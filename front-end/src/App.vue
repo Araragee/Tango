@@ -7,8 +7,16 @@ import SharedCalendar from './components/SharedCalendar.vue';
 import LandingPage from './components/LandingPage.vue';
 import TangoPlans from './components/TangoPlans.vue';
 import TangoTodo from './components/TangoTodo.vue';
+import LoginView from './components/LoginView.vue';
+import SignUpView from './components/SignUpView.vue';
+import OnboardingView from './components/OnboardingView.vue';
+import SettingsView from './components/SettingsView.vue';
+import ArchiveView from './components/ArchiveView.vue';
+import NotificationSystem from './components/NotificationSystem.vue';
+import { provide, ref } from 'vue';
 
 const store = useAppStore();
+const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null);
 
 const currentComponent = computed(() => {
   switch (store.activeView) {
@@ -17,8 +25,22 @@ const currentComponent = computed(() => {
     case 'To-Dos': return TangoTodo;
     case 'Calendar': return SharedCalendar;
     case 'Landing': return LandingPage;
+    case 'Login': return LoginView;
+    case 'SignUp': return SignUpView;
+    case 'Onboarding': return OnboardingView;
+    case 'Settings': return SettingsView;
+    case 'Archive': return ArchiveView;
     default: return LandingPage;
   }
+});
+
+const showNav = computed(() => {
+  return !['Landing', 'Login', 'SignUp', 'Onboarding'].includes(store.activeView);
+});
+
+// Provide notification system to all components
+provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
+    notificationRef.value?.add(message, type);
 });
 </script>
 
@@ -32,7 +54,20 @@ const currentComponent = computed(() => {
       </div>
       
       <div class="flex items-center gap-4">
-        <div class="w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center">
+        <button
+          v-if="showNav"
+          @click="store.setActiveView('Archive')"
+          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          aria-label="Archive"
+        >
+          history
+        </button>
+        <div
+          v-if="showNav"
+          class="w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+          @click="store.setActiveView('Settings')"
+          aria-label="Settings"
+        >
           <img 
             alt="Partner Profile" 
             class="w-full h-full object-cover grayscale" 
@@ -45,7 +80,7 @@ const currentComponent = computed(() => {
     <!-- Main Content -->
     <main class="pt-20 pb-28 px-4 md:px-8 max-w-6xl mx-auto min-h-screen">
       <transition
-        name="fade"
+        name="slide-fade"
         mode="out-in"
       >
         <component :is="currentComponent" />
@@ -53,19 +88,26 @@ const currentComponent = computed(() => {
     </main>
 
     <!-- Navigation -->
-    <BottomNav />
+    <BottomNav v-if="showNav" />
+
+    <!-- Notifications -->
+    <NotificationSystem ref="notificationRef" />
   </div>
 </template>
 
 <style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease-out;
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.2s ease-out;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.slide-fade-enter-from {
   opacity: 0;
+  transform: translateY(10px);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
-

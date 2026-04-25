@@ -1,9 +1,21 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { useAppStore } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
+import NewEventSheet from './NewEventSheet.vue';
 
+const store = useAppStore();
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+const showEventSheet = ref(false);
+
+const getEventsForDay = (day: number) => {
+    // Simplified: matching only by day number for the mock
+    const dateStr = `2023-10-${day.toString().padStart(2, '0')}`;
+    return store.calendar.events.filter(e => e.date === dateStr);
+};
 </script>
 
 <template>
@@ -11,17 +23,17 @@ const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     <!-- Header & Controls -->
     <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md w-full">
       <div>
-        <h2 class="text-headline-lg text-primary">October 1998</h2>
+        <h2 class="text-headline-lg text-primary">{{ store.calendar.currentMonth }}</h2>
         <p class="text-body-md text-on-surface-variant">Syncing with Alex</p>
       </div>
       <div class="flex gap-4 flex-wrap">
-        <TangoButton variant="surface" size="md" class="w-12 h-12">
+        <TangoButton variant="surface" size="md" class="w-12 h-12" aria-label="Previous Month">
           <span class="material-symbols-outlined">chevron_left</span>
         </TangoButton>
-        <TangoButton variant="surface" size="md" class="w-12 h-12">
+        <TangoButton variant="surface" size="md" class="w-12 h-12" aria-label="Next Month">
           <span class="material-symbols-outlined">chevron_right</span>
         </TangoButton>
-        <TangoButton variant="primary" size="md" class="md:ml-4">
+        <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="md:ml-4" aria-label="New Event">
           <span class="material-symbols-outlined">add</span>
           New Event
         </TangoButton>
@@ -49,17 +61,20 @@ const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         >
           <span class="text-label-sm text-on-surface" :class="{ 'font-bold': day === 14 }">{{ day }}</span>
           
-          <!-- Example Events -->
-          <div v-if="day === 2" class="mt-xs bg-secondary-container text-on-secondary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none">
-            Rent Due
-          </div>
-          <div v-if="day === 7" class="mt-xs bg-primary-container text-on-primary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
-            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
-            Date Night
-          </div>
-          <div v-if="day === 11" class="mt-xs bg-tertiary-container text-on-tertiary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
-            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
-            Budget Sync
+          <!-- Events -->
+          <div
+            v-for="event in getEventsForDay(day)"
+            :key="event.id"
+            class="mt-xs text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none flex items-center gap-[1px]"
+            :class="{
+                'bg-primary-container text-on-primary-container': event.category === 'date',
+                'bg-secondary-container text-on-secondary-container': event.category === 'errand',
+                'bg-tertiary-container text-on-tertiary-container': event.category === 'bill',
+                'bg-surface-variant': !['date', 'errand', 'bill'].includes(event.category)
+            }"
+          >
+            <span class="material-symbols-outlined text-[10px]">{{ event.icon }}</span>
+            {{ event.title }}
           </div>
         </div>
       </div>
@@ -73,18 +88,17 @@ const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
           <h3 class="text-headline-md text-on-surface">Coming Up</h3>
         </div>
         <ul class="space-y-4">
-          <li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
-            <div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">7</div>
-            <div>
-              <p class="text-label-sm text-on-surface">Date Night: Pizza & Movies</p>
-              <p class="text-[12px] text-on-surface-variant">7:00 PM</p>
+          <li
+            v-for="event in store.calendar.events.slice(0, 3)"
+            :key="event.id"
+            class="flex items-center gap-4 bg-surface p-4 pixel-border-sm"
+          >
+            <div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">
+                {{ event.date.split('-').pop() }}
             </div>
-          </li>
-          <li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
-            <div class="w-8 h-8 bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">11</div>
             <div>
-              <p class="text-label-sm text-on-surface">Monthly Budget Sync</p>
-              <p class="text-[12px] text-on-surface-variant">10:00 AM</p>
+              <p class="text-label-sm text-on-surface">{{ event.title }}</p>
+              <p class="text-[12px] text-on-surface-variant">{{ event.time }}</p>
             </div>
           </li>
         </ul>
@@ -103,5 +117,7 @@ const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         </div>
       </TangoCard>
     </section>
+
+    <NewEventSheet :show="showEventSheet" @close="showEventSheet = false" />
   </div>
 </template>
