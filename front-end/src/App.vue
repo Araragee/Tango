@@ -1,69 +1,84 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { computed } from 'vue';
+import { useAppStore } from './stores/useStore';
+import BottomNav from './components/BottomNav.vue';
+import BudgetTracker from './components/BudgetTracker.vue';
+import PlansGoals from './components/PlansGoals.vue';
+import TodoList from './components/TodoList.vue';
+import SharedCalendar from './components/SharedCalendar.vue';
+import BaseIcon from './components/Base/BaseIcon.vue';
+
+const store = useAppStore();
+
+const currentComponent = computed(() => {
+  switch (store.activeView) {
+    case 'Budget': return BudgetTracker;
+    case 'Plans': return PlansGoals;
+    case 'To-Dos': return TodoList;
+    case 'Calendar': return SharedCalendar;
+    default: return BudgetTracker;
+  }
+});
 </script>
 
 <template>
-  <main class="min-h-screen w-full overflow-x-hidden">
-    <!-- Navbar -->
-    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
-      <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <div class="flex items-center gap-2">
-          <div class="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-secondary"></div>
-          <span class="text-xl font-black tracking-tight text-white uppercase">Tango</span>
+  <div class="min-h-screen bg-background text-on-background font-body-md antialiased">
+    <!-- Top Bar -->
+    <header class="fixed top-0 left-0 w-full z-50 bg-stone-50/80 dark:bg-stone-950/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm flex justify-between items-center px-5 h-16">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary">
+           <BaseIcon name="Heart" :size="16" />
         </div>
-        <div class="hidden items-center gap-8 md:flex">
-          <a href="#" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Documentation</a>
-          <a href="#" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Components</a>
-          <a href="#" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">Showcase</a>
-          <button class="rounded-full bg-white px-5 py-2 text-sm font-bold text-slate-950 hover:bg-slate-200 transition-all shadow-xl shadow-white/5">
-            Get Started
-          </button>
-        </div>
+        <h1 class="text-lg font-semibold text-slate-700 dark:text-slate-200 tracking-tight font-manrope">PartnerSpace</h1>
       </div>
-    </nav>
+      <button class="w-8 h-8 rounded-full overflow-hidden hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-200 bg-surface-variant flex-shrink-0 border border-slate-200/50">
+        <img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-rj67vnriMkKHUNRMjp_sD1bCCojnDHVMw94QDwDfU3MXNf_xxg0mqkwA-Q0uwxQHXvLcFEUYvT8Fd22qriykXf1kbLu8f1pmg_AK1v8bq6xX4boYzp9IKtBrWmbojVe6WQAus94J008hFUpiTZ-MKf_vfH9CsIUA5u8CnXoVeTrue_7B75ukpMM7NZ7sv3jr5fYP7VDT3jp5VDm8CoZJvJYXb6MOjPHZ1OtqwgkOeAvXD-tC8Pi7a2dOYftKhIuGxjjcy9ibpac"/>
+      </button>
+    </header>
 
-    <!-- Hero Section -->
-    <section class="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-      <!-- Background Blobs -->
-      <div class="absolute top-0 left-1/2 -z-10 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/10 blur-[120px]"></div>
-      <div class="absolute bottom-0 right-0 -z-10 h-[600px] w-[600px] translate-x-1/3 translate-y-1/3 rounded-full bg-brand-secondary/5 blur-[100px]"></div>
+    <!-- Main Content -->
+    <main class="pt-24 pb-28 px-edge-margin max-w-2xl mx-auto min-h-screen">
+      <transition
+        name="fade"
+        mode="out-in"
+      >
+        <component :is="currentComponent" />
+      </transition>
+    </main>
 
-      <div class="mx-auto max-w-7xl px-6">
-        <div class="flex flex-col items-center text-center">
-          <div class="mb-6 inline-flex items-center rounded-full border border-brand-primary/20 bg-brand-primary/5 px-3 py-1 text-xs font-semibold text-brand-primary backdrop-blur-sm">
-            🚀 New features are live!
-          </div>
-          
-          <HelloWorld msg="Beautiful by Default." />
-          
-          <div class="mt-16 flex flex-wrap justify-center gap-4">
-            <div class="flex h-12 items-center gap-2 rounded-xl bg-slate-900 border border-slate-800 px-4">
-              <span class="text-slate-500 font-mono text-sm">$</span>
-              <code class="text-slate-300 font-mono text-sm">npm install tango-ui</code>
-              <button class="ml-2 text-slate-500 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950/50 py-12">
-      <div class="mx-auto max-w-7xl px-6 text-center">
-        <p class="text-sm text-slate-500">
-          Built with ❤️ for the modern web. © 2024 Tango Project.
-        </p>
-      </div>
-    </footer>
-  </main>
+    <!-- Navigation -->
+    <BottomNav />
+  </div>
 </template>
 
 <style>
-/* Custom animations can go here if needed */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
 }
 </style>
