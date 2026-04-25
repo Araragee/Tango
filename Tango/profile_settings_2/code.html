@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Profile &amp; Settings - Serene Partnership</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Manrope:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#f8fafc",
+                        "surface-container-highest": "#475569",
+                        "on-tertiary-container": "#f8fafc",
+                        "background": "#020617",
+                        "surface-container-high": "#334155",
+                        "error-container": "#7f1d1d",
+                        "surface-container-low": "#1e293b",
+                        "secondary-fixed-dim": "#475569",
+                        "on-tertiary": "#020617",
+                        "on-error-container": "#fecaca",
+                        "secondary-fixed": "#334155",
+                        "secondary": "#94a3b8",
+                        "inverse-on-surface": "#020617",
+                        "on-primary-container": "#f0f9ff",
+                        "on-surface-variant": "#94a3b8",
+                        "on-error": "#000000",
+                        "primary": "#38bdf8",
+                        "on-secondary": "#020617",
+                        "on-primary-fixed-variant": "#e0f2fe",
+                        "surface-bright": "#1e293b",
+                        "on-primary": "#020617",
+                        "inverse-primary": "#0284c7",
+                        "surface-variant": "#334155",
+                        "surface-tint": "#38bdf8",
+                        "on-secondary-fixed-variant": "#f8fafc",
+                        "surface-container": "#1e293b",
+                        "secondary-container": "#334155",
+                        "on-secondary-fixed": "#f8fafc",
+                        "primary-container": "#0369a1",
+                        "inverse-surface": "#f8fafc",
+                        "surface-dim": "#020617",
+                        "primary-fixed-dim": "#0ea5e9",
+                        "on-tertiary-fixed-variant": "#f8fafc",
+                        "primary-fixed": "#0ea5e9",
+                        "on-background": "#f8fafc",
+                        "surface-container-lowest": "#0f172a",
+                        "tertiary-container": "#334155",
+                        "on-surface": "#f8fafc",
+                        "tertiary-fixed-dim": "#475569",
+                        "surface": "#020617",
+                        "error": "#ef4444",
+                        "tertiary-fixed": "#334155",
+                        "tertiary": "#94a3b8",
+                        "on-primary-fixed": "#ffffff",
+                        "outline": "#64748b",
+                        "outline-variant": "#475569",
+                        "on-tertiary-fixed": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "touch-target": "48px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "edge-margin": "20px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "h1": ["Manrope"],
+                        "button": ["Inter"],
+                        "h2": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400" }],
+                        "h1": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "button": ["16px", { "lineHeight": "1", "letterSpacing": "0.01em", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background antialiased pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.2)] pt-safe">
+<div class="flex justify-between items-center h-16 px-4 w-full">
+<button class="h-touch-target w-touch-target flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-h2 text-h2 text-on-surface">Profile &amp; Settings</h1>
+<button class="h-touch-target w-touch-target flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container transition-colors active:scale-95">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</header>
+<main class="pt-24 px-edge-margin max-w-2xl mx-auto space-y-xl">
+<!-- Profile Section -->
+<section>
+<div class="bg-surface-container-lowest rounded-xl p-md shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center space-y-md text-center">
+<div class="flex -space-x-4 relative">
+<img alt="Partner 1 Profile Picture" class="w-20 h-20 rounded-full object-cover border-4 border-surface-container-lowest shadow-sm z-10" data-alt="close up portrait of a young woman with natural light and a soft smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQSI3eva8d0ia9if_uLrfobnac9DqYoEYgPnhXrntcM59_NzIZxt3NsnjoEQaR61be1sHCA4Xx2ATxQADUy-JTXjJVcCZgbh6E-5VkQKG2FRZ-PcWFc6Yms859IoJ5E8F4JLxEk3UYgnXvwYDvlCQpBPKZ8F5_e2h0ALgKq9HoFS1h_RdHd9QlT8Xfiu3RrEpqqnQ3B2DzcG6V0YVrY40xIUWdyquQ8iEznhjUMQ9RBjSUk1XS7QCOaa6ApEV4U2km32d8JDooDSc"/>
+<img alt="Partner 2 Profile Picture" class="w-20 h-20 rounded-full object-cover border-4 border-surface-container-lowest shadow-sm z-0" data-alt="close up portrait of a young man looking relaxed outdoors with soft background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBx_3pCDMGQKx7Ll--orkF5rmAlk8TCI2vs6MRI_2TGvkFoAtwMzYtBcpipJPQoFWnSX0wkUJg2R-UHhVQVtyYEPfDSDxCvcKese2DgoS0tOGmcipgYqrBLTb9nQ7UX71Oqj8YzyNMgCg1PBWFJiloUcaHX50NeuG2eltr8FZdJfXu4WU2qxH8qIa66v-OrCqzi-R9sjgT2n-kKPN_FkFbrr6qqmkgmq516sPFr0gUCb0WJ3OeMBkmdnywPCl9vjes6jEHLAzUXVgI"/>
+</div>
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">Alex &amp; Sam</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Joint Profile</p>
+</div>
+<div class="bg-surface-container-low px-md py-2 rounded-full inline-flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="favorite">favorite</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Joined Oct 2022</span>
+</div>
+</div>
+</section>
+<!-- Settings Categories -->
+<div class="space-y-lg">
+<!-- Account -->
+<section class="space-y-sm">
+<h3 class="font-label-caps text-label-caps text-primary uppercase pl-2">Account</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] overflow-hidden">
+<div class="flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Notifications</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer h-touch-target w-touch-target justify-end">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[14px] after:start-[9px] after:bg-white after:border-surface-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Privacy</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined" data-icon="security">security</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Security</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Preferences -->
+<section class="space-y-sm">
+<h3 class="font-label-caps text-label-caps text-primary uppercase pl-2">Preferences</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] overflow-hidden">
+<div class="flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Dark Mode</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer h-touch-target w-touch-target justify-end">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[14px] after:start-[9px] after:bg-white after:border-surface-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="language">language</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">App Language</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="font-body-md text-body-md text-on-surface-variant">English</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Default Currency</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="font-body-md text-body-md text-on-surface-variant">USD ($)</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Our Space -->
+<section class="space-y-sm">
+<h3 class="font-label-caps text-label-caps text-primary uppercase pl-2">Our Space</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] overflow-hidden">
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Edit Partner Details</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined" data-icon="cloud">cloud</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Shared Storage</span>
+<span class="text-xs text-on-surface-variant">2.4 GB of 5 GB used</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined" data-icon="extension">extension</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">App Integrations</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Support -->
+<section class="space-y-sm">
+<h3 class="font-label-caps text-label-caps text-primary uppercase pl-2">Support</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.2)] overflow-hidden">
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help_center">help_center</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Help Center</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="feedback">feedback</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">Feedback</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-md border-b border-surface-container-high last:border-0 hover:bg-surface-container-low transition-colors active:bg-surface-container text-left">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface">About</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+</div>
+<!-- Logout -->
+<div class="pt-md pb-xl flex justify-center">
+<button class="font-button text-button text-error hover:bg-error-container/50 px-lg py-sm rounded-full transition-colors active:scale-95 flex items-center space-x-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+<span>Log Out</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface-container-lowest/80 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.3)] rounded-t-2xl z-50">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200 ease-out px-5 py-2 group" href="#">
+<span class="material-symbols-outlined group-active:scale-[0.98]" data-icon="home">home</span>
+<span class="font-label-caps text-label-caps mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200 ease-out px-5 py-2 group" href="#">
+<span class="material-symbols-outlined group-active:scale-[0.98]" data-icon="favorite">favorite</span>
+<span class="font-label-caps text-label-caps mt-1">Shared</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all duration-200 ease-out px-5 py-2 group" href="#">
+<span class="material-symbols-outlined group-active:scale-[0.98]" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-caps text-label-caps mt-1">Calendar</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-5 py-2 active:scale-[0.98] transition-all duration-200 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profile</span>
+</a>
+</nav>
+</body></html>
