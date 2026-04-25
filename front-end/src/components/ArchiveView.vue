@@ -16,7 +16,7 @@ const completedGoals = [
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-8">
+  <div class="max-w-5xl mx-auto space-y-8">
     <div class="border-b-2 border-black pb-4">
       <h2 class="text-headline-xl">Archive</h2>
       <p class="text-body-md text-on-surface-variant">Your journey so far.</p>

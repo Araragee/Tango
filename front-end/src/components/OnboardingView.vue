@@ -17,7 +17,7 @@ const next = () => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto py-12">
+  <div class="max-w-2xl mx-auto py-12 pt-16 min-h-screen flex flex-col justify-center">
     <TangoCard padding="xl" shadow="default" class="text-center">
       <div v-if="step === 1" class="space-y-6">
         <div class="w-32 h-32 bg-primary-container mx-auto pixel-border-sm flex items-center justify-center">

@@ -52,7 +52,7 @@ const saveEvent = () => {
       <div class="absolute inset-0 bg-dither opacity-90" @click="emit('close')"></div>
 
       <!-- Sheet Container -->
-      <div class="relative z-20 w-full max-w-2xl bg-surface pixel-border border-b-0 hard-shadow-dark flex flex-col p-6 rounded-t-xl">
+      <div class="relative z-20 w-full max-w-3xl bg-surface pixel-border border-b-0 hard-shadow-dark flex flex-col p-6 rounded-t-xl">
         <div class="w-12 h-1 bg-on-surface-variant opacity-20 mx-auto mb-6 rounded-full"></div>
 
         <h2 class="text-headline-lg mb-6 uppercase border-b-2 border-black pb-2">New Event</h2>

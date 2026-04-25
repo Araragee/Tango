@@ -78,7 +78,10 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
     </header>
 
     <!-- Main Content -->
-    <main class="pt-20 pb-28 px-4 md:px-8 max-w-6xl mx-auto min-h-screen">
+    <main :class="[
+      'min-h-screen transition-all duration-300',
+      showNav ? 'pt-20 pb-28 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
+    ]">
       <transition
         name="slide-fade"
         mode="out-in"

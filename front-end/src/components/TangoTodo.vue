@@ -26,7 +26,7 @@ const quickAdd = () => {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto w-full flex flex-col gap-8">
+  <div class="max-w-4xl mx-auto w-full flex flex-col gap-8">
     <!-- Phrase of the Day Card -->
     <TangoCard padding="lg" shadow="none" class="w-full pixel-border bg-surface hard-shadow-green relative overflow-hidden">
       <div class="absolute top-0 right-0 w-24 h-24 bg-dither opacity-50 border-l-2 border-b-2 border-on-surface"></div>

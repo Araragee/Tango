@@ -19,7 +19,7 @@ const getEventsForDay = (day: number) => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-lg py-12 w-full">
+  <div class="max-w-5xl mx-auto space-y-lg py-12 w-full">
     <!-- Header & Controls -->
     <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md w-full">
       <div>

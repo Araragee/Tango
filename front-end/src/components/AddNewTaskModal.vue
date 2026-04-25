@@ -36,7 +36,7 @@ const saveTask = () => {
 </script>
 
 <template>
-  <BaseModal :show="show" title="New Task" @close="emit('close')">
+  <BaseModal :show="show" title="New Task" max-width="max-w-xl" @close="emit('close')">
     <div class="flex flex-col gap-6">
       <!-- Task Name Input -->
       <TangoInput v-model="taskName" label="Task Name" placeholder="e.g. Buy groceries..." :error="error" required />

@@ -6,7 +6,8 @@ const store = useAppStore();
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+  <div class="flex flex-col items-center justify-center min-h-screen text-center px-4 pt-16">
+    <div class="w-full max-w-6xl mx-auto flex flex-col items-center py-20">
     <!-- Hero Image Area -->
     <div class="relative w-64 h-64 mb-12">
       <div class="absolute inset-0 bg-primary-container pixel-border hard-shadow transform rotate-3"></div>
@@ -61,6 +62,7 @@ const store = useAppStore();
         <div class="text-headline-md text-primary">$2M+</div>
         <div class="text-label-sm uppercase tracking-widest mt-1">Saved Together</div>
       </div>
+    </div>
     </div>
   </div>
 </template>

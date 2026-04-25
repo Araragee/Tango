@@ -24,7 +24,7 @@ const resetAccount = () => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-8">
+  <div class="max-w-5xl mx-auto space-y-8">
     <div class="border-b-2 border-black pb-4">
       <h2 class="text-headline-xl">Settings</h2>
     </div>

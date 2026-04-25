@@ -5,20 +5,31 @@ import TangoButton from './TangoButton.vue';
 interface Props {
   show: boolean;
   title: string;
+  maxWidth?: string;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  maxWidth: 'max-w-lg'
+});
 const emit = defineEmits(['close']);
 </script>
 
 <template>
   <Transition name="modal">
-    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-gutter">
+    <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <!-- Background Overlay -->
       <div class="absolute inset-0 bg-dither opacity-90" @click="emit('close')"></div>
 
       <!-- Modal Container -->
-      <div class="relative z-20 w-full max-w-md bg-surface pixel-border hard-shadow flex flex-col">
+      <div 
+        :class="[
+          'relative z-20 w-[90%] min-w-[320px] bg-surface pixel-border hard-shadow flex flex-col',
+          maxWidth === 'max-w-md' ? 'max-w-[448px]' : 
+          maxWidth === 'max-w-lg' ? 'max-w-[512px]' : 
+          maxWidth === 'max-w-xl' ? 'max-w-[576px]' : 
+          maxWidth === 'max-w-2xl' ? 'max-w-[672px]' : 'max-w-[512px]'
+        ]"
+      >
         <!-- Modal Header -->
         <div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">
           <h2 class="text-headline-md m-0 uppercase">{{ title }}</h2>

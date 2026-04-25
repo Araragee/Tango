@@ -10,8 +10,8 @@ const login = () => {
 </script>
 
 <template>
-  <div class="min-h-[80vh] flex flex-col items-center justify-center p-gutter">
-    <main class="w-full max-w-md mx-auto bg-surface pixel-border hard-shadow p-lg flex flex-col items-center">
+  <div class="min-h-screen flex flex-col items-center justify-center p-4 pt-16">
+    <div class="w-[90%] max-w-[448px] min-w-[300px] bg-surface pixel-border hard-shadow p-6 flex flex-col items-center">
       <div class="mb-xl text-center flex flex-col items-center gap-sm mt-lg">
         <span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <h1 class="text-headline-xl text-primary tracking-tighter italic uppercase">Tango</h1>
@@ -54,6 +54,6 @@ const login = () => {
           <button @click="store.setActiveView('SignUp')" type="button" class="inline-block mt-xs text-body-md font-bold text-secondary hover:text-secondary-fixed-dim transition-colors border-b-2 border-transparent hover:border-secondary">Create an account</button>
         </div>
       </form>
-    </main>
+    </div>
   </div>
 </template>
