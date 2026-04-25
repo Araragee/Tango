@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - Goal Editor</title>
+<!-- Google Fonts: Space Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fcf9f4",
+                        "tertiary": "#7a5155",
+                        "on-primary-fixed-variant": "#7d2937",
+                        "surface-container-low": "#f6f3ee",
+                        "on-surface-variant": "#554243",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1c1c19",
+                        "surface-container-highest": "#e5e2dd",
+                        "secondary-fixed": "#d3e8d5",
+                        "on-primary": "#ffffff",
+                        "primary": "#983e4b",
+                        "background": "#fcf9f4",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#dac0c1",
+                        "surface-container-high": "#ebe8e3",
+                        "primary-fixed": "#ffdadb",
+                        "error": "#ba1a1a",
+                        "outline": "#887273",
+                        "on-secondary-fixed": "#0e1f13",
+                        "surface-container": "#f0ede9",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary-container": "#546758",
+                        "primary-container": "#b75662",
+                        "surface-variant": "#e5e2dd",
+                        "on-background": "#1c1c19",
+                        "surface-dim": "#dcdad5",
+                        "secondary-container": "#d0e5d2",
+                        "inverse-surface": "#31302d",
+                        "surface-tint": "#9b404d",
+                        "primary-fixed-dim": "#ffb2b9",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#301216",
+                        "secondary-fixed-dim": "#b7ccb9",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f3f0eb",
+                        "on-secondary-fixed-variant": "#394b3d",
+                        "on-primary-fixed": "#40000f",
+                        "tertiary-fixed-dim": "#eeb9bd",
+                        "on-tertiary-fixed-variant": "#623c40",
+                        "surface": "#fcf9f4",
+                        "tertiary-container": "#95696d",
+                        "secondary": "#506354",
+                        "tertiary-fixed": "#ffdadc",
+                        "on-primary-container": "#fffbff",
+                        "inverse-primary": "#ffb2b9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "unit": "4px",
+                        "margin": "20px",
+                        "xl": "48px",
+                        "xs": "4px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "headline-lg": ["Space Grotesk"],
+                        "headline-xl": ["Space Grotesk"],
+                        "body-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "headline-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+        .sunken-input { border-top: 2px solid #e5e2dd; border-left: 2px solid #e5e2dd; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff; background-color: #f6f3ee; }
+        
+        /* Custom dither pattern for progress bar */
+        .dither-pattern {
+            background-image: 
+                repeating-linear-gradient(45deg, #983e4b 25%, transparent 25%, transparent 75%, #983e4b 75%, #983e4b),
+                repeating-linear-gradient(45deg, #983e4b 25%, transparent 25%, transparent 75%, #983e4b 75%, #983e4b);
+            background-position: 0 0, 4px 4px;
+            background-size: 8px 8px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background min-h-screen text-on-background font-body-md antialiased selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar Shared Component -->
+<header class="bg-[#FDFBF7] dark:bg-stone-900 font-['Space_Grotesk'] font-bold tracking-tighter border-b-2 border-black flex justify-between items-center w-full px-4 py-4 fixed top-0 z-50">
+<button aria-label="Favorite" class="text-stone-600 dark:text-stone-400 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<span class="text-2xl font-black text-[#D8707C] italic tracking-widest font-headline-md">TANGO</span>
+<button aria-label="Settings" class="text-stone-600 dark:text-stone-400 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-gutter max-w-md mx-auto flex flex-col gap-lg">
+<!-- Hero Card for Goal -->
+<section class="bg-surface pixel-border hard-shadow relative">
+<div class="h-32 w-full border-b-2 border-on-surface overflow-hidden bg-surface-container">
+<img alt="Europe Trip Vision" class="w-full h-full object-cover grayscale opacity-80" data-alt="vintage polaroid style photo of a sunny cobblestone street in paris with a cafe and bicycle" data-location="Paris, France" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApY2RFNjrrPM6izdAD_XBrJJNvRAT38E-P_cioTFQpGFsrDgY6aTBKyIiy2-Ni82TN0EiX1HpHSAq3YNenu9qAPEOqjVDSsd-FCu-0n95kEYLsLj2veXXznn6gbBdBd--als6r6gjdXZ2uNyVjuQolkdy7XJXCA6AtQqK6yuD7sa6R8c8YS0YYzRgxkZtYMjvwBMoeA3yNgjbPrCm8UEKGLM-AHivAo6WsnYZCdoRU6Qebod2PlLJE6Y4UVcj4badcf5K7vQo8evI"/>
+</div>
+<div class="p-6 flex flex-col gap-sm">
+<div class="absolute top-28 -left-2 bg-secondary text-on-secondary pixel-border px-3 py-1 font-label-sm uppercase transform -rotate-3 z-10">
+                    Target: Aug '25
+                </div>
+<h1 class="font-headline-lg text-primary mt-4">Europe Trip</h1>
+<p class="font-body-md text-outline">Saving for flights, vintage stays, and endless pasta.</p>
+<div class="flex justify-between items-end mt-sm border-t-2 border-surface-container-highest pt-4">
+<div class="flex flex-col">
+<span class="font-label-sm text-outline uppercase">Current Stash</span>
+<span class="font-headline-md text-on-surface">$2,450</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-sm text-outline uppercase">Goal</span>
+<span class="font-headline-md text-on-surface-variant">$5,000</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Pixelated Progress Bar Editor -->
+<section class="bg-surface pixel-border p-6 hard-shadow-dark">
+<div class="flex justify-between items-center mb-4">
+<h2 class="font-headline-md text-secondary">Milestone Progress</h2>
+<span class="font-label-sm bg-primary-container text-on-primary-container px-3 py-1 pixel-border-sm uppercase">49%</span>
+</div>
+<!-- Draggable Bar Area -->
+<div class="h-8 w-full pixel-border bg-surface relative overflow-hidden flex cursor-ew-resize group">
+<!-- Solid Fill -->
+<div class="h-full bg-secondary transition-all duration-300 ease-out" style="width: 45%;"></div>
+<!-- Dithered Leading Edge -->
+<div class="h-full w-8 dither-pattern opacity-80" style="background-color: #506354;"></div>
+<!-- Drag Handle Indicator (Visible on hover) -->
+<div class="absolute top-0 bottom-0 w-2 bg-on-surface opacity-0 group-hover:opacity-100 transition-opacity" style="left: calc(45% + 16px);"></div>
+</div>
+<p class="font-label-sm text-outline mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">touch_app</span>
+                Drag bar to update progress manually
+            </p>
+</section>
+<!-- Add Contribution Button -->
+<button class="w-full bg-primary text-on-primary font-body-md font-bold py-3 pixel-border hard-shadow-dark btn-active transition-transform flex justify-center items-center gap-xs">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+            Add Contribution
+        </button>
+<!-- Sub-milestones Checklist -->
+<section class="mt-6">
+<div class="flex justify-between items-center mb-6">
+<h2 class="font-headline-md text-on-surface">Quest Log</h2>
+<button class="text-secondary font-label-sm uppercase hover:underline">Edit List</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Checked Item -->
+<div class="bg-surface-container-low pixel-border p-4 flex items-center gap-4 cursor-pointer opacity-75">
+<div class="w-6 h-6 sunken-input bg-primary flex items-center justify-center text-on-primary shrink-0">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-outline line-through decoration-2 decoration-on-surface">Book Roundtrip Flights</p>
+</div>
+<span class="font-label-sm text-outline-variant uppercase">$1,200</span>
+</div>
+<!-- Unchecked Item -->
+<div class="bg-surface pixel-border p-4 flex items-center gap-4 hover:bg-surface-container transition-colors cursor-pointer">
+<div class="w-6 h-6 sunken-input shrink-0"></div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-bold">Reserve AirBnBs</p>
+</div>
+<span class="font-label-sm text-secondary uppercase font-bold">$800</span>
+</div>
+<!-- Unchecked Item -->
+<div class="bg-surface pixel-border p-4 flex items-center gap-4 hover:bg-surface-container transition-colors cursor-pointer">
+<div class="w-6 h-6 sunken-input shrink-0"></div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-bold">Eurail Passes</p>
+</div>
+<span class="font-label-sm text-secondary uppercase font-bold">$450</span>
+</div>
+<!-- Add New Sub-milestone -->
+<div class="border-2 border-dashed border-outline-variant p-4 flex items-center justify-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer text-outline">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-sm uppercase">Add Sub-goal</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar Shared Component -->
+<nav class="bg-[#FDFBF7] dark:bg-stone-900 border-t-2 border-black fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2">
+<!-- Budget - Inactive -->
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 transition-colors active:scale-95 duration-75 w-16">
+<span class="material-symbols-outlined mb-1">account_balance_wallet</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase">Budget</span>
+</button>
+<!-- Goals - Active -->
+<button class="flex flex-col items-center justify-center bg-[#D8707C] text-white p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:scale-95 transition-transform w-16">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase">Goals</span>
+</button>
+<!-- To-dos - Inactive -->
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 transition-colors active:scale-95 duration-75 w-16">
+<span class="material-symbols-outlined mb-1">checklist</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase">To-dos</span>
+</button>
+<!-- Calendar - Inactive -->
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 transition-colors active:scale-95 duration-75 w-16">
+<span class="material-symbols-outlined mb-1">calendar_today</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase">Calendar</span>
+</button>
+</nav>
+</body></html>

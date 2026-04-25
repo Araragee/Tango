@@ -1,88 +1,130 @@
 <script setup lang="ts">
-import { useAppStore } from '../stores/useStore';
-import BaseCard from './Base/BaseCard.vue';
-import BaseIcon from './Base/BaseIcon.vue';
-import BaseProgressBar from './Base/BaseProgressBar.vue';
-import BaseButton from './Base/BaseButton.vue';
+import TangoButton from './TangoButton.vue';
+import TangoCard from './TangoCard.vue';
 
-const store = useAppStore();
+const transactions = [
+  { id: 1, name: 'Pizza Night', date: 'Yesterday', amount: -45.00, icon: 'local_pizza', type: 'expense' },
+  { id: 2, name: 'Groceries', date: 'Mar 12', amount: -120.50, icon: 'shopping_cart', type: 'expense' },
+  { id: 3, name: 'Cinema', date: 'Mar 10', amount: -32.00, icon: 'movie', type: 'expense' },
+  { id: 4, name: 'Alex Transfer', date: 'Mar 09', amount: 500.00, icon: 'payments', type: 'income' },
+];
 </script>
 
 <template>
-  <div class="flex flex-col gap-xl">
-    <!-- Joint Balance -->
-    <section class="bg-surface-container-lowest rounded-[24px] p-lg shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-surface-variant/30 flex flex-col items-center text-center relative overflow-hidden">
-      <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-fixed to-secondary-fixed"></div>
-      <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-xs">Joint Balance</p>
-      <h2 class="font-h1 text-h1 text-primary mb-md tracking-tight">${{ store.budget.balance.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</h2>
-      <div class="inline-flex items-center gap-2 bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full font-label-caps text-label-caps">
-        <BaseIcon name="trending_up" :size="16" />
-        <span>${{ store.budget.savedThisMonth }} Saved this month</span>
-      </div>
-    </section>
+  <div class="flex flex-col gap-8 w-full">
+    <!-- Main Content Grid -->
+    <main class="w-full grid grid-cols-1 md:grid-cols-12 gap-8">
+      <!-- Left Column: Balance & Charts -->
+      <div class="md:col-span-7 flex flex-col gap-8 w-full">
+        <!-- Joint Balance Card -->
+        <TangoCard padding="none" shadow="default" class="h-48 flex flex-col justify-center items-center relative w-full">
+          <div class="absolute top-4 left-4 px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm">
+            Joint Balance
+          </div>
+          <h2 class="text-headline-xl text-on-surface mt-4">
+            $4,250.00
+          </h2>
+          <p class="text-body-md text-on-surface-variant mt-2">
+            Updated just now
+          </p>
+          <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black"></div>
+        </TangoCard>
 
-    <!-- Monthly Spending -->
-    <section>
-      <div class="flex justify-between items-end mb-md px-xs">
-        <h3 class="font-h2 text-h2 text-on-surface">Monthly Spending</h3>
-      </div>
-      <div class="grid grid-cols-1 gap-md">
-        <BaseCard
-          v-for="item in store.budget.monthlySpending"
-          :key="item.id"
-          class="cursor-pointer active:scale-[0.98] transition-all duration-200 hover:shadow-[0_8px_25px_rgb(0,0,0,0.04)] group"
-        >
-          <div class="flex justify-between items-center mb-sm">
-            <div class="flex items-center gap-sm">
-              <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
-                <BaseIcon :name="item.icon" />
+        <!-- Category Breakdown -->
+        <TangoCard padding="lg" shadow="dark" class="w-full">
+          <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
+            <h3 class="text-headline-lg text-on-surface">Category Breakdown</h3>
+            <span class="material-symbols-outlined text-secondary">bar_chart</span>
+          </div>
+          <div class="space-y-6">
+            <!-- Rent -->
+            <div>
+              <div class="flex justify-between text-label-sm mb-2 uppercase">
+                <span>Rent</span>
+                <span>$2,000</span>
               </div>
-              <span class="font-body-lg text-body-lg text-on-surface font-medium">{{ item.category }}</span>
+              <div class="w-full h-6 pixel-border bg-surface relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full w-[60%] bg-primary flex justify-end">
+                  <div class="w-4 h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjUiLz48L3N2Zz4=')] opacity-50"></div>
+                </div>
+              </div>
             </div>
-            <span class="font-body-md text-body-md text-on-surface-variant">${{ item.spent }} / ${{ item.limit }}</span>
+            <!-- Food -->
+            <div>
+              <div class="flex justify-between text-label-sm mb-2 uppercase">
+                <span>Food</span>
+                <span>$850</span>
+              </div>
+              <div class="w-full h-6 pixel-border bg-surface relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full w-[35%] bg-secondary flex justify-end">
+                  <div class="w-4 h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC41Ii8+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjUiLz48L3N2Zz4=')] opacity-50"></div>
+                </div>
+              </div>
+            </div>
+            <!-- Fun -->
+            <div>
+              <div class="flex justify-between text-label-sm mb-2 uppercase">
+                <span>Fun</span>
+                <span>$400</span>
+              </div>
+              <div class="w-full h-6 pixel-border bg-surface relative overflow-hidden">
+                <div class="absolute top-0 left-0 h-full w-[15%] bg-tertiary-container flex justify-end"></div>
+              </div>
+            </div>
           </div>
-          <BaseProgressBar :progress="(item.spent / item.limit) * 100" />
-        </BaseCard>
+        </TangoCard>
       </div>
-      <div class="mt-md flex justify-center">
-        <BaseButton variant="outline">Adjust Budgets</BaseButton>
-      </div>
-    </section>
 
-    <!-- Recent Activity -->
-    <section>
-      <div class="flex justify-between items-center mb-md px-xs">
-        <h3 class="font-h2 text-h2 text-on-surface">Recent Activity</h3>
-        <button class="font-label-caps text-label-caps text-primary uppercase tracking-wide hover:text-primary-container transition-colors">
-          View All
-        </button>
-      </div>
-      <BaseCard class="p-0 overflow-hidden flex flex-col">
-        <div
-          v-for="(activity, index) in store.budget.recentActivity"
-          :key="activity.id"
-          :class="[
-            'min-h-touch-target flex items-center justify-between p-md active:bg-surface-container-low transition-colors cursor-pointer group relative overflow-hidden',
-            index !== store.budget.recentActivity.length - 1 ? 'border-b border-surface-variant/30' : ''
-          ]"
-        >
-          <div class="flex items-center gap-md">
-            <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
-              <BaseIcon :name="activity.icon" />
-            </div>
-            <div class="flex flex-col">
-              <span class="font-body-lg text-body-lg text-on-surface font-medium leading-tight mb-1">{{ activity.title }}</span>
-              <span class="font-label-caps text-label-caps text-outline uppercase">{{ activity.date }}</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-sm">
-            <span :class="['font-body-lg text-body-lg font-medium', activity.amount > 0 ? 'text-primary' : 'text-on-surface']">
-              {{ activity.amount > 0 ? '+' : '' }}${{ Math.abs(activity.amount).toFixed(2) }}
-            </span>
-            <BaseIcon name="chevron_right" class="text-outline-variant opacity-0 group-hover:opacity-100 transition-opacity" :size="18" />
-          </div>
+      <!-- Right Column: Recent Transactions & Add Action -->
+      <div class="md:col-span-5 flex flex-col gap-8 w-full">
+        <!-- Add Expense Success Message -->
+        <div class="bg-secondary-container text-on-secondary-container pixel-border-sm p-4 flex items-center gap-3 w-full">
+          <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+          <span class="text-label-sm uppercase">Expense 'Groceries' added successfully!</span>
         </div>
-      </BaseCard>
-    </section>
+
+        <!-- Recent Transactions List -->
+        <TangoCard padding="lg" shadow="default" class="flex-grow flex flex-col w-full">
+          <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
+            <h3 class="text-headline-lg text-on-surface">Recent</h3>
+            <TangoButton shadow="dark" size="sm">
+              <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">add</span>
+              ADD
+            </TangoButton>
+          </div>
+          <div class="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+            <div 
+              v-for="tx in transactions" 
+              :key="tx.id"
+              class="flex items-center justify-between p-3 hover:bg-surface-variant pixel-border-sm transition-colors cursor-pointer bg-surface"
+            >
+              <div class="flex items-center gap-4">
+                <div 
+                  class="w-10 h-10 flex items-center justify-center pixel-border-sm"
+                  :class="{
+                    'bg-secondary-container': tx.id === 1,
+                    'bg-primary-container': tx.id === 2,
+                    'bg-tertiary-fixed-dim': tx.id === 3,
+                    'bg-secondary-fixed': tx.id === 4,
+                  }"
+                >
+                  <span class="material-symbols-outlined text-on-surface">{{ tx.icon }}</span>
+                </div>
+                <div>
+                  <div class="text-body-md font-bold">{{ tx.name }}</div>
+                  <div class="text-label-sm text-outline mt-1 uppercase">{{ tx.date }}</div>
+                </div>
+              </div>
+              <div 
+                class="text-body-lg font-bold"
+                :class="tx.amount < 0 ? 'text-error' : 'text-secondary'"
+              >
+                {{ tx.amount < 0 ? '-' : '+' }}${{ Math.abs(tx.amount).toFixed(2) }}
+              </div>
+            </div>
+          </div>
+        </TangoCard>
+      </div>
+    </main>
   </div>
 </template>

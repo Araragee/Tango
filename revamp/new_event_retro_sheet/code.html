@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>New Event - Shared Calendar</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Space Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f6f3ee",
+                        "on-tertiary-fixed-variant": "#623c40",
+                        "tertiary-container": "#95696d",
+                        "surface-dim": "#dcdad5",
+                        "primary-container": "#b75662",
+                        "on-background": "#1c1c19",
+                        "outline": "#887273",
+                        "surface-variant": "#e5e2dd",
+                        "secondary": "#506354",
+                        "background": "#fcf9f4",
+                        "surface-container-highest": "#e5e2dd",
+                        "primary-fixed": "#ffdadb",
+                        "inverse-surface": "#31302d",
+                        "outline-variant": "#dac0c1",
+                        "on-primary-fixed-variant": "#7d2937",
+                        "inverse-primary": "#ffb2b9",
+                        "primary-fixed-dim": "#ffb2b9",
+                        "primary": "#983e4b",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#394b3d",
+                        "tertiary-fixed": "#ffdadc",
+                        "secondary-fixed": "#d3e8d5",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#d0e5d2",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#eeb9bd",
+                        "on-surface": "#1c1c19",
+                        "on-secondary-container": "#546758",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f4",
+                        "surface": "#fcf9f4",
+                        "on-primary-fixed": "#40000f",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#9b404d",
+                        "inverse-on-surface": "#f3f0eb",
+                        "surface-container": "#f0ede9",
+                        "on-secondary-fixed": "#0e1f13",
+                        "on-tertiary-fixed": "#301216",
+                        "secondary-fixed-dim": "#b7ccb9",
+                        "tertiary": "#7a5155",
+                        "surface-container-high": "#ebe8e3",
+                        "on-surface-variant": "#554243",
+                        "on-tertiary-container": "#fffbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "unit": "4px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "xl": "48px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "headline-lg": ["Space Grotesk"],
+                        "body-lg": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "body-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+        .sunken-input { border-top: 2px solid #e5e2dd; border-left: 2px solid #e5e2dd; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff; background-color: #f6f3ee; transition: all 0.1s ease; }
+        .sunken-input:focus { outline: 2px solid #1c1c19; outline-offset: -2px; background-color: #ffffff; }
+
+        /* Hide default date/time icons to replace with custom */
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-dither text-on-surface font-body-md min-h-screen flex justify-center items-start md:pt-8 pb-8">
+<!-- Main App Container (Mobile Width Constrained) -->
+<div class="w-full max-w-md bg-surface min-h-screen md:min-h-[850px] pixel-border hard-shadow-dark flex flex-col relative z-10">
+<!-- Task Header (Adapted from TopAppBar styling) -->
+<header class="flex justify-between items-center w-full px-4 h-16 bg-primary border-b-2 border-black sticky top-0 z-50">
+<button class="p-2 border-2 border-transparent hover:border-black active:bg-primary-container active:text-on-primary transition-colors flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">close</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-primary uppercase m-0">New Event</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Form Canvas -->
+<main class="flex-1 p-6 flex flex-col gap-6 mt-2">
+<!-- Event Title Input -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Event Title</label>
+<input class="sunken-input w-full px-4 py-3 font-headline-md text-headline-md placeholder:text-outline-variant placeholder:font-body-md" placeholder="e.g., Vet Appointment" type="text"/>
+</div>
+<!-- Date & Time Row -->
+<div class="grid grid-cols-2 gap-6">
+<!-- Date Input -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Date</label>
+<div class="relative w-full h-14">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface z-10 pointer-events-none">calendar_month</span>
+<input class="sunken-input absolute inset-0 w-full h-full pl-12 pr-3 font-body-md text-body-md font-bold text-on-surface" type="date" value="2023-11-15"/>
+</div>
+</div>
+<!-- Time Input -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Time</label>
+<div class="relative w-full h-14">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface z-10 pointer-events-none">schedule</span>
+<input class="sunken-input absolute inset-0 w-full h-full pl-12 pr-3 font-body-md text-body-md font-bold text-on-surface" type="time" value="14:30"/>
+</div>
+</div>
+</div>
+<!-- Location Input -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Location</label>
+<div class="relative w-full h-14">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface z-10 pointer-events-none">location_on</span>
+<input class="sunken-input absolute inset-0 w-full h-full pl-12 pr-3 font-body-md text-body-md placeholder:text-outline-variant" placeholder="Add location..." type="text"/>
+</div>
+</div>
+<!-- Joint Event Toggle Card -->
+<div class="mt-2 pixel-border bg-surface-container-low p-4 flex items-center justify-between hard-shadow">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary flex items-center justify-center pixel-border">
+<span class="material-symbols-outlined text-on-secondary" style="font-variation-settings: 'FILL' 1;">group</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase text-on-surface">Joint Event</span>
+<span class="font-body-md text-[14px] text-on-surface-variant">Sync to shared calendar</span>
+</div>
+</div>
+<!-- Retro Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-14 h-8 sunken-input peer-focus:outline-none peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-2 after:border-on-surface after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-6"></div>
+</label>
+</div>
+<!-- Notes Textarea -->
+<div class="flex flex-col gap-2 flex-1 mt-2">
+<label class="font-label-sm text-label-sm uppercase text-outline">Notes (Optional)</label>
+<textarea class="sunken-input w-full px-4 py-3 font-body-md text-body-md placeholder:text-outline-variant resize-none flex-1 min-h-[120px]" placeholder="Add details, packing list, or reminders..."></textarea>
+</div>
+</main>
+<!-- Sticky Action Bottom Area -->
+<div class="p-6 bg-surface border-t-2 border-black mt-auto">
+<button class="w-full bg-primary text-on-primary font-headline-md text-headline-md py-4 pixel-border hard-shadow-dark btn-active transition-transform uppercase tracking-widest flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_add_on</span>
+                Create Event
+            </button>
+</div>
+</div>
+</body></html>

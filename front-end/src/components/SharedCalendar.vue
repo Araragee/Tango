@@ -1,98 +1,107 @@
 <script setup lang="ts">
-import { useAppStore } from '../stores/useStore';
-import BaseCard from './Base/BaseCard.vue';
-import BaseIcon from './Base/BaseIcon.vue';
-
-const store = useAppStore();
+import TangoButton from './TangoButton.vue';
+import TangoCard from './TangoCard.vue';
 
 const days = Array.from({ length: 31 }, (_, i) => i + 1);
-const prevMonthDays = [24, 25, 26, 27, 28, 29, 30];
-const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-const hasEvent = (day: number) => {
-  if (day === 2) return ['secondary'];
-  if (day === 6) return ['primary'];
-  if (day === 8) return ['primary', 'secondary'];
-  if (day === 13) return ['secondary'];
-  if (day === 14) return ['primary'];
-  return [];
-};
+const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 </script>
 
 <template>
-  <div class="space-y-xl">
-    <!-- Calendar Grid Section -->
-    <BaseCard class="p-md overflow-hidden relative">
-      <!-- Header Controls -->
-      <div class="flex justify-between items-center mb-lg">
-        <h2 class="font-h2 text-h2 text-on-surface">{{ store.calendar.currentMonth }}</h2>
-        <div class="flex gap-xs">
-          <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low active:bg-surface-container-highest text-on-surface-variant transition-all duration-200 active:scale-95">
-            <BaseIcon name="chevron_left" />
-          </button>
-          <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low active:bg-surface-container-highest text-on-surface-variant transition-all duration-200 active:scale-95">
-            <BaseIcon name="chevron_right" />
-          </button>
+  <div class="max-w-4xl mx-auto space-y-lg py-12 w-full">
+    <!-- Header & Controls -->
+    <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md w-full">
+      <div>
+        <h2 class="text-headline-lg text-primary">October 1998</h2>
+        <p class="text-body-md text-on-surface-variant">Syncing with Alex</p>
+      </div>
+      <div class="flex gap-4 flex-wrap">
+        <TangoButton variant="surface" size="md" class="w-12 h-12">
+          <span class="material-symbols-outlined">chevron_left</span>
+        </TangoButton>
+        <TangoButton variant="surface" size="md" class="w-12 h-12">
+          <span class="material-symbols-outlined">chevron_right</span>
+        </TangoButton>
+        <TangoButton variant="primary" size="md" class="md:ml-4">
+          <span class="material-symbols-outlined">add</span>
+          New Event
+        </TangoButton>
+      </div>
+    </section>
+
+    <!-- Calendar Grid -->
+    <TangoCard padding="none" shadow="default" class="bg-surface-container-lowest p-1 w-full">
+      <div class="grid grid-cols-7 gap-xs text-center border-b-2 border-on-surface pb-sm mb-sm bg-surface">
+        <div v-for="day in weekDays" :key="day" class="text-label-sm text-on-surface uppercase">
+          {{ day }}
         </div>
       </div>
-
-      <!-- Days Header -->
-      <div class="grid grid-cols-7 gap-1 text-center mb-sm">
-        <div v-for="day in weekDays" :key="day" class="font-label-caps text-label-caps text-outline">{{ day }}</div>
-      </div>
-
-      <!-- Calendar Grid -->
-      <div class="grid grid-cols-7 gap-y-sm gap-x-1 text-center">
-        <!-- Previous Month -->
-        <div v-for="d in prevMonthDays" :key="'prev-'+d" class="py-2 font-body-md text-body-md text-outline/50 flex flex-col items-center justify-center h-12">
-          {{ d }}
-        </div>
-        <!-- Current Month -->
-        <div
-          v-for="d in days"
-          :key="d"
-          class="py-2 font-body-md text-body-md text-on-surface flex flex-col items-center justify-center h-12 cursor-pointer hover:bg-surface-container-low rounded-lg transition-all duration-150 active:scale-95 relative"
-          :class="{ 'font-button text-button text-on-primary bg-primary rounded-full w-10 h-10 mx-auto shadow-md ring-4 ring-primary-fixed/30': d === 12 }"
+      <!-- Grid Cells -->
+      <div class="grid grid-cols-7 gap-[1px] bg-surface-variant">
+        <!-- Empty Days -->
+        <div v-for="i in 3" :key="'empty-'+i" class="bg-surface-container-low min-h-[100px] p-xs"></div>
+        
+        <!-- Days -->
+        <div 
+          v-for="day in days" 
+          :key="day"
+          class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors"
+          :class="{ 'bg-primary-fixed-dim border-primary': day === 14 }"
         >
-          {{ d }}
-          <div v-if="d !== 12 && hasEvent(d).length > 0" class="flex items-center gap-[2px] mt-1">
-            <div v-for="type in hasEvent(d)" :key="type" :class="['w-1.5 h-1.5 rounded-full', type === 'primary' ? 'bg-primary' : 'bg-secondary']"></div>
+          <span class="text-label-sm text-on-surface" :class="{ 'font-bold': day === 14 }">{{ day }}</span>
+          
+          <!-- Example Events -->
+          <div v-if="day === 2" class="mt-xs bg-secondary-container text-on-secondary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none">
+            Rent Due
+          </div>
+          <div v-if="day === 7" class="mt-xs bg-primary-container text-on-primary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
+            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+            Date Night
+          </div>
+          <div v-if="day === 11" class="mt-xs bg-tertiary-container text-on-tertiary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
+            <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+            Budget Sync
           </div>
         </div>
       </div>
-    </BaseCard>
+    </TangoCard>
 
-    <!-- Upcoming Events -->
-    <section class="space-y-md">
-      <h3 class="font-h2 text-h2 text-on-surface px-1">Upcoming this week</h3>
-      <div class="space-y-sm">
-        <BaseCard
-          v-for="event in store.calendar.events"
-          :key="event.id"
-          class="p-md flex gap-md relative overflow-hidden active:scale-[0.98] hover:shadow-md transition-all duration-200 cursor-pointer group"
-        >
-          <div :class="['absolute left-0 top-0 bottom-0 w-1.5 transition-all', event.category === 'date' ? 'bg-primary' : 'bg-secondary']"></div>
-          <div class="flex flex-col items-center justify-center min-w-[50px] border-r border-outline-variant/20 pr-md">
-            <span :class="['font-label-caps text-label-caps', event.category === 'date' ? 'text-primary' : 'text-secondary']">OCT</span>
-            <span class="font-h2 text-h2 text-on-surface">{{ event.date.split('-')[2] }}</span>
-          </div>
-          <div class="flex-1 py-1">
-            <h4 class="font-button text-button text-on-surface">{{ event.title }}</h4>
-            <div class="flex items-center gap-1 mt-1 text-on-surface-variant">
-              <BaseIcon name="schedule" :size="14" />
-              <span class="font-body-md text-body-md text-sm">{{ event.time }}</span>
+    <!-- Upcoming Highlights Bento -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 w-full">
+      <TangoCard padding="lg" shadow="default" class="flex flex-col gap-4 w-full">
+        <div class="flex items-center gap-4 border-b border-on-surface pb-4">
+          <span class="material-symbols-outlined text-primary">notifications_active</span>
+          <h3 class="text-headline-md text-on-surface">Coming Up</h3>
+        </div>
+        <ul class="space-y-4">
+          <li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
+            <div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">7</div>
+            <div>
+              <p class="text-label-sm text-on-surface">Date Night: Pizza & Movies</p>
+              <p class="text-[12px] text-on-surface-variant">7:00 PM</p>
             </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <div class="flex -space-x-2">
-              <div v-for="p in event.partners" :key="p" :class="['w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold', p === 'P1' ? 'bg-primary' : 'bg-secondary']">
-                {{ p }}
-              </div>
+          </li>
+          <li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
+            <div class="w-8 h-8 bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">11</div>
+            <div>
+              <p class="text-label-sm text-on-surface">Monthly Budget Sync</p>
+              <p class="text-[12px] text-on-surface-variant">10:00 AM</p>
             </div>
-            <BaseIcon :name="event.icon" :size="20" :class="event.category === 'date' ? 'text-primary' : 'text-secondary'" />
+          </li>
+        </ul>
+      </TangoCard>
+
+      <TangoCard padding="lg" shadow="default" class="bg-secondary-container flex flex-col gap-4 justify-between relative overflow-hidden w-full">
+        <div class="absolute inset-0 bg-dither opacity-30 z-0"></div>
+        <div class="relative z-10">
+          <h3 class="text-headline-md text-on-secondary-container mb-2">Sync Score</h3>
+          <p class="text-body-md text-on-secondary-container">You and Alex are perfectly aligned this month. Keep it up!</p>
+        </div>
+        <div class="relative z-10 w-full bg-surface-container-lowest pixel-border h-6 mt-6">
+          <div class="h-full bg-secondary border-r border-on-surface w-[85%] flex items-center">
+            <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, #394b3d 25%, transparent 25%, transparent 75%, #394b3d 75%, #394b3d); background-position: 0 0, 4px 4px; background-size: 8px 8px;"></div>
           </div>
-        </BaseCard>
-      </div>
+        </div>
+      </TangoCard>
     </section>
   </div>
 </template>

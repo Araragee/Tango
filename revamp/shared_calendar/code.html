@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - Shared Calendar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#95696d",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1c1c19",
+                        "tertiary-fixed-dim": "#eeb9bd",
+                        "surface": "#fcf9f4",
+                        "error": "#ba1a1a",
+                        "tertiary": "#7a5155",
+                        "tertiary-fixed": "#ffdadc",
+                        "outline": "#887273",
+                        "on-primary-fixed": "#40000f",
+                        "on-tertiary-fixed": "#301216",
+                        "outline-variant": "#dac0c1",
+                        "surface-variant": "#e5e2dd",
+                        "surface-container": "#f0ede9",
+                        "surface-tint": "#9b404d",
+                        "on-secondary-fixed-variant": "#394b3d",
+                        "secondary-container": "#d0e5d2",
+                        "primary-container": "#b75662",
+                        "inverse-surface": "#31302d",
+                        "on-secondary-fixed": "#0e1f13",
+                        "on-tertiary-fixed-variant": "#623c40",
+                        "surface-dim": "#dcdad5",
+                        "primary-fixed-dim": "#ffb2b9",
+                        "primary-fixed": "#ffdadb",
+                        "on-background": "#1c1c19",
+                        "secondary-fixed": "#d3e8d5",
+                        "secondary": "#506354",
+                        "inverse-on-surface": "#f3f0eb",
+                        "secondary-fixed-dim": "#b7ccb9",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#554243",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "primary": "#983e4b",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#7d2937",
+                        "surface-bright": "#fcf9f4",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#ffb2b9",
+                        "surface-container-highest": "#e5e2dd",
+                        "on-tertiary-container": "#fffbff",
+                        "background": "#fcf9f4",
+                        "on-secondary-container": "#546758",
+                        "surface-container-high": "#ebe8e3",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f6f3ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "48px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Space Grotesk"],
+                        "body-md": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "headline-xl": ["Space Grotesk"],
+                        "headline-lg": ["Space Grotesk"],
+                        "body-lg": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+        .sunken-input { border-top: 2px solid #e5e2dd; border-left: 2px solid #e5e2dd; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff; background-color: #f6f3ee; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen relative font-body-md pb-[100px] pt-[80px]">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-[#FDFBF7] dark:bg-stone-900 border-b-2 border-black">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[#D8707C]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<h1 class="text-2xl font-black text-[#D8707C] tracking-[0.1em] font-headline-md italic uppercase">TANGO</h1>
+<div class="w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center">
+<img alt="Partner Profile" class="w-full h-full object-cover grayscale" data-alt="close up portrait of a young woman with warm lighting and soft background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARsylQHyCixmFuURzGboOIi2XZhcz6LszBOMsRrj0mHIBOVwbK7OC6-1_Sfr9Co3z21kxhd1SrVg1A935uvoXEcXSBl4MYBU8gyoH_IXWl2HYkyKBHmtBc1JDK7kT1dVjm5JPoKE5x-8I1SLQPoTY-gW2u4zqYo82IooaPfF4thuX_gVFL4GruyLjiyZrJmFf5ah6dy3TzGRsXrmmuwP6KvKi4P0BYddYpQrG8c2tl58hV9BFZGfKTDZnPIfsb1Hv5wk3hfHLP5iU"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-4xl mx-auto px-4 md:px-lg space-y-lg py-12">
+<!-- Header & Controls -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">October 1998</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Syncing with Alex</p>
+</div>
+<div class="flex gap-4 flex-wrap">
+<button class="w-12 h-12 bg-surface text-on-surface pixel-border hard-shadow btn-active flex items-center justify-center transition-transform">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-12 h-12 bg-surface text-on-surface pixel-border hard-shadow btn-active flex items-center justify-center transition-transform">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-3 transition-transform flex items-center gap-2 md:ml-4">
+<span class="material-symbols-outlined">add</span>
+                    New Event
+                </button>
+</div>
+</section>
+<!-- Calendar Grid -->
+<section class="bg-surface-container-lowest pixel-border p-xs hard-shadow">
+<div class="grid grid-cols-7 gap-xs text-center border-b-2 border-on-surface pb-sm mb-sm bg-surface">
+<div class="font-label-sm text-label-sm text-on-surface uppercase">SUN</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">MON</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">TUE</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">WED</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">THU</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">FRI</div>
+<div class="font-label-sm text-label-sm text-on-surface uppercase">SAT</div>
+</div>
+<!-- Grid Cells -->
+<div class="grid grid-cols-7 gap-[1px] bg-surface-variant">
+<!-- Empty Days -->
+<div class="bg-surface-container-low min-h-[100px] p-xs"></div>
+<div class="bg-surface-container-low min-h-[100px] p-xs"></div>
+<div class="bg-surface-container-low min-h-[100px] p-xs"></div>
+<!-- Day 1 -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">1</span>
+</div>
+<!-- Day 2 -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">2</span>
+<div class="mt-xs bg-secondary-container text-on-secondary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none">
+                        Rent Due
+                    </div>
+</div>
+<!-- Day 3 -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">3</span>
+</div>
+<!-- Day 4 -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">4</span>
+</div>
+<!-- Next Week -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">5</span>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">6</span>
+</div>
+<!-- Day 7 with Event -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">7</span>
+<div class="mt-xs bg-primary-container text-on-primary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        Date Night
+                    </div>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">8</span>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">9</span>
+</div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">10</span>
+</div>
+<!-- Day 11 with Event -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors">
+<span class="font-label-sm text-label-sm text-on-surface">11</span>
+<div class="mt-xs bg-tertiary-container text-on-tertiary-container text-[10px] p-[2px] pixel-border-sm font-bold truncate flex items-center gap-[2px] leading-none">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+                        Budget Sync
+                    </div>
+</div>
+<!-- Fill remaining grid roughly -->
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">12</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">13</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs bg-primary-fixed-dim border border-primary"><span class="font-label-sm text-label-sm text-on-surface font-bold">14</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">15</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">16</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">17</span></div>
+<div class="bg-surface-container-lowest min-h-[100px] p-xs"><span class="font-label-sm text-label-sm text-on-surface">18</span></div>
+</div>
+</section>
+<!-- Upcoming Highlights Bento -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+<div class="bg-surface-container-lowest pixel-border p-6 flex flex-col gap-4 hard-shadow">
+<div class="flex items-center gap-4 border-b border-on-surface pb-4">
+<span class="material-symbols-outlined text-primary">notifications_active</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Coming Up</h3>
+</div>
+<ul class="space-y-4">
+<li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
+<div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">7</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Date Night: Pizza &amp; Movies</p>
+<p class="font-body-md text-[12px] text-on-surface-variant">7:00 PM</p>
+</div>
+</li>
+<li class="flex items-center gap-4 bg-surface p-4 pixel-border-sm">
+<div class="w-8 h-8 bg-tertiary-container text-on-tertiary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">11</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Monthly Budget Sync</p>
+<p class="font-body-md text-[12px] text-on-surface-variant">10:00 AM</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="bg-secondary-container pixel-border p-6 flex flex-col gap-4 justify-between relative overflow-hidden hard-shadow">
+<div class="absolute inset-0 bg-dither opacity-30 z-0"></div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-headline-md text-on-secondary-container mb-2">Sync Score</h3>
+<p class="font-body-md text-body-md text-on-secondary-container">You and Alex are perfectly aligned this month. Keep it up!</p>
+</div>
+<div class="relative z-10 w-full bg-surface-container-lowest pixel-border h-6 mt-6">
+<div class="h-full bg-secondary border-r border-on-surface w-[85%] flex items-center">
+<div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, #394b3d 25%, transparent 25%, transparent 75%, #394b3d 75%, #394b3d); background-position: 0 0, 4px 4px; background-size: 8px 8px;"></div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 bg-on-surface/50 z-[100] flex items-center justify-center p-md">
+<!-- Dither edge transition -->
+<div class="absolute inset-0 bg-dither opacity-20"></div>
+<div class="bg-surface-container-lowest pixel-border hard-shadow p-8 max-w-sm w-full relative z-10 flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-secondary-container text-on-secondary-container rounded-full border-2 border-on-surface flex items-center justify-center mb-6 shadow-[2px_2px_0px_0px_#1c1c19]">
+<span class="material-symbols-outlined text-[24px]">check_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Event Added!</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 border-b border-surface-variant pb-6 w-full">"Groceries" has been added to the joint calendar.</p>
+<button class="bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-3 transition-transform w-full uppercase tracking-widest">
+                Awesome
+            </button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="md:hidden bg-[#FDFBF7] dark:bg-stone-900 border-t-2 border-black fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2">
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-tight mt-1">Budget</span>
+</button>
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">stars</span>
+<span class="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-tight mt-1">Goals</span>
+</button>
+<button class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">checklist_rtl</span>
+<span class="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-tight mt-1">To-Dos</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary text-on-primary p-2 pixel-border hard-shadow-dark active:scale-95 transition-transform">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-tight mt-1">Calendar</span>
+</button>
+</nav>
+</body></html>

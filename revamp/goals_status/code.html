@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - Goals</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#95696d",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#1c1c19",
+                      "tertiary-fixed-dim": "#eeb9bd",
+                      "surface": "#fcf9f4",
+                      "error": "#ba1a1a",
+                      "tertiary": "#7a5155",
+                      "tertiary-fixed": "#ffdadc",
+                      "outline": "#887273",
+                      "on-primary-fixed": "#40000f",
+                      "on-tertiary-fixed": "#301216",
+                      "outline-variant": "#dac0c1",
+                      "surface-variant": "#e5e2dd",
+                      "surface-container": "#f0ede9",
+                      "surface-tint": "#9b404d",
+                      "on-secondary-fixed-variant": "#394b3d",
+                      "secondary-container": "#d0e5d2",
+                      "primary-container": "#b75662",
+                      "inverse-surface": "#31302d",
+                      "on-secondary-fixed": "#0e1f13",
+                      "on-tertiary-fixed-variant": "#623c40",
+                      "surface-dim": "#dcdad5",
+                      "primary-fixed-dim": "#ffb2b9",
+                      "primary-fixed": "#ffdadb",
+                      "on-background": "#1c1c19",
+                      "secondary-fixed": "#d3e8d5",
+                      "secondary": "#506354",
+                      "inverse-on-surface": "#f3f0eb",
+                      "secondary-fixed-dim": "#b7ccb9",
+                      "on-tertiary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "on-surface-variant": "#554243",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#fffbff",
+                      "primary": "#983e4b",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#7d2937",
+                      "surface-bright": "#fcf9f4",
+                      "on-primary": "#ffffff",
+                      "inverse-primary": "#ffb2b9",
+                      "surface-container-highest": "#e5e2dd",
+                      "on-tertiary-container": "#fffbff",
+                      "background": "#fcf9f4",
+                      "on-secondary-container": "#546758",
+                      "surface-container-high": "#ebe8e3",
+                      "error-container": "#ffdad6",
+                      "surface-container-low": "#f6f3ee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "48px",
+                      "md": "16px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "unit": "4px",
+                      "sm": "8px",
+                      "margin": "20px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "body-md": [
+                              "Space Grotesk"
+                      ],
+                      "label-sm": [
+                              "Space Grotesk"
+                      ],
+                      "headline-xl": [
+                              "Space Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Space Grotesk"
+                      ],
+                      "body-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      }
+              }
+            },
+          }
+    </script>
+<style>
+        body {
+            background-image: radial-gradient(#dac0c1 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+        
+        .dither-progress {
+            background-image: 
+                linear-gradient(45deg, #b75662 25%, transparent 25%, transparent 75%, #b75662 75%, #b75662),
+                linear-gradient(45deg, #b75662 25%, transparent 25%, transparent 75%, #b75662 75%, #b75662);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+        }
+
+        .dither-progress-green {
+            background-image: 
+                linear-gradient(45deg, #506354 25%, transparent 25%, transparent 75%, #506354 75%, #506354),
+                linear-gradient(45deg, #506354 25%, transparent 25%, transparent 75%, #506354 75%, #506354);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+        }
+
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .pixel-shadow-green { box-shadow: 4px 4px 0px 0px #506354; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pt-[80px] pb-[100px] selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#FFFDF5] dark:bg-stone-950 border-b-2 border-black dark:border-white shadow-[0_4px_0px_0px_rgba(216,112,124,1)] font-['Space_Grotesk'] font-bold uppercase tracking-tighter">
+<button aria-label="Menu" class="flex items-center justify-center w-10 h-10 pixel-border bg-surface btn-active hard-shadow-dark">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+<h1 class="text-2xl font-black text-[#D8707C] tracking-[0.1em]">TANGO</h1>
+<button aria-label="Profile" class="flex items-center justify-center w-10 h-10 pixel-border bg-surface btn-active hard-shadow-dark overflow-hidden">
+<img alt="Partner Profile" class="w-full h-full object-cover" data-alt="Pixel art style close up portrait of a young woman with short hair against a warm pink background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj31XTvk3e40Lb3nTb4USM7nGzSxWFOUV9Foq0UWkh2jiUXyVkUojO46StI3JT85itZ3GSmfz6O-VX2k9wJPxROoMJPvh1E0REcCJrGuC5V16dhvvA4u31V8ZYB3b9wsSf3Ft5aLDCXxoahwS8G4TZYsvcAC-jaamIiS6YpsAglE0AgRq2jeugxUIcgxGYd2ijtUlGZmJS_-Wm-Tscx4yEFH6BzcnQBIR6LGvP8dPR9UWOElYC4Dr5YEx6FsdRrIoptJ1VkGa0oOI"/>
+</button>
+</header>
+<main class="max-w-4xl mx-auto px-margin space-y-xl">
+<!-- Header Section -->
+<section class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-lg gap-6">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface">Your Goals</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Keep tracking, you're doing great!</p>
+</div>
+<button class="bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-label-sm text-label-sm px-6 py-3 transition-transform flex items-center gap-2 uppercase">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                New Goal
+            </button>
+</section>
+<!-- Long Term Goals -->
+<section class="space-y-lg mt-xl">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-tertiary-container" style="font-variation-settings: 'FILL' 1;">flight_takeoff</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Long-term</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Goal Card 1 -->
+<article class="bg-surface pixel-border hard-shadow p-lg flex flex-col gap-sm relative">
+<div class="absolute top-0 right-0 bg-secondary-container border-l-2 border-b-2 border-black px-md py-sm font-label-sm text-label-sm text-on-secondary-container z-10">
+                        On Track
+                    </div>
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center pt-8 gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface pr-4">Europe Trip</h4>
+<span class="font-body-md text-body-md font-bold text-primary-container whitespace-nowrap">$4,500 / $6,000</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Summer 2024 Backpacking</p>
+<div class="w-full h-6 pixel-border bg-surface-variant relative my-lg">
+<div class="h-full bg-primary-container w-[75%] flex justify-end">
+<div class="w-4 h-full dither-progress"></div>
+</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-outline mt-xs">
+<span>Started: Jan 2023</span>
+<span>75%</span>
+</div>
+</article>
+<!-- Goal Card 2 -->
+<article class="bg-surface pixel-border hard-shadow p-lg flex flex-col gap-sm relative">
+<div class="absolute top-0 right-0 bg-surface-variant border-l-2 border-b-2 border-black px-md py-sm font-label-sm text-label-sm text-on-surface-variant z-10">
+                        Needs Attention
+                    </div>
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center pt-8 gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface pr-4">House Downpayment</h4>
+<span class="font-body-md text-body-md font-bold text-primary-container whitespace-nowrap">$12,000 / $40,000</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">The Dream Home Fund</p>
+<div class="w-full h-6 pixel-border bg-surface-variant relative my-lg">
+<div class="h-full bg-primary-container w-[30%] flex justify-end">
+<div class="w-4 h-full dither-progress"></div>
+</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-outline mt-xs">
+<span>Started: Mar 2022</span>
+<span>30%</span>
+</div>
+</article>
+</div>
+</section>
+<!-- Short Term Goals -->
+<section class="space-y-lg mt-xl">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Short-term</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<!-- Goal Card 3 -->
+<article class="bg-surface pixel-border pixel-shadow-green p-lg flex flex-col gap-sm relative">
+<div class="absolute top-0 right-0 bg-secondary border-l-2 border-b-2 border-black px-md py-sm font-label-sm text-label-sm text-on-secondary z-10">
+                        Goal Reached!
+                    </div>
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center pt-8 gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface line-through decoration-2 pr-4">New Sofa</h4>
+<span class="font-body-md text-body-md font-bold text-secondary whitespace-nowrap">$800 / $800</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Living room upgrade</p>
+<div class="w-full h-6 pixel-border bg-surface-variant relative my-lg">
+<div class="h-full bg-secondary w-[100%] flex justify-end">
+<!-- No leading edge needed for completed -->
+</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-outline mt-xs">
+<span>Completed: Oct 2023</span>
+<span>100%</span>
+</div>
+</article>
+<!-- Goal Card 4 -->
+<article class="bg-surface pixel-border pixel-shadow-green p-lg flex flex-col gap-sm relative">
+<div class="absolute top-0 right-0 bg-secondary-container border-l-2 border-b-2 border-black px-md py-sm font-label-sm text-label-sm text-on-secondary-container z-10">
+                        On Track
+                    </div>
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center pt-8 gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface pr-4">New Laptop</h4>
+<span class="font-body-md text-body-md font-bold text-secondary whitespace-nowrap">$900 / $1,200</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Work &amp; Play Machine</p>
+<div class="w-full h-6 pixel-border bg-surface-variant relative my-lg">
+<div class="h-full bg-secondary w-[75%] flex justify-end">
+<div class="w-4 h-full dither-progress-green"></div>
+</div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-outline mt-xs">
+<span>Started: Aug 2023</span>
+<span>75%</span>
+</div>
+</article>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-[#FFFDF5] dark:bg-stone-950 border-t-2 border-black dark:border-white shadow-[0_-4px_0px_0px_rgba(216,112,124,1)] font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-tight md:hidden">
+<button class="flex flex-col items-center justify-center text-black dark:text-white p-2 opacity-70 hover:bg-[#FCE7E9] dark:hover:bg-stone-800 active:translate-y-0 active:shadow-none transition-all duration-75 w-16">
+<span class="material-symbols-outlined mb-1">payments</span>
+<span>Budget</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-[#D8707C] text-white border-2 border-black -translate-y-2 shadow-[4px_4px_0px_0px_#000] p-2 hover:bg-[#FCE7E9] dark:hover:bg-stone-800 active:translate-y-0 active:shadow-none transition-all duration-75 w-16">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span>Goals</span>
+</button>
+<button class="flex flex-col items-center justify-center text-black dark:text-white p-2 opacity-70 hover:bg-[#FCE7E9] dark:hover:bg-stone-800 active:translate-y-0 active:shadow-none transition-all duration-75 w-16">
+<span class="material-symbols-outlined mb-1">checklist_rtl</span>
+<span>To-Dos</span>
+</button>
+<button class="flex flex-col items-center justify-center text-black dark:text-white p-2 opacity-70 hover:bg-[#FCE7E9] dark:hover:bg-stone-800 active:translate-y-0 active:shadow-none transition-all duration-75 w-16">
+<span class="material-symbols-outlined mb-1">calendar_month</span>
+<span>Calendar</span>
+</button>
+</nav>
+</body></html>

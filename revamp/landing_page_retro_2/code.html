@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - Partner App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-container": "#546758",
+                      "on-surface-variant": "#554243",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#95696d",
+                      "surface-variant": "#e5e2dd",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed": "#ffdadc",
+                      "surface-bright": "#fcf9f4",
+                      "inverse-surface": "#31302d",
+                      "secondary-container": "#d0e5d2",
+                      "inverse-primary": "#ffb2b9",
+                      "on-secondary-fixed-variant": "#394b3d",
+                      "on-background": "#1c1c19",
+                      "tertiary-fixed-dim": "#eeb9bd",
+                      "on-error-container": "#93000a",
+                      "on-secondary-fixed": "#0e1f13",
+                      "surface-container-low": "#f6f3ee",
+                      "outline-variant": "#dac0c1",
+                      "primary-container": "#b75662",
+                      "primary": "#983e4b",
+                      "surface-dim": "#dcdad5",
+                      "surface-tint": "#9b404d",
+                      "on-primary": "#ffffff",
+                      "surface-container-high": "#ebe8e3",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#1c1c19",
+                      "primary-fixed": "#ffdadb",
+                      "on-tertiary-container": "#fffbff",
+                      "secondary-fixed": "#d3e8d5",
+                      "tertiary": "#7a5155",
+                      "primary-fixed-dim": "#ffb2b9",
+                      "on-primary-fixed-variant": "#7d2937",
+                      "surface": "#fcf9f4",
+                      "on-tertiary-fixed": "#301216",
+                      "outline": "#887273",
+                      "on-primary-container": "#fffbff",
+                      "on-tertiary-fixed-variant": "#623c40",
+                      "surface-container": "#f0ede9",
+                      "surface-container-highest": "#e5e2dd",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#f3f0eb",
+                      "background": "#fcf9f4",
+                      "on-primary-fixed": "#40000f",
+                      "secondary": "#506354",
+                      "on-secondary": "#ffffff",
+                      "secondary-fixed-dim": "#b7ccb9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "margin": "20px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "gutter": "16px",
+                      "xl": "48px",
+                      "lg": "24px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Space Grotesk"
+                      ],
+                      "label-sm": [
+                              "Space Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Space Grotesk"
+                      ],
+                      "headline-xl": [
+                              "Space Grotesk"
+                      ],
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "body-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .pixel-bg {
+            background-image: radial-gradient(var(--tw-colors-outline-variant) 1px, transparent 0);
+            background-size: 8px 8px;
+        }
+        .dither-bg {
+            background-image: repeating-linear-gradient(45deg, var(--tw-colors-surface-container-high) 25%, transparent 25%, transparent 75%, var(--tw-colors-surface-container-high) 75%, var(--tw-colors-surface-container-high)), repeating-linear-gradient(45deg, var(--tw-colors-surface-container-high) 25%, var(--tw-colors-surface) 25%, var(--tw-colors-surface) 75%, var(--tw-colors-surface-container-high) 75%, var(--tw-colors-surface-container-high));
+            background-position: 0 0, 4px 4px;
+            background-size: 8px 8px;
+        }
+        .retro-shadow {
+            box-shadow: 4px 4px 0px 0px var(--tw-colors-primary);
+        }
+        .retro-shadow-green {
+            box-shadow: 4px 4px 0px 0px var(--tw-colors-secondary);
+        }
+        .retro-shadow:active, .retro-shadow-green:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background pixel-bg min-h-screen flex flex-col font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation (Suppressed on Landing Page intent) -->
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center p-gutter md:p-xl w-full max-w-5xl mx-auto space-y-xl">
+<!-- Hero Section -->
+<section class="w-full flex flex-col items-center text-center space-y-lg border-2 border-on-background bg-surface p-xl relative">
+<div class="absolute -top-4 -left-4 w-8 h-8 bg-primary border-2 border-on-background flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary font-bold text-[16px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<div class="absolute -bottom-4 -right-4 w-8 h-8 bg-secondary border-2 border-on-background flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary font-bold text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div class="w-24 h-24 mb-md">
+<img alt="Pixel art heart logo" class="w-full h-full object-contain pixelated" data-alt="8-bit style pixel art heart in vibrant rosy red with thick black outline on a cream background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXMeis2x07XcmMrmbOrUiWItb2qDv-knp15g3phlyOfMqszjAOFKh4d72WeDsfYpRXvrkxEyp0Gb0Qp80fSRZRLJ-Lf4feWaSfXJOoz_lZdjtPJVCU9USFK7PjMECMCu0XxoWQ9zsVBpqW6lfB2r50aoriuDG_5zI_IMiBNvGTmemI198u5U2N1q5fl7im-f6Ysp7pGttdr8m6hP4VuOjWrkzhB7aUBuZPxMPld_gfJDpkTzpIZbj_F6Lysop1fCeA7FkZhIY-V6E" style="image-rendering: pixelated;"/>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary tracking-tighter italic">Tango</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">Your shared life, pixel perfectly organized.</p>
+<div class="pt-md">
+<button class="bg-surface text-primary border-2 border-on-background px-lg py-sm font-label-sm text-label-sm uppercase retro-shadow transition-all">
+                    Start Your Journey
+                </button>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="w-full grid grid-cols-1 md:grid-cols-2 gap-md md:gap-lg">
+<!-- Feature 1 -->
+<div class="bg-surface border-2 border-on-background flex flex-col h-full retro-shadow-green">
+<div class="bg-secondary text-on-secondary p-sm border-b-2 border-on-background font-label-sm text-label-sm uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">event_note</span>
+                    Shared Calendar
+                </div>
+<div class="p-md flex-grow dither-bg flex flex-col items-center justify-center text-center">
+<p class="font-body-md text-body-md text-on-background bg-surface border border-on-background p-sm">Never double-book date night again.</p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="bg-surface border-2 border-on-background flex flex-col h-full retro-shadow">
+<div class="bg-primary text-on-primary p-sm border-b-2 border-on-background font-label-sm text-label-sm uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    Budgeting
+                </div>
+<div class="p-md flex-grow flex flex-col space-y-sm bg-surface-container-low">
+<div class="w-full border border-on-background h-4 bg-surface relative">
+<div class="absolute top-0 left-0 h-full bg-primary w-2/3 border-r border-on-background"></div>
+<div class="absolute top-0 left-2/3 h-full w-8 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjOTgzZTRiIi8+CjxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiM5ODNlNGIiLz4KPC9zdmc+')]"></div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm text-center">Shared goals, tracked together.</p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="bg-surface border-2 border-on-background flex flex-col h-full retro-shadow-green md:col-span-2">
+<div class="bg-secondary text-on-secondary p-sm border-b-2 border-on-background font-label-sm text-label-sm uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">check_box</span>
+                    To-Dos
+                </div>
+<div class="p-md flex-grow flex flex-col sm:flex-row gap-md items-center justify-between">
+<div class="space-y-xs w-full sm:w-1/2">
+<div class="flex items-center gap-2 p-xs border-b border-on-background border-dashed">
+<div class="w-4 h-4 border border-on-background flex items-center justify-center bg-surface-container-high"></div>
+<span class="font-body-md text-body-md text-on-background">Groceries</span>
+</div>
+<div class="flex items-center gap-2 p-xs border-b border-on-background border-dashed opacity-50">
+<div class="w-4 h-4 border border-on-background flex items-center justify-center bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[12px] font-bold">check</span>
+</div>
+<span class="font-body-md text-body-md text-on-background line-through">Walk the dog</span>
+</div>
+</div>
+<div class="w-full sm:w-1/2 bg-surface-container-high p-sm border border-on-background font-body-md text-body-md text-center">
+                        Keep track of the little things.
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation (Suppressed on Landing Page intent) -->
+</body></html>

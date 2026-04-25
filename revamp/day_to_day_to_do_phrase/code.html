@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - To-Dos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#95696d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#1c1c19",
+                    "tertiary-fixed-dim": "#eeb9bd",
+                    "surface": "#fcf9f4",
+                    "error": "#ba1a1a",
+                    "tertiary": "#7a5155",
+                    "tertiary-fixed": "#ffdadc",
+                    "outline": "#887273",
+                    "on-primary-fixed": "#40000f",
+                    "on-tertiary-fixed": "#301216",
+                    "outline-variant": "#dac0c1",
+                    "surface-variant": "#e5e2dd",
+                    "surface-container": "#f0ede9",
+                    "surface-tint": "#9b404d",
+                    "on-secondary-fixed-variant": "#394b3d",
+                    "secondary-container": "#d0e5d2",
+                    "primary-container": "#b75662",
+                    "inverse-surface": "#31302d",
+                    "on-secondary-fixed": "#0e1f13",
+                    "on-tertiary-fixed-variant": "#623c40",
+                    "surface-dim": "#dcdad5",
+                    "primary-fixed-dim": "#ffb2b9",
+                    "primary-fixed": "#ffdadb",
+                    "on-background": "#1c1c19",
+                    "secondary-fixed": "#d3e8d5",
+                    "secondary": "#506354",
+                    "inverse-on-surface": "#f3f0eb",
+                    "secondary-fixed-dim": "#b7ccb9",
+                    "on-tertiary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#554243",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#fffbff",
+                    "primary": "#983e4b",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#7d2937",
+                    "surface-bright": "#fcf9f4",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#ffb2b9",
+                    "surface-container-highest": "#e5e2dd",
+                    "on-tertiary-container": "#fffbff",
+                    "background": "#fcf9f4",
+                    "on-secondary-container": "#546758",
+                    "surface-container-high": "#ebe8e3",
+                    "error-container": "#ffdad6",
+                    "surface-container-low": "#f6f3ee"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "gutter": "16px",
+                    "unit": "4px",
+                    "sm": "8px",
+                    "margin": "20px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "headline-md": [
+                            "Space Grotesk"
+                    ],
+                    "body-md": [
+                            "Space Grotesk"
+                    ],
+                    "label-sm": [
+                            "Space Grotesk"
+                    ],
+                    "headline-xl": [
+                            "Space Grotesk"
+                    ],
+                    "headline-lg": [
+                            "Space Grotesk"
+                    ],
+                    "body-lg": [
+                            "Space Grotesk"
+                    ]
+            },
+            "fontSize": {
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.0",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-xl": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.1",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+        }
+      }
+    </script>
+<style>
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .hard-shadow-green { box-shadow: 4px 4px 0px 0px #506354; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        
+        .bg-dither { 
+            background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), 
+                              repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); 
+            background-position: 0 0, 4px 4px; 
+            background-size: 8px 8px; 
+        }
+        
+        .bg-dither-rose { 
+            background-image: repeating-linear-gradient(45deg, #ffdadb 25%, transparent 25%, transparent 75%, #ffdadb 75%, #ffdadb), 
+                              repeating-linear-gradient(45deg, #ffdadb 25%, #fcf9f4 25%, #fcf9f4 75%, #ffdadb 75%, #ffdadb); 
+            background-position: 0 0, 4px 4px; 
+            background-size: 8px 8px; 
+        }
+
+        .sunken-input { 
+            border-top: 2px solid #e5e2dd; 
+            border-left: 2px solid #e5e2dd; 
+            border-bottom: 1px solid #ffffff; 
+            border-right: 1px solid #ffffff; 
+            background-color: #f6f3ee; 
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen pb-32 pt-20 bg-dither">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 h-16 bg-[#FDFBF7] dark:bg-stone-900 border-b-2 border-black">
+<div class="flex items-center gap-4">
+<button class="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-stone-600 dark:text-stone-400 p-2">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<h1 class="text-2xl font-black text-[#D8707C] italic dark:text-rose-300 font-headline-md tracking-widest uppercase">TANGO</h1>
+<div class="flex items-center">
+<div class="w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden">
+<img alt="Partner Profile" class="w-full h-full object-cover grayscale" data-alt="close up portrait of a smiling young woman with short dark hair in bright daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAchx1iYwUBHxek0hetz0Xc0FxM5lc1aUEUUq6-5KR2nCd73kN2YVyLSZ2m7N3qzf0j-y57mcej28P0_G2NEHjFfqJFhyxJLqxWWQZ0F-AqACLosvkQOOnUr5ruUQmf8xcTV4IG3haZ4ilY66Or-9B6xJ7_yb2fuPKQcV9T3AqB0LvGgsp2-LeEEW3GIHav-rdc56-WMgOEM8McUBZe0ylcrGPixH6qEAzNIneXVM9dd1wC58N9WXUWCcppw8am1h53pNiXUsgtOtE"/>
+</div>
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 flex flex-col gap-8">
+<!-- Phrase of the Day Card -->
+<div class="pixel-border bg-surface p-6 hard-shadow-green relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-dither-rose opacity-50 border-l-2 border-b-2 border-on-surface"></div>
+<div class="flex items-center gap-2 mb-4 relative z-10">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">local_florist</span>
+<h2 class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Phrase of the Day</h2>
+</div>
+<p class="font-headline-md text-headline-md text-on-surface relative z-10">"Grow together, one pixel at a time."</p>
+</div>
+<!-- Task List Container -->
+<div class="flex flex-col gap-4">
+<div class="flex justify-between items-end mb-2 border-b-2 border-on-background pb-2">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Shared To-Dos</h2>
+<span class="bg-primary-container text-on-primary-container pixel-border-sm font-label-sm text-label-sm px-3 py-1 uppercase">2 / 5</span>
+</div>
+<!-- Task Items -->
+<label class="bg-surface pixel-border p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-low transition-colors hard-shadow">
+<div class="w-6 h-6 sunken-input flex items-center justify-center bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+<div class="flex flex-col flex-grow">
+<span class="font-body-lg text-body-lg text-on-surface-variant line-through">Groceries at Trader Joe's</span>
+<span class="font-label-sm text-label-sm text-outline uppercase mt-1">Assigned: Both</span>
+</div>
+</label>
+<label class="bg-surface pixel-border p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-low transition-colors hard-shadow">
+<div class="w-6 h-6 sunken-input flex items-center justify-center bg-primary text-on-primary">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+<div class="flex flex-col flex-grow">
+<span class="font-body-lg text-body-lg text-on-surface-variant line-through">Pay electric bill</span>
+<span class="font-label-sm text-label-sm text-outline uppercase mt-1">Assigned: Alex</span>
+</div>
+</label>
+<label class="bg-surface pixel-border p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-low transition-colors hard-shadow">
+<div class="w-6 h-6 sunken-input"></div>
+<div class="flex flex-col flex-grow">
+<span class="font-body-lg text-body-lg text-on-surface">Walk the dog (long route)</span>
+<span class="font-label-sm text-label-sm text-outline uppercase mt-1">Assigned: Sam</span>
+</div>
+<span class="bg-primary-container text-on-primary-container pixel-border-sm font-label-sm text-label-sm px-3 py-1 uppercase">High</span>
+</label>
+<label class="bg-surface pixel-border p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-low transition-colors hard-shadow">
+<div class="w-6 h-6 sunken-input"></div>
+<div class="flex flex-col flex-grow">
+<span class="font-body-lg text-body-lg text-on-surface">Call landlord about sink</span>
+<span class="font-label-sm text-label-sm text-outline uppercase mt-1">Assigned: Alex</span>
+</div>
+</label>
+<label class="bg-surface pixel-border p-4 flex items-center gap-4 cursor-pointer hover:bg-surface-container-low transition-colors hard-shadow">
+<div class="w-6 h-6 sunken-input"></div>
+<div class="flex flex-col flex-grow">
+<span class="font-body-lg text-body-lg text-on-surface">Plan weekend trip</span>
+<span class="font-label-sm text-label-sm text-outline uppercase mt-1">Assigned: Both</span>
+</div>
+</label>
+</div>
+<!-- Add Task Area -->
+<div class="mt-4 bg-surface p-6 pixel-border hard-shadow">
+<label class="font-label-sm text-label-sm mb-4 block uppercase text-outline">Add New Task</label>
+<div class="flex flex-col gap-4">
+<input class="w-full sunken-input px-4 py-3 font-body-md text-body-md focus:outline-none focus:ring-0" placeholder="What needs doing?" type="text"/>
+<div class="flex justify-between items-center mt-2">
+<div class="flex gap-2">
+<button class="bg-surface-variant text-on-surface-variant pixel-border-sm font-label-sm text-label-sm px-3 py-1 hover:bg-surface-dim transition-colors uppercase">Both</button>
+<button class="bg-surface-variant text-on-surface-variant pixel-border-sm font-label-sm text-label-sm px-3 py-1 hover:bg-surface-dim transition-colors uppercase">Alex</button>
+<button class="bg-surface-variant text-on-surface-variant pixel-border-sm font-label-sm text-label-sm px-3 py-1 hover:bg-surface-dim transition-colors uppercase">Sam</button>
+</div>
+<button class="bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-2 transition-transform uppercase">Add</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden bg-[#FDFBF7] dark:bg-stone-900 border-t-2 border-black fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2">
+<a class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">payments</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase tracking-tight">Budget</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">stars</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase tracking-tight">Goals</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#D8707C] text-white p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:scale-95 transition-transform -translate-y-4" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">checklist_rtl</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase tracking-tight">To-Dos</span>
+</a>
+<a class="flex flex-col items-center justify-center text-stone-600 dark:text-stone-400 p-2 hover:bg-rose-50 dark:hover:bg-stone-800 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1">calendar_month</span>
+<span class="font-['Space_Grotesk'] text-[12px] font-bold uppercase tracking-tight">Calendar</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Transaction Detail - Tango</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-bright": "#fcf9f4",
+                      "tertiary": "#7a5155",
+                      "on-primary-fixed-variant": "#7d2937",
+                      "surface-container-low": "#f6f3ee",
+                      "on-surface-variant": "#554243",
+                      "on-error-container": "#93000a",
+                      "on-surface": "#1c1c19",
+                      "surface-container-highest": "#e5e2dd",
+                      "secondary-fixed": "#d3e8d5",
+                      "on-primary": "#ffffff",
+                      "primary": "#983e4b",
+                      "background": "#fcf9f4",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#dac0c1",
+                      "surface-container-high": "#ebe8e3",
+                      "primary-fixed": "#ffdadb",
+                      "error": "#ba1a1a",
+                      "outline": "#887273",
+                      "on-secondary-fixed": "#0e1f13",
+                      "surface-container": "#f0ede9",
+                      "on-tertiary-container": "#fffbff",
+                      "on-secondary-container": "#546758",
+                      "primary-container": "#b75662",
+                      "surface-variant": "#e5e2dd",
+                      "on-background": "#1c1c19",
+                      "surface-dim": "#dcdad5",
+                      "secondary-container": "#d0e5d2",
+                      "inverse-surface": "#31302d",
+                      "surface-tint": "#9b404d",
+                      "primary-fixed-dim": "#ffb2b9",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#301216",
+                      "secondary-fixed-dim": "#b7ccb9",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#f3f0eb",
+                      "on-secondary-fixed-variant": "#394b3d",
+                      "on-primary-fixed": "#40000f",
+                      "tertiary-fixed-dim": "#eeb9bd",
+                      "on-tertiary-fixed-variant": "#623c40",
+                      "surface": "#fcf9f4",
+                      "tertiary-container": "#95696d",
+                      "secondary": "#506354",
+                      "tertiary-fixed": "#ffdadc",
+                      "on-primary-container": "#fffbff",
+                      "inverse-primary": "#ffb2b9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "unit": "4px",
+                      "margin": "20px",
+                      "xl": "48px",
+                      "xs": "4px",
+                      "md": "16px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Space Grotesk"
+                      ],
+                      "label-sm": [
+                              "Space Grotesk"
+                      ],
+                      "headline-md": [
+                              "Space Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Space Grotesk"
+                      ],
+                      "headline-xl": [
+                              "Space Grotesk"
+                      ],
+                      "body-lg": [
+                              "Space Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+        .sunken-input { border-top: 2px solid #e5e2dd; border-left: 2px solid #e5e2dd; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff; background-color: #f6f3ee; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md bg-dither min-h-screen">
+<!-- TopAppBar from JSON -->
+<header class="bg-surface border-b-2 border-black flex justify-between items-center w-full px-6 py-4 max-w-full sticky top-0 z-40">
+<button class="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-on-surface p-2">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<h1 class="text-2xl font-black text-primary italic font-headline-md m-0">TANGO</h1>
+<button class="hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none text-on-surface p-2">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-md mx-auto p-gutter pt-8 pb-24">
+<!-- Task Navigation -->
+<button class="mb-lg flex items-center gap-2 bg-surface text-on-surface pixel-border hard-shadow btn-active font-label-sm text-label-sm font-bold px-4 py-2 transition-transform uppercase">
+<span class="material-symbols-outlined" style="font-size: 16px;">arrow_back</span>
+            Back to Budget
+        </button>
+<!-- Receipt Card -->
+<article class="bg-surface pixel-border p-6 sm:p-8 relative overflow-hidden hard-shadow">
+<!-- Receipt Header -->
+<div class="text-center mb-6">
+<h2 class="font-headline-lg text-headline-lg font-black uppercase tracking-tight text-on-surface mb-1">Pizza Night</h2>
+<p class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Luigi's Pizzeria</p>
+</div>
+<div class="border-b-2 border-dashed border-outline mb-6"></div>
+<!-- Amount Focus -->
+<div class="text-center mb-6">
+<p class="font-label-sm text-label-sm text-outline uppercase mb-2">Total Paid</p>
+<div class="font-headline-xl text-headline-xl font-black text-primary tracking-tighter">
+                    $45.50
+                </div>
+</div>
+<div class="border-b-2 border-dashed border-outline mb-6"></div>
+<!-- Line Items -->
+<ul class="space-y-4 mb-8">
+<li class="flex justify-between items-center border-b border-surface-variant pb-2">
+<span class="font-label-sm text-label-sm text-outline uppercase">Date</span>
+<span class="font-body-md text-body-md font-bold text-on-surface">Oct 24, 2023</span>
+</li>
+<li class="flex justify-between items-center border-b border-surface-variant pb-2">
+<span class="font-label-sm text-label-sm text-outline uppercase">Category</span>
+<span class="bg-secondary-container text-on-secondary-container pixel-border-sm font-label-sm text-label-sm px-3 py-1 uppercase flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">restaurant</span>
+                        Dining
+                    </span>
+</li>
+<li class="flex justify-between items-center pb-2">
+<span class="font-label-sm text-label-sm text-outline uppercase">Payer</span>
+<span class="font-body-md text-body-md font-bold text-on-surface flex items-center gap-2">
+<img alt="Alex's avatar" class="w-6 h-6 pixel-border object-cover" data-alt="close-up pixel art style portrait of a young man with short dark hair against a warm background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCL3wUUtAdZ5tk7V9nlmxz9FyRBuWsqMtvjVwEAhyEHQ-9emtKWFmhUAbpbLarYd5QuTGA0l1ch_bygHEqqu_z74eLFrC3RlgyAMArvaL8IBcfoBc7ZLp-lB9cJZnbBxWZiPDKjqvJ7siOZF_BwkWrXvvDCnGGth-t73gX7H-0KRWlJtSs03nr6z_Z8_drdq-wHw4NmPFmVX0QQbJhN_nLhgi7t3xhfgFJhvnMWZE6KoGt9jaufAoEkkviKxZ_peK_iZlnBa-cTCHU"/>
+                        Alex
+                    </span>
+</li>
+</ul>
+<!-- Tactical Split Visualization -->
+<div class="mb-8 pixel-border bg-surface-container-low p-4 hard-shadow-dark">
+<div class="flex justify-between items-end mb-2">
+<p class="font-label-sm text-label-sm text-on-surface uppercase">Split Breakdown</p>
+<p class="font-label-sm text-label-sm text-outline">50 / 50</p>
+</div>
+<div class="h-8 pixel-border bg-surface-variant relative flex overflow-hidden">
+<!-- Alex's Share -->
+<div class="w-1/2 bg-primary border-r-2 border-on-surface flex items-center justify-center">
+<span class="font-label-sm text-label-sm text-on-primary">Alex ($22.75)</span>
+</div>
+<!-- Your Share -->
+<div class="w-1/2 bg-surface-container flex items-center justify-center">
+<span class="font-label-sm text-label-sm text-on-surface">You ($22.75)</span>
+</div>
+</div>
+</div>
+<!-- Action Cluster -->
+<div class="flex flex-col gap-4">
+<button class="w-full bg-surface text-on-surface pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-3 transition-transform flex items-center justify-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined" style="font-size: 18px;">call_split</span>
+                    Edit Split
+                </button>
+<button class="w-full bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-3 transition-transform flex items-center justify-center gap-2 uppercase tracking-widest">
+<span class="material-symbols-outlined" style="font-size: 18px;">category</span>
+                    Recategorize
+                </button>
+</div>
+</article>
+</main>
+</body></html>

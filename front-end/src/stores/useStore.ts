@@ -38,7 +38,7 @@ export const useAppStore = defineStore('app', {
       ],
       currentMonth: 'October 2023'
     },
-    activeView: 'Budget'
+    activeView: 'Landing'
   }),
   actions: {
     setActiveView(view: string) {

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tango - Add New Task</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f6f3ee",
+                        "on-tertiary-fixed-variant": "#623c40",
+                        "tertiary-container": "#95696d",
+                        "surface-dim": "#dcdad5",
+                        "primary-container": "#b75662",
+                        "on-background": "#1c1c19",
+                        "outline": "#887273",
+                        "surface-variant": "#e5e2dd",
+                        "secondary": "#506354",
+                        "background": "#fcf9f4",
+                        "surface-container-highest": "#e5e2dd",
+                        "primary-fixed": "#ffdadb",
+                        "inverse-surface": "#31302d",
+                        "outline-variant": "#dac0c1",
+                        "on-primary-fixed-variant": "#7d2937",
+                        "inverse-primary": "#ffb2b9",
+                        "primary-fixed-dim": "#ffb2b9",
+                        "primary": "#983e4b",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#394b3d",
+                        "tertiary-fixed": "#ffdadc",
+                        "secondary-fixed": "#d3e8d5",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#d0e5d2",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#eeb9bd",
+                        "on-surface": "#1c1c19",
+                        "on-secondary-container": "#546758",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#fcf9f4",
+                        "surface": "#fcf9f4",
+                        "on-primary-fixed": "#40000f",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#9b404d",
+                        "inverse-on-surface": "#f3f0eb",
+                        "surface-container": "#f0ede9",
+                        "on-secondary-fixed": "#0e1f13",
+                        "on-tertiary-fixed": "#301216",
+                        "secondary-fixed-dim": "#b7ccb9",
+                        "tertiary": "#7a5155",
+                        "surface-container-high": "#ebe8e3",
+                        "on-surface-variant": "#554243",
+                        "on-tertiary-container": "#fffbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "unit": "4px",
+                        "sm": "8px",
+                        "margin": "20px",
+                        "xl": "48px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Space Grotesk"],
+                        "headline-md": ["Space Grotesk"],
+                        "headline-lg": ["Space Grotesk"],
+                        "body-lg": ["Space Grotesk"],
+                        "label-sm": ["Space Grotesk"],
+                        "body-md": ["Space Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "1.0", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pixel-border { border: 2px solid #1c1c19; }
+        .pixel-border-sm { border: 1px solid #1c1c19; }
+        .hard-shadow { box-shadow: 4px 4px 0px 0px #983e4b; }
+        .hard-shadow-dark { box-shadow: 4px 4px 0px 0px #1c1c19; }
+        .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        .bg-dither { background-image: repeating-linear-gradient(45deg, #e5e2dd 25%, transparent 25%, transparent 75%, #e5e2dd 75%, #e5e2dd), repeating-linear-gradient(45deg, #e5e2dd 25%, #fcf9f4 25%, #fcf9f4 75%, #e5e2dd 75%, #e5e2dd); background-position: 0 0, 4px 4px; background-size: 8px 8px; }
+        .sunken-input { border-top: 2px solid #e5e2dd; border-left: 2px solid #e5e2dd; border-bottom: 1px solid #ffffff; border-right: 1px solid #ffffff; background-color: #f6f3ee; }
+        .sunken-input:focus { outline: none; border-color: #983e4b; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background font-body-md text-on-background h-screen w-screen overflow-hidden flex items-center justify-center relative">
+<!-- The actual page content behind the modal would go here, but for this task, we focus on the modal overlay.
+         We simulate the background being blurred/dimmed. -->
+<!-- Background Overlay -->
+<div class="absolute inset-0 bg-dither z-10 opacity-90"></div>
+<!-- Modal Container -->
+<div class="relative z-20 w-full max-w-md mx-gutter bg-surface pixel-border hard-shadow flex flex-col">
+<!-- Modal Header -->
+<div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md m-0">NEW TASK</h2>
+<button aria-label="Close modal" class="text-on-primary hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-6 flex flex-col gap-6">
+<!-- Task Name Input -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="taskName">Task Name</label>
+<input class="sunken-input p-sm font-body-md text-body-md text-on-surface w-full h-12 focus:outline-none focus:ring-0" id="taskName" placeholder="e.g. Buy groceries..." type="text"/>
+</div>
+<!-- Assignee Selection (Avatars) -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Assign To</label>
+<div class="flex gap-4">
+<!-- Avatar 1 (Selected State) -->
+<label class="cursor-pointer relative flex flex-col items-center gap-xs group">
+<input checked="" class="sr-only" name="assignee" type="radio" value="user1"/>
+<div class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-secondary-container hard-shadow-dark group-active:translate-y-[2px] group-active:translate-x-[2px] group-active:shadow-none transition-all ring-2 ring-primary ring-offset-2 ring-offset-surface">
+<img alt="Avatar 1" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" data-alt="Pixelated close-up portrait of a young woman with short hair against a warm solid background, retro 8-bit aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXYXYtfKKfVgC8bz6fETu_-XDgkBy2IBZ_jK0a8i5DTHw6IRySgRbY6_KJ4HQOgh6NnBIKkVyBW51JKlQeSWpo--4K5GoRkbbEoMwudpFGePD54KrBEfKXYBOlppsSz9enU0RlH1RPJ0x60npvMbu3vbTd_lCo_6IPOIyo-nQYMaFsjRpObO-b8IKTa1RC713aYX9fAUN-ee7OIz_S-RlAHJQnWMktbZy_tIt_gQsZlEWaerlxq9h2TAqXcyhTz4miCHrMDyfJgyo"/>
+</div>
+<span class="font-label-sm text-label-sm text-primary">Alex</span>
+</label>
+<!-- Avatar 2 (Unselected State) -->
+<label class="cursor-pointer relative flex flex-col items-center gap-xs group">
+<input class="sr-only" name="assignee" type="radio" value="user2"/>
+<div class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-tertiary-container hard-shadow-dark group-hover:bg-tertiary-fixed group-active:translate-y-[2px] group-active:translate-x-[2px] group-active:shadow-none transition-all">
+<img alt="Avatar 2" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" data-alt="Pixelated close-up portrait of a young man with a beard against a cool solid background, retro 8-bit aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQVv5dSNsR5Hfg_YUe2GRHtjJHMEHEiQZWkOMZvefo9Uw4nxq9XY1yizfKd2hCbyXqC3kX1z-4hD16aJoMxVuGSUmO0gCArh0a95iwW-a5OZgsLkZEvxq8WLK_74iSauiCaoXN-9ac2moZB4A0RISahamtQgmUKYCArKwGYv-8h5epIx9q6IV2b74QGiAtBb6cRecKlQB6Rm_cKM7XKxGdQ-rAnqgQCMSPVdiazLY6Wl-FPfYwoIbfobHxUw28LvuGNkVsAIvar5c"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sam</span>
+</label>
+<!-- Unassigned/Both -->
+<label class="cursor-pointer relative flex flex-col items-center gap-xs group">
+<input class="sr-only" name="assignee" type="radio" value="both"/>
+<div class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-surface-variant flex items-center justify-center hard-shadow-dark group-hover:bg-surface-dim group-active:translate-y-[2px] group-active:translate-x-[2px] group-active:shadow-none transition-all">
+<span class="material-symbols-outlined text-on-surface-variant text-2xl" style="font-variation-settings: 'FILL' 0;">group</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Both</span>
+</label>
+</div>
+</div>
+<!-- Priority Selection (Retro Labels) -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Priority</label>
+<div class="grid grid-cols-3 gap-4">
+<!-- Chill -->
+<label class="cursor-pointer">
+<input class="sr-only peer" name="priority" type="radio" value="chill"/>
+<div class="pixel-border bg-surface text-on-surface text-center py-2 font-label-sm text-label-sm uppercase hard-shadow-dark peer-checked:bg-secondary-container peer-checked:border-on-surface peer-checked:shadow-none peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] transition-all hover:bg-surface-variant">
+                            Chill
+                        </div>
+</label>
+<!-- Normal -->
+<label class="cursor-pointer">
+<input checked="" class="sr-only peer" name="priority" type="radio" value="normal"/>
+<div class="pixel-border bg-surface text-on-surface text-center py-2 font-label-sm text-label-sm uppercase hard-shadow-dark peer-checked:bg-primary-fixed peer-checked:border-primary peer-checked:shadow-none peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] transition-all hover:bg-surface-variant">
+                            Normal
+                        </div>
+</label>
+<!-- ASAP -->
+<label class="cursor-pointer">
+<input class="sr-only peer" name="priority" type="radio" value="asap"/>
+<div class="pixel-border bg-surface text-on-surface text-center py-2 font-label-sm text-label-sm uppercase hard-shadow-dark peer-checked:bg-error-container peer-checked:text-on-error-container peer-checked:border-error peer-checked:shadow-none peer-checked:translate-x-[4px] peer-checked:translate-y-[4px] transition-all hover:bg-surface-variant">
+                            ASAP
+                        </div>
+</label>
+</div>
+</div>
+<!-- Date Picker (Simplified sunken field) -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase" for="dueDate">Due Date</label>
+<div class="relative">
+<input class="sunken-input p-sm font-body-md text-body-md text-on-surface w-full h-12 pr-10 appearance-none focus:outline-none focus:ring-0" id="dueDate" type="date"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style="font-variation-settings: 'FILL' 0;">calendar_month</span>
+</div>
+</div>
+</div>
+<!-- Modal Footer Actions -->
+<div class="p-6 pt-0 flex gap-4 justify-end border-t-2 border-on-surface border-opacity-10 mt-2">
+<button class="bg-surface text-on-surface pixel-border hard-shadow btn-active font-body-md text-body-md px-6 py-2 uppercase font-bold tracking-widest text-sm">
+                Cancel
+            </button>
+<button class="bg-primary text-on-primary pixel-border hard-shadow-dark btn-active font-body-md text-body-md font-bold px-6 py-2 uppercase tracking-widest text-sm">
+                SAVE TASK
+            </button>
+</div>
+</div>
+</body></html>
