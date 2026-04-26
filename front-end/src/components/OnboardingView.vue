@@ -47,7 +47,8 @@ const next = () => {
         <TangoButton @click="next" size="lg" class="w-full">
           {{ step === 3 ? "Let's Go!" : "Next" }}
         </TangoButton>
-        <div class="flex justify-center gap-2">
+        <TangoButton v-if="step > 1" @click="step--" variant="surface" size="lg" class="w-full">Back</TangoButton>
+        <div class="flex justify-center gap-2 mt-4">
           <div v-for="i in 3" :key="i" class="w-3 h-3 pixel-border-sm" :class="step === i ? 'bg-primary' : 'bg-surface-variant'"></div>
         </div>
       </div>

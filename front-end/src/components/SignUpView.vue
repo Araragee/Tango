@@ -1,10 +1,25 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useAppStore } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 
 const store = useAppStore();
 
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const error = ref('');
+
 const signup = () => {
+  error.value = '';
+  if (!email.value.trim() || !password.value) {
+    error.value = 'Please fill in all fields.';
+    return;
+  }
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match.';
+    return;
+  }
   store.setActiveView('Onboarding');
 };
 </script>
@@ -23,7 +38,7 @@ const signup = () => {
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.com" type="email"/>
+            <input v-model="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.com" type="email"/>
           </div>
         </div>
 
@@ -31,9 +46,19 @@ const signup = () => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password"/>
+            <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password"/>
           </div>
         </div>
+
+        <div class="flex flex-col gap-xs">
+          <label class="text-label-sm text-on-background uppercase" for="confirmPassword">Confirm Password</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
+            <input v-model="confirmPassword" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="confirmPassword" placeholder="••••••••" type="password"/>
+          </div>
+        </div>
+
+        <p v-if="error" class="text-error text-label-sm">{{ error }}</p>
 
         <TangoButton type="submit" variant="secondary" shadow="dark" class="w-full py-3">
           Create Account

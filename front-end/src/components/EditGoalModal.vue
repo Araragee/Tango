@@ -17,17 +17,19 @@ const description = ref('');
 const saved = ref(0);
 const target = ref(0);
 const icon = ref('flag');
+const deadline = ref('');
 const errors = ref({ title: '', target: '' });
 
 watch(() => props.goalId, (newId) => {
     if (newId) {
-        const goal = store.plans.goals.find(g => g.id === newId);
+        const goal = store.plans.goals.find((g: Goal) => g.id === newId);
         if (goal) {
             title.value = goal.title;
             description.value = goal.description;
             saved.value = goal.saved;
             target.value = goal.target;
             icon.value = goal.icon;
+            deadline.value = goal.deadline ?? '';
         }
     } else {
         title.value = '';
@@ -35,9 +37,17 @@ watch(() => props.goalId, (newId) => {
         saved.value = 0;
         target.value = 0;
         icon.value = 'flag';
+        deadline.value = '';
     }
     errors.value = { title: '', target: '' };
 }, { immediate: true });
+
+const deleteGoal = () => {
+  if (!props.goalId) return;
+  if (!confirm('Delete this goal? This cannot be undone.')) return;
+  store.deleteGoal(props.goalId);
+  emit('close');
+};
 
 const saveGoal = () => {
     errors.value = { title: '', target: '' };
@@ -60,7 +70,8 @@ const saveGoal = () => {
             description: description.value,
             saved: saved.value,
             target: target.value,
-            icon: icon.value
+            icon: icon.value,
+            deadline: deadline.value || undefined
         });
     } else {
         store.addGoal({
@@ -68,8 +79,8 @@ const saveGoal = () => {
             description: description.value,
             saved: saved.value,
             target: target.value,
-            status: 'On Track',
-            icon: icon.value
+            icon: icon.value,
+            deadline: deadline.value || undefined
         });
     }
     emit('close');
@@ -103,9 +114,12 @@ const saveGoal = () => {
                 </button>
             </div>
         </div>
+
+        <TangoInput v-model="deadline" label="Target Date (Optional)" type="date" />
     </div>
 
     <template #footer>
+      <TangoButton v-if="goalId" @click="deleteGoal" variant="outline" class="text-error border-error mr-auto" size="sm" aria-label="Delete goal">Delete</TangoButton>
       <TangoButton @click="emit('close')" variant="surface" size="sm" aria-label="Cancel">Cancel</TangoButton>
       <TangoButton @click="saveGoal" shadow="dark" size="sm" aria-label="Save Goal">SAVE GOAL</TangoButton>
     </template>

@@ -1,36 +1,60 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useAppStore } from '../stores/useStore';
+import { ref, computed } from 'vue';
+import { useAppStore, type CalendarEvent } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import NewEventSheet from './NewEventSheet.vue';
 
 const store = useAppStore();
-const days = Array.from({ length: 31 }, (_, i) => i + 1);
 const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const showEventSheet = ref(false);
+const selectedDate = ref('');
+
+const currentDate = ref(new Date(2023, 9, 1)); // Oct 2023 as starting default
+const daysInMonth = computed(() => new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0).getDate());
+const firstDayOffset = computed(() => new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), 1).getDay());
+const monthLabel = computed(() => currentDate.value.toLocaleString('default', { month: 'long', year: 'numeric' }));
 
 const getEventsForDay = (day: number) => {
-    // Simplified: matching only by day number for the mock
-    const dateStr = `2023-10-${day.toString().padStart(2, '0')}`;
-    return store.calendar.events.filter(e => e.date === dateStr);
+  const y = currentDate.value.getFullYear();
+  const m = String(currentDate.value.getMonth() + 1).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  return store.calendar.events.filter((e: CalendarEvent) => e.date === `${y}-${m}-${d}`);
 };
+
+const prevMonth = () => { currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1); };
+const nextMonth = () => { currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1); };
+
+const handleDayClick = (day: number) => {
+  const y = currentDate.value.getFullYear();
+  const m = String(currentDate.value.getMonth() + 1).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  selectedDate.value = `${y}-${m}-${d}`;
+  showEventSheet.value = true;
+};
+
+const syncScore = computed(() => {
+  const total = store.calendar.events.length;
+  if (total === 0) return 0;
+  const shared = store.calendar.events.filter((e: CalendarEvent) => e.partners.length > 1).length;
+  return Math.round((shared / total) * 100);
+});
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto space-y-lg py-12 w-full">
+  <div class="max-w-5xl mx-auto space-y-lg lg:py-12 py-6 w-full">
     <!-- Header & Controls -->
     <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md w-full">
       <div>
-        <h2 class="text-headline-lg text-primary">{{ store.calendar.currentMonth }}</h2>
-        <p class="text-body-md text-on-surface-variant">Syncing with Alex</p>
+        <h2 class="text-headline-lg text-primary">{{ monthLabel }}</h2>
+        <p class="text-body-md text-on-surface-variant">Syncing with {{ store.partnerName }}</p>
       </div>
       <div class="flex gap-4 flex-wrap">
-        <TangoButton variant="surface" size="md" class="w-12 h-12" aria-label="Previous Month">
+        <TangoButton @click="prevMonth" variant="surface" size="md" class="w-12 h-12" aria-label="Previous Month">
           <span class="material-symbols-outlined">chevron_left</span>
         </TangoButton>
-        <TangoButton variant="surface" size="md" class="w-12 h-12" aria-label="Next Month">
+        <TangoButton @click="nextMonth" variant="surface" size="md" class="w-12 h-12" aria-label="Next Month">
           <span class="material-symbols-outlined">chevron_right</span>
         </TangoButton>
         <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="md:ml-4" aria-label="New Event">
@@ -50,16 +74,16 @@ const getEventsForDay = (day: number) => {
       <!-- Grid Cells -->
       <div class="grid grid-cols-7 gap-[1px] bg-surface-variant">
         <!-- Empty Days -->
-        <div v-for="i in 3" :key="'empty-'+i" class="bg-surface-container-low min-h-[100px] p-xs"></div>
+        <div v-for="i in firstDayOffset" :key="'empty-'+i" class="bg-surface-container-low min-h-[100px] p-xs"></div>
         
         <!-- Days -->
         <div 
-          v-for="day in days" 
+          v-for="day in daysInMonth" 
           :key="day"
-          class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors"
-          :class="{ 'bg-primary-fixed-dim border-primary': day === 14 }"
+          class="bg-surface-container-lowest min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors cursor-pointer"
+          @click="handleDayClick(day)"
         >
-          <span class="text-label-sm text-on-surface" :class="{ 'font-bold': day === 14 }">{{ day }}</span>
+          <span class="text-label-sm text-on-surface">{{ day }}</span>
           
           <!-- Events -->
           <div
@@ -108,16 +132,16 @@ const getEventsForDay = (day: number) => {
         <div class="absolute inset-0 bg-dither opacity-30 z-0"></div>
         <div class="relative z-10">
           <h3 class="text-headline-md text-on-secondary-container mb-2">Sync Score</h3>
-          <p class="text-body-md text-on-secondary-container">You and Alex are perfectly aligned this month. Keep it up!</p>
+          <p class="text-body-md text-on-secondary-container">You and {{ store.partnerName }} have {{ syncScore }}% of events in sync.</p>
         </div>
         <div class="relative z-10 w-full bg-surface-container-lowest pixel-border h-6 mt-6">
-          <div class="h-full bg-secondary border-r border-on-surface w-[85%] flex items-center">
+          <div class="h-full bg-secondary border-r border-on-surface flex items-center" :style="{ width: syncScore + '%' }">
             <div class="w-full h-full" style="background-image: repeating-linear-gradient(45deg, #394b3d 25%, transparent 25%, transparent 75%, #394b3d 75%, #394b3d); background-position: 0 0, 4px 4px; background-size: 8px 8px;"></div>
           </div>
         </div>
       </TangoCard>
     </section>
 
-    <NewEventSheet :show="showEventSheet" @close="showEventSheet = false" />
+    <NewEventSheet :show="showEventSheet" :initialDate="selectedDate" @close="showEventSheet = false" />
   </div>
 </template>

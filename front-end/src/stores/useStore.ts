@@ -50,6 +50,8 @@ export const useAppStore = defineStore('app', {
       return JSON.parse(savedState);
     }
     return {
+      userName: 'Alex',
+      partnerName: 'Sam',
       budget: {
         balance: 8450,
         monthlySpending: [
@@ -66,8 +68,8 @@ export const useAppStore = defineStore('app', {
       plans: {
         goals: [
           { id: 1, title: 'Japan Trip 2025', description: 'Autumn leaves and sushi.', saved: 4500, target: 8000, status: 'On Track', icon: 'flight_takeoff', progress: 56 },
-          { id: 2, title: 'Down Payment', description: '', saved: 12000, target: 50000, status: '', icon: 'home', progress: 24 },
-          { id: 3, title: 'Puppy Fund', description: '', saved: 800, target: 1500, status: '', icon: 'pets', progress: 53 },
+          { id: 2, title: 'Down Payment', description: '', saved: 12000, target: 50000, status: 'Behind', icon: 'home', progress: 24 },
+          { id: 3, title: 'Puppy Fund', description: '', saved: 800, target: 1500, status: 'On Track', icon: 'pets', progress: 53 },
         ] as Goal[]
       },
       todos: {
@@ -83,8 +85,7 @@ export const useAppStore = defineStore('app', {
         events: [
           { id: 1, title: 'Date Night', time: '7:00 PM - 10:00 PM', date: '2023-10-14', category: 'date', partners: ['P1', 'P2'], icon: 'restaurant' },
           { id: 2, title: 'Dentist Appt', time: '2:30 PM - 3:30 PM', date: '2023-10-16', category: 'errand', partners: ['P2'], icon: 'dentistry' },
-        ] as CalendarEvent[],
-        currentMonth: 'October 2023'
+        ] as CalendarEvent[]
       },
       activeView: 'Landing'
     };
@@ -93,14 +94,22 @@ export const useAppStore = defineStore('app', {
     setActiveView(view: string) {
       this.activeView = view;
     },
+    updateProfile(userName: string, partnerName: string) {
+      this.userName = userName;
+      this.partnerName = partnerName;
+    },
     // Budget Actions
     addTransaction(transaction: Omit<Transaction, 'id'>) {
-      const id = Math.max(0, ...this.budget.recentActivity.map(t => t.id)) + 1;
+      const id = Math.max(0, ...this.budget.recentActivity.map((t: Transaction) => t.id)) + 1;
       this.budget.recentActivity.unshift({ ...transaction, id });
       this.budget.balance += transaction.amount;
     },
+    updateTransaction(id: number, updates: Partial<Transaction>) {
+      const tx = this.budget.recentActivity.find((t: Transaction) => t.id === id);
+      if (tx) Object.assign(tx, updates);
+    },
     deleteTransaction(id: number) {
-      const index = this.budget.recentActivity.findIndex(t => t.id === id);
+      const index = this.budget.recentActivity.findIndex((t: Transaction) => t.id === id);
       if (index !== -1) {
         this.budget.balance -= this.budget.recentActivity[index].amount;
         this.budget.recentActivity.splice(index, 1);
@@ -111,62 +120,71 @@ export const useAppStore = defineStore('app', {
     },
     // Plans Actions
     addGoal(goal: Omit<Goal, 'id' | 'progress'>) {
-      const id = Math.max(0, ...this.plans.goals.map(g => g.id)) + 1;
+      const id = Math.max(0, ...this.plans.goals.map((g: Goal) => g.id)) + 1;
       const progress = Math.round((goal.saved / goal.target) * 100);
-      this.plans.goals.push({ ...goal, id, progress });
+      const status = progress >= 100 ? 'Completed' : progress >= 50 ? 'On Track' : 'Behind';
+      this.plans.goals.push({ ...goal, id, progress, status });
     },
     editGoal(id: number, updates: Partial<Goal>) {
-      const goal = this.plans.goals.find(g => g.id === id);
+      const goal = this.plans.goals.find((g: Goal) => g.id === id);
       if (goal) {
         Object.assign(goal, updates);
         goal.progress = Math.round((goal.saved / goal.target) * 100);
+        goal.status = goal.progress >= 100 ? 'Completed' : goal.progress >= 50 ? 'On Track' : 'Behind';
       }
     },
+    deleteGoal(id: number) {
+      this.plans.goals = this.plans.goals.filter((g: Goal) => g.id !== id);
+    },
+    completeGoal(id: number) {
+      const goal = this.plans.goals.find((g: Goal) => g.id === id);
+      if (goal) goal.status = 'Completed';
+    },
     updateGoalProgress(id: number, saved: number) {
-      const goal = this.plans.goals.find(g => g.id === id);
+      const goal = this.plans.goals.find((g: Goal) => g.id === id);
       if (goal) {
         goal.saved = saved;
         goal.progress = Math.round((goal.saved / goal.target) * 100);
+        goal.status = goal.progress >= 100 ? 'Completed' : goal.progress >= 50 ? 'On Track' : 'Behind';
       }
     },
     // To-Do Actions
     addTask(task: Omit<Todo, 'id' | 'completed'>) {
-      const id = Math.max(0, ...this.todos.items.map(t => t.id)) + 1;
+      const id = Math.max(0, ...this.todos.items.map((t: Todo) => t.id)) + 1;
       this.todos.items.push({ ...task, id, completed: false });
     },
     deleteTask(id: number) {
-      this.todos.items = this.todos.items.filter(t => t.id !== id);
+      this.todos.items = this.todos.items.filter((t: Todo) => t.id !== id);
     },
     toggleTodo(id: number) {
-      const todo = this.todos.items.find(item => item.id === id);
+      const todo = this.todos.items.find((item: Todo) => item.id === id);
       if (todo) {
         todo.completed = !todo.completed;
       }
     },
     // Calendar Actions
     addEvent(event: Omit<CalendarEvent, 'id'>) {
-      const id = Math.max(0, ...this.calendar.events.map(e => e.id)) + 1;
+      const id = Math.max(0, ...this.calendar.events.map((e: CalendarEvent) => e.id)) + 1;
       this.calendar.events.push({ ...event, id });
     },
     editEvent(id: number, updates: Partial<CalendarEvent>) {
-      const event = this.calendar.events.find(e => e.id === id);
+      const event = this.calendar.events.find((e: CalendarEvent) => e.id === id);
       if (event) {
         Object.assign(event, updates);
       }
     },
     deleteEvent(id: number) {
-      this.calendar.events = this.calendar.events.filter(e => e.id !== id);
+      this.calendar.events = this.calendar.events.filter((e: CalendarEvent) => e.id !== id);
     },
     syncWithPartner() {
-      // Placeholder for future sync logic
-      console.log('Syncing with partner...');
+      // No backend yet — placeholder sync confirmation
     }
   }
 });
 
 // Persistence
 export function setupStorePersistence(store: ReturnType<typeof useAppStore>) {
-  store.$subscribe((mutation, state) => {
+  store.$subscribe((_mutation: any, state: any) => {
     localStorage.setItem('tango-state', JSON.stringify(state));
   });
 }

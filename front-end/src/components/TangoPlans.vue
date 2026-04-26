@@ -37,7 +37,7 @@ const openEditGoal = (id: number) => {
 
     <!-- Goals Grid -->
     <section class="space-y-lg mt-xl w-full">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
+      <div v-if="store.plans.goals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
         <TangoCard
             v-for="goal in store.plans.goals"
             :key="goal.id"
@@ -71,12 +71,24 @@ const openEditGoal = (id: number) => {
               <div v-if="goal.progress < 100" class="w-4 h-full bg-dither opacity-50"></div>
             </div>
           </div>
-          <div class="flex justify-between text-label-sm text-outline mt-xs">
+          <div class="flex justify-between text-label-sm text-outline mt-xs items-center">
             <span>Progress</span>
-            <span>{{ goal.progress }}%</span>
+            <div class="flex items-center gap-2">
+              <span>{{ goal.progress }}%</span>
+              <button
+                @click.stop="store.deleteGoal(goal.id)"
+                class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
+                aria-label="Delete goal"
+              >
+                delete
+              </button>
+            </div>
           </div>
         </TangoCard>
       </div>
+      <p v-else class="text-body-md text-on-surface-variant py-8">
+        No goals yet. Create one to start tracking.
+      </p>
     </section>
 
     <EditGoalModal

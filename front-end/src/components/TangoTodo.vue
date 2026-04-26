@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, inject } from 'vue';
-import { useAppStore } from '../stores/useStore';
+import { useAppStore, type Todo } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
@@ -42,7 +42,7 @@ const quickAdd = () => {
       <div class="flex justify-between items-end mb-2 border-b-2 border-on-background pb-2 w-full">
         <h2 class="text-headline-lg text-on-surface">Shared To-Dos</h2>
         <span class="bg-primary-container text-on-primary-container pixel-border-sm text-label-sm px-3 py-1 uppercase whitespace-nowrap">
-            {{ store.todos.items.filter(t => t.completed).length }} / {{ store.todos.items.length }}
+            {{ store.todos.items.filter((t: Todo) => t.completed).length }} / {{ store.todos.items.length }}
         </span>
       </div>
       

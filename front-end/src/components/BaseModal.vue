@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { } from 'vue';
 import TangoButton from './TangoButton.vue';
 
 interface Props {

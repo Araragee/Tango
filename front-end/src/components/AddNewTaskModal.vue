@@ -10,6 +10,7 @@ const emit = defineEmits(['close']);
 const store = useAppStore();
 
 const taskName = ref('');
+const category = ref('General');
 const assignee = ref('Both');
 const priority = ref('Normal');
 const dueDate = ref('');
@@ -23,13 +24,14 @@ const saveTask = () => {
 
   store.addTask({
     text: taskName.value,
-    category: 'General',
+    category: category.value,
     assigned: assignee.value,
     priority: priority.value as any,
     subtext: dueDate.value ? `Due: ${dueDate.value}` : undefined
   });
 
   taskName.value = '';
+  category.value = 'General';
   error.value = '';
   emit('close');
 };
@@ -46,26 +48,26 @@ const saveTask = () => {
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Assign To</label>
         <div class="flex gap-4">
           <!-- Avatar 1 -->
-          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" aria-label="Assign to Alex">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="Alex"/>
+          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.partnerName">
+            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.partnerName"/>
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-secondary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === 'Alex' }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.partnerName }"
             >
-              <img alt="Alex" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXYXYtfKKfVgC8bz6fETu_-XDgkBy2IBZ_jK0a8i5DTHw6IRySgRbY6_KJ4HQOgh6NnBIKkVyBW51JKlQeSWpo--4K5GoRkbbEoMwudpFGePD54KrBEfKXYBOlppsSz9enU0RlH1RPJ0x60npvMbu3vbTd_lCo_6IPOIyo-nQYMaFsjRpObO-b8IKTa1RC713aYX9fAUN-ee7OIz_S-RlAHJQnWMktbZy_tIt_gQsZlEWaerlxq9h2TAqXcyhTz4miCHrMDyfJgyo"/>
+              <img :alt="store.partnerName" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXYXYtfKKfVgC8bz6fETu_-XDgkBy2IBZ_jK0a8i5DTHw6IRySgRbY6_KJ4HQOgh6NnBIKkVyBW51JKlQeSWpo--4K5GoRkbbEoMwudpFGePD54KrBEfKXYBOlppsSz9enU0RlH1RPJ0x60npvMbu3vbTd_lCo_6IPOIyo-nQYMaFsjRpObO-b8IKTa1RC713aYX9fAUN-ee7OIz_S-RlAHJQnWMktbZy_tIt_gQsZlEWaerlxq9h2TAqXcyhTz4miCHrMDyfJgyo"/>
             </div>
-            <span class="text-label-sm" :class="assignee === 'Alex' ? 'text-primary' : 'text-on-surface-variant'">Alex</span>
+            <span class="text-label-sm" :class="assignee === store.partnerName ? 'text-primary' : 'text-on-surface-variant'">{{ store.partnerName }}</span>
           </label>
           <!-- Avatar 2 -->
-          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" aria-label="Assign to Sam">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="Sam"/>
+          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.userName">
+            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.userName"/>
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-tertiary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === 'Sam' }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.userName }"
             >
-              <img alt="Sam" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQVv5dSNsR5Hfg_YUe2GRHtjJHMEHEiQZWkOMZvefo9Uw4nxq9XY1yizfKd2hCbyXqC3kX1z-4hD16aJoMxVuGSUmO0gCArh0a95iwW-a5OZgsLkZEvxq8WLK_74iSauiCaoXN-9ac2moZB4A0RISahamtQgmUKYCArKwGYv-8h5epIx9q6IV2b74QGiAtBb6cRecKlQB6Rm_cKM7XKxGdQ-rAnqgQCMSPVdiazLY6Wl-FPfYwoIbfobHxUw28LvuGNkVsAIvar5c"/>
+              <img :alt="store.userName" class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQVv5dSNsR5Hfg_YUe2GRHtjJHMEHEiQZWkOMZvefo9Uw4nxq9XY1yizfKd2hCbyXqC3kX1z-4hD16aJoMxVuGSUmO0gCArh0a95iwW-a5OZgsLkZEvxq8WLK_74iSauiCaoXN-9ac2moZB4A0RISahamtQgmUKYCArKwGYv-8h5epIx9q6IV2b74QGiAtBb6cRecKlQB6Rm_cKM7XKxGdQ-rAnqgQCMSPVdiazLY6Wl-FPfYwoIbfobHxUw28LvuGNkVsAIvar5c"/>
             </div>
-            <span class="text-label-sm" :class="assignee === 'Sam' ? 'text-primary' : 'text-on-surface-variant'">Sam</span>
+            <span class="text-label-sm" :class="assignee === store.userName ? 'text-primary' : 'text-on-surface-variant'">{{ store.userName }}</span>
           </label>
           <!-- Both -->
           <label class="cursor-pointer relative flex flex-col items-center gap-xs group" aria-label="Assign to Both">
@@ -100,6 +102,9 @@ const saveTask = () => {
           </label>
         </div>
       </div>
+
+      <!-- Category Input -->
+      <TangoInput v-model="category" label="Category" placeholder="e.g. Grocery List" />
 
       <!-- Date Picker -->
       <TangoInput v-model="dueDate" label="Due Date" type="date" />

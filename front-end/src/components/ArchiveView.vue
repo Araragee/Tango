@@ -1,18 +1,12 @@
 <script setup lang="ts">
-import { useAppStore } from '../stores/useStore';
+import { computed } from 'vue';
+import { useAppStore, type Goal, type Transaction } from '../stores/useStore';
 import TangoCard from './TangoCard.vue';
 
 const store = useAppStore();
 
-const archivedTransactions = [
-  { id: 101, title: 'Summer Vacation Rent', amount: -1200, date: 'Aug 2023', category: 'Travel' },
-  { id: 102, title: 'New Car Downpayment', amount: -5000, date: 'Jul 2023', category: 'Finance' },
-];
-
-const completedGoals = [
-  { id: 201, title: 'Wedding Fund', target: 15000, date: 'June 2023' },
-  { id: 202, title: 'Emergency Fund', target: 5000, date: 'March 2023' },
-];
+const completedGoals = computed(() => store.plans.goals.filter((g: Goal) => g.status === 'Completed'));
+const archivedTransactions = computed(() => store.budget.recentActivity.filter((tx: Transaction) => tx.type === 'expense').slice(-10));
 </script>
 
 <template>
@@ -24,12 +18,12 @@ const completedGoals = [
 
     <section class="space-y-4">
       <h3 class="text-headline-lg">Completed Goals</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="completedGoals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <TangoCard v-for="goal in completedGoals" :key="goal.id" padding="md">
           <div class="flex justify-between items-center">
             <div>
               <h4 class="text-headline-md">{{ goal.title }}</h4>
-              <p class="text-label-sm text-outline uppercase">Reached: {{ goal.date }}</p>
+              <p class="text-label-sm text-outline uppercase">Reached: –</p>
             </div>
             <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
           </div>
@@ -38,11 +32,12 @@ const completedGoals = [
           </div>
         </TangoCard>
       </div>
+      <p v-else class="text-body-md text-on-surface-variant">No completed goals yet.</p>
     </section>
 
     <section class="space-y-4">
       <h3 class="text-headline-lg">Past Transactions</h3>
-      <div class="space-y-2">
+      <div v-if="archivedTransactions.length > 0" class="space-y-2">
         <div v-for="tx in archivedTransactions" :key="tx.id" class="bg-surface pixel-border-sm p-4 flex justify-between items-center">
           <div>
             <div class="text-body-md font-bold">{{ tx.title }}</div>
@@ -53,6 +48,7 @@ const completedGoals = [
           </div>
         </div>
       </div>
+      <p v-else class="text-body-md text-on-surface-variant">No past transactions yet.</p>
     </section>
   </div>
 </template>

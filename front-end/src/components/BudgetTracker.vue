@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, computed } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
@@ -7,11 +7,17 @@ import TransactionDetailsModal from './TransactionDetailsModal.vue';
 import AddTransactionModal from './AddTransactionModal.vue';
 
 const store = useAppStore();
-const notify = inject('notify') as (msg: string, type?: string) => void;
 
 const showDetails = ref(false);
 const showAddModal = ref(false);
 const selectedTransaction = ref<Transaction | null>(null);
+
+const filter = ref<'all' | 'expense' | 'income'>('all');
+const filteredActivity = computed(() =>
+  filter.value === 'all'
+    ? store.budget.recentActivity
+    : store.budget.recentActivity.filter((tx: Transaction) => tx.type === filter.value)
+);
 
 const openDetails = (tx: Transaction) => {
   selectedTransaction.value = tx;
@@ -38,6 +44,12 @@ const openDetails = (tx: Transaction) => {
           </p>
           <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black"></div>
         </TangoCard>
+
+        <!-- Saved This Month Stat -->
+        <div class="flex justify-between items-center px-4 py-2 bg-secondary-container pixel-border-sm">
+          <span class="text-label-sm uppercase text-on-secondary-container">Saved This Month</span>
+          <span class="text-body-lg font-bold text-on-secondary-container">+${{ store.budget.savedThisMonth.toLocaleString() }}</span>
+        </div>
 
         <!-- Category Breakdown -->
         <TangoCard padding="lg" shadow="dark" class="w-full">
@@ -75,9 +87,23 @@ const openDetails = (tx: Transaction) => {
               ADD
             </TangoButton>
           </div>
+          
+          <!-- Filters -->
+          <div class="flex gap-2 mb-4">
+            <button v-for="f in ['all', 'expense', 'income']" :key="f"
+              @click="filter = f as any"
+              class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
+              :class="filter === f ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'">
+              {{ f }}
+            </button>
+          </div>
+
           <div class="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+            <p v-if="filteredActivity.length === 0" class="text-body-md text-on-surface-variant text-center py-8">
+              No transactions yet. Add one to get started.
+            </p>
             <div 
-              v-for="tx in store.budget.recentActivity"
+              v-for="tx in filteredActivity"
               :key="tx.id"
               @click="openDetails(tx)"
               class="flex items-center justify-between p-3 hover:bg-surface-variant pixel-border-sm transition-colors cursor-pointer bg-surface"

@@ -43,6 +43,9 @@ const saveTransaction = () => {
     // Reset and close
     title.value = '';
     amount.value = 0;
+    category.value = 'General';
+    type.value = 'expense';
+    date.value = new Date().toISOString().split('T')[0];
     emit('close');
 };
 </script>

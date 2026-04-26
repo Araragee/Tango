@@ -8,10 +8,17 @@ import TangoInput from './TangoInput.vue';
 const store = useAppStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
-const userName = ref('Alex');
-const partnerName = ref('Sam');
+const userName = ref(store.userName);
+const partnerName = ref(store.partnerName);
+const darkMode = ref(false);
+const notifications = ref(true);
 
 const updateProfile = () => {
+    if (!userName.value.trim() || !partnerName.value.trim()) {
+        notify('Names cannot be empty.', 'error');
+        return;
+    }
+    store.updateProfile(userName.value, partnerName.value);
     notify('Profile updated successfully!', 'success');
 };
 
@@ -44,14 +51,22 @@ const resetAccount = () => {
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">Dark Mode</span>
-            <div class="w-12 h-6 pixel-border-sm bg-surface-variant relative cursor-pointer">
-              <div class="absolute left-1 top-1 w-4 h-4 bg-primary"></div>
+            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
+                 :class="darkMode ? 'bg-primary' : 'bg-surface-variant'"
+                 @click="darkMode = !darkMode"
+                 role="switch" :aria-checked="darkMode">
+              <div class="absolute top-1 w-4 h-4 transition-all"
+                   :class="darkMode ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">Notifications</span>
-            <div class="w-12 h-6 pixel-border-sm bg-secondary relative cursor-pointer">
-              <div class="absolute right-1 top-1 w-4 h-4 bg-surface"></div>
+            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
+                 :class="notifications ? 'bg-primary' : 'bg-surface-variant'"
+                 @click="notifications = !notifications"
+                 role="switch" :aria-checked="notifications">
+              <div class="absolute top-1 w-4 h-4 transition-all"
+                   :class="notifications ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
         </div>

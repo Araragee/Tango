@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
+import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
-import { useAppStore } from '../stores/useStore';
+import { useAppStore, type CalendarEvent } from '../stores/useStore';
 
-defineProps<{ show: boolean }>();
+const props = defineProps<{ 
+    show: boolean;
+    initialDate?: string;
+}>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
 
@@ -13,6 +17,47 @@ const date = ref('');
 const time = ref('');
 const category = ref('date');
 const errors = ref({ title: '', date: '' });
+const editingEventId = ref<number | null>(null);
+
+const dayEvents = computed(() => {
+    if (!date.value) return [];
+    return store.calendar.events.filter(e => e.date === date.value);
+});
+
+watch(() => props.show, (isShown) => {
+    if (isShown) {
+        date.value = props.initialDate || '';
+        title.value = '';
+        time.value = '';
+        category.value = 'date';
+        errors.value = { title: '', date: '' };
+        editingEventId.value = null;
+    }
+});
+
+const setEditEvent = (event: CalendarEvent) => {
+    editingEventId.value = event.id;
+    title.value = event.title;
+    date.value = event.date;
+    time.value = event.time === 'All Day' ? '' : event.time;
+    category.value = event.category;
+};
+
+const deleteEvent = () => {
+    if (editingEventId.value && confirm('Delete this event?')) {
+        store.deleteEvent(editingEventId.value);
+        emit('close');
+    }
+};
+
+const cancelEdit = () => {
+    editingEventId.value = null;
+    title.value = '';
+    date.value = props.initialDate || '';
+    time.value = '';
+    category.value = 'date';
+    errors.value = { title: '', date: '' };
+};
 
 const saveEvent = () => {
     errors.value = { title: '', date: '' };
@@ -29,35 +74,80 @@ const saveEvent = () => {
 
     if (hasError) return;
 
-    store.addEvent({
+    const eventData = {
         title: title.value,
         date: date.value,
         time: time.value || 'All Day',
         category: category.value,
         partners: ['P1', 'P2'],
         icon: category.value === 'date' ? 'favorite' : category.value === 'bill' ? 'payments' : category.value === 'errand' ? 'shopping_cart' : 'event'
-    });
+    };
+
+    if (editingEventId.value) {
+        store.editEvent(editingEventId.value, eventData);
+    } else {
+        store.addEvent(eventData);
+    }
 
     title.value = '';
     date.value = '';
     time.value = '';
+    category.value = 'date';
     emit('close');
 };
 </script>
 
 <template>
-  <Transition name="sheet">
-    <div v-if="show" class="fixed inset-0 z-50 flex items-end justify-center">
-      <!-- Background Overlay -->
-      <div class="absolute inset-0 bg-dither opacity-90" @click="emit('close')"></div>
+  <BaseModal :show="show" title="Day Schedule" @close="emit('close')">
+    <div class="flex flex-col gap-6">
+        <!-- Existing Events -->
+        <div v-if="dayEvents.length > 0" class="space-y-3">
+            <h3 class="text-label-sm text-secondary uppercase font-bold border-b border-secondary pb-1">Scheduled Events</h3>
+            <div class="space-y-2">
+                <div 
+                    v-for="event in dayEvents" 
+                    :key="event.id" 
+                    @click="setEditEvent(event)"
+                    class="p-3 bg-surface-container-low pixel-border-sm flex justify-between items-center cursor-pointer hover:bg-surface-variant transition-colors"
+                    :class="{ 'ring-2 ring-primary': editingEventId === event.id }"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-sm">{{ event.icon }}</span>
+                        <span class="text-body-md font-bold">{{ event.title }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-label-sm text-outline">{{ event.time }}</span>
+                        <div class="relative w-5 h-5 flex items-center justify-center">
+                            <Transition name="icon-pop" mode="out-in">
+                                <span 
+                                    v-if="editingEventId === event.id" 
+                                    key="close"
+                                    @click.stop="cancelEdit"
+                                    class="material-symbols-outlined text-sm text-primary cursor-pointer hover:scale-125 transition-transform"
+                                >
+                                    close
+                                </span>
+                                <span 
+                                    v-else 
+                                    key="edit"
+                                    class="material-symbols-outlined text-sm text-outline group-hover:text-primary transition-colors"
+                                >
+                                    edit
+                                </span>
+                            </Transition>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-      <!-- Sheet Container -->
-      <div class="relative z-20 w-full max-w-3xl bg-surface pixel-border border-b-0 hard-shadow-dark flex flex-col p-6 rounded-t-xl">
-        <div class="w-12 h-1 bg-on-surface-variant opacity-20 mx-auto mb-6 rounded-full"></div>
-
-        <h2 class="text-headline-lg mb-6 uppercase border-b-2 border-black pb-2">New Event</h2>
-
-        <div class="flex flex-col gap-6 overflow-y-auto max-h-[60vh] pb-8">
+        <div 
+            class="space-y-4 pt-4 transition-all duration-300 rounded-lg"
+            :class="{ 'bg-primary-container bg-opacity-10 p-4 ring-1 ring-primary ring-opacity-20': editingEventId }"
+        >
+            <h3 class="text-label-sm uppercase font-bold border-b pb-1" :class="editingEventId ? 'text-primary border-primary border-opacity-30' : 'text-on-surface-variant border-outline-variant'">
+                {{ editingEventId ? 'Edit Mode: ' + title : 'Add New Event' }}
+            </h3>
             <TangoInput v-model="title" label="Event Name" placeholder="e.g. Anniversary Dinner" :error="errors.title" required />
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -82,14 +172,16 @@ const saveEvent = () => {
                 </div>
             </div>
         </div>
-
-        <div class="flex gap-4 mt-auto">
-            <TangoButton @click="emit('close')" variant="surface" class="flex-1" aria-label="Cancel">Cancel</TangoButton>
-            <TangoButton @click="saveEvent" shadow="dark" class="flex-1" aria-label="Add to Calendar">Add to Calendar</TangoButton>
-        </div>
-      </div>
     </div>
-  </Transition>
+
+    <template #footer>
+        <TangoButton v-if="editingEventId" @click="deleteEvent" variant="outline" class="text-error border-error mr-auto" size="sm" aria-label="Delete Event">Delete</TangoButton>
+        <TangoButton @click="emit('close')" variant="surface" size="sm" aria-label="Cancel">Cancel</TangoButton>
+        <TangoButton @click="saveEvent" shadow="dark" size="sm" :aria-label="editingEventId ? 'Save Changes' : 'Add to Calendar'">
+            {{ editingEventId ? 'SAVE CHANGES' : 'ADD EVENT' }}
+        </TangoButton>
+    </template>
+  </BaseModal>
 </template>
 
 <style scoped>
@@ -102,5 +194,20 @@ const saveEvent = () => {
 .sheet-leave-to {
   transform: translateY(100%);
   opacity: 0;
+}
+
+.icon-pop-enter-active,
+.icon-pop-leave-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.icon-pop-enter-from {
+  opacity: 0;
+  transform: scale(0.5) rotate(-90deg);
+}
+
+.icon-pop-leave-to {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
 }
 </style>

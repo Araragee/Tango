@@ -7,16 +7,14 @@ const store = useAppStore();
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen text-center px-4 pt-16">
-    <div class="w-full max-w-6xl mx-auto flex flex-col items-center py-20">
+    <div class="w-full lg:max-w-6xl max-w-[90%] mx-auto flex flex-col items-center py-20">
     <!-- Hero Image Area -->
     <div class="relative w-64 h-64 mb-12">
       <div class="absolute inset-0 bg-primary-container pixel-border hard-shadow transform rotate-3"></div>
       <div class="absolute inset-0 bg-surface pixel-border hard-shadow -rotate-3 flex items-center justify-center overflow-hidden">
-        <img
-          alt="Tango Couple"
-          class="w-full h-full object-cover grayscale contrast-125 mix-blend-multiply opacity-80"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9OayV5YpZkZ7YvS9kZ_E_K-hXGvX_Mv_9v_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z_Z"
-        />
+        <div class="w-full h-full bg-primary-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-on-primary-container" style="font-size: 80px; font-variation-settings: 'FILL' 1;">favorite</span>
+        </div>
       </div>
       <!-- Floating Pixel Hearts -->
       <span class="absolute -top-4 -right-4 material-symbols-outlined text-primary text-4xl animate-bounce">favorite</span>
@@ -29,11 +27,11 @@ const store = useAppStore();
       <span class="text-primary italic">for Duos.</span>
     </h1>
 
-    <p class="text-body-lg text-on-surface-variant max-w-md mb-12">
+    <p class="text-body-lg text-on-surface-variant  mb-12">
       Tango helps partners sync their budgets, calendars, and goals in one retro-inspired shared space.
     </p>
 
-    <div class="flex flex-col sm:flex-row gap-6 w-full max-w-sm">
+    <div class="flex flex-col sm:flex-row gap-6 w-full ">
       <TangoButton
         class="flex-1"
         size="lg"
@@ -46,9 +44,9 @@ const store = useAppStore();
         class="flex-1"
         variant="outline"
         size="lg"
-        @click="store.setActiveView('SignUp')"
+        @click="store.setActiveView('Login')"
       >
-        Learn More
+        Sign In
       </TangoButton>
     </div>
 
