@@ -11,6 +11,7 @@ const store = useAppStore();
 const showDetails = ref(false);
 const showAddModal = ref(false);
 const selectedTransaction = ref<Transaction | null>(null);
+const balanceType = ref<'Joint' | 'Personal'>('Joint');
 
 const filter = ref<'all' | 'expense' | 'income'>('all');
 const filteredActivity = computed(() =>
@@ -31,13 +32,16 @@ const openDetails = (tx: Transaction) => {
     <main class="w-full grid grid-cols-1 md:grid-cols-12 gap-8">
       <!-- Left Column: Balance & Charts -->
       <div class="md:col-span-7 flex flex-col gap-8 w-full">
-        <!-- Joint Balance Card -->
+        <!-- Joint/Personal Balance Card -->
         <TangoCard padding="none" shadow="default" class="h-48 flex flex-col justify-center items-center relative w-full">
-          <div class="absolute top-4 left-4 px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm">
-            Joint Balance
+          <div 
+            class="absolute top-4 left-4 px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm cursor-pointer hover:opacity-80 flex items-center gap-1 select-none"
+            @click="balanceType = balanceType === 'Joint' ? 'Personal' : 'Joint'"
+          >
+            {{ balanceType }} Balance <span class="material-symbols-outlined text-[14px]">swap_horiz</span>
           </div>
           <h2 class="text-headline-xl text-on-surface mt-4">
-            ${{ store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
+            ${{ balanceType === 'Joint' ? store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00' }}
           </h2>
           <p class="text-body-md text-on-surface-variant mt-2">
             Updated just now

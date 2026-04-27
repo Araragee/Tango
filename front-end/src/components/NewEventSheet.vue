@@ -8,6 +8,7 @@ import { useAppStore, type CalendarEvent } from '../stores/useStore';
 const props = defineProps<{ 
     show: boolean;
     initialDate?: string;
+    initialEventId?: string | null;
 }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
@@ -17,7 +18,7 @@ const date = ref('');
 const time = ref('');
 const category = ref('date');
 const errors = ref({ title: '', date: '' });
-const editingEventId = ref<number | null>(null);
+const editingEventId = ref<string | null>(null);
 
 const dayEvents = computed(() => {
     if (!date.value) return [];
@@ -32,6 +33,15 @@ watch(() => props.show, (isShown) => {
         category.value = 'date';
         errors.value = { title: '', date: '' };
         editingEventId.value = null;
+
+        if (props.initialEventId) {
+            const ev = store.calendar.events.find((e: CalendarEvent) => e.id === props.initialEventId);
+            if (ev) {
+                date.value = ev.date;
+                // Wait for the next tick or just set it
+                setEditEvent(ev);
+            }
+        }
     }
 });
 

@@ -9,6 +9,7 @@ const store = useAppStore();
 
 const showEditModal = ref(false);
 const selectedGoalId = ref<string | null>(null);
+const viewType = ref<'Joint' | 'Personal'>('Joint');
 
 const openNewGoal = () => {
     selectedGoalId.value = null;
@@ -26,7 +27,16 @@ const openEditGoal = (id: string) => {
     <!-- Header Section -->
     <section class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black dark:border-white pb-lg gap-6 w-full">
       <div>
-        <h2 class="text-headline-xl text-on-surface">Your Goals</h2>
+        <div class="flex items-center gap-3">
+            <h2 class="text-headline-xl text-on-surface">{{ viewType }} Goals</h2>
+            <button 
+                @click="viewType = viewType === 'Joint' ? 'Personal' : 'Joint'"
+                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors bg-surface-variant rounded-full p-1"
+                title="Toggle View"
+            >
+                swap_horiz
+            </button>
+        </div>
         <p class="text-body-md text-on-surface-variant mt-sm">Keep tracking, you're doing great!</p>
       </div>
       <TangoButton @click="openNewGoal" shadow="dark" size="md" class="uppercase" aria-label="New Goal">

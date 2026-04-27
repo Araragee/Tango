@@ -526,12 +526,19 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
+    const newEvent = { ...event, id: crypto.randomUUID() } as CalendarEvent
+    events.value.push(newEvent)
+
     const { error } = await supabase.from('calendar_events').insert({
       household_id: household.householdId,
       created_by: auth.user?.id,
       ...event,
     })
-    if (error) throw error
+    
+    if (error) {
+      events.value = events.value.filter(e => e.id !== newEvent.id)
+      throw error
+    }
   }
 
   async function editEvent(id: string, updates: Partial<CalendarEvent>) {

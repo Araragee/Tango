@@ -10,6 +10,7 @@ const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const showEventSheet = ref(false);
 const selectedDate = ref('');
+const selectedEventId = ref<string | null>(null);
 
 const currentDate = ref(new Date(2023, 9, 1)); // Oct 2023 as starting default
 const daysInMonth = computed(() => new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 0).getDate());
@@ -31,6 +32,13 @@ const handleDayClick = (day: number) => {
   const m = String(currentDate.value.getMonth() + 1).padStart(2, '0');
   const d = String(day).padStart(2, '0');
   selectedDate.value = `${y}-${m}-${d}`;
+  selectedEventId.value = null;
+  showEventSheet.value = true;
+};
+
+const openEventDetails = (event: CalendarEvent) => {
+  selectedDate.value = event.date;
+  selectedEventId.value = event.id;
   showEventSheet.value = true;
 };
 
@@ -89,7 +97,8 @@ const syncScore = computed(() => {
           <div
             v-for="event in getEventsForDay(day)"
             :key="event.id"
-            class="mt-xs text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none flex items-center gap-[1px]"
+            @click.stop="openEventDetails(event)"
+            class="mt-xs text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none flex items-center gap-[1px] hover:opacity-80 transition-opacity"
             :class="{
                 'bg-primary-container text-on-primary-container': event.category === 'date',
                 'bg-secondary-container text-on-secondary-container': event.category === 'errand',
@@ -115,7 +124,8 @@ const syncScore = computed(() => {
           <li
             v-for="event in store.calendar.events.slice(0, 3)"
             :key="event.id"
-            class="flex items-center gap-4 bg-surface p-4 pixel-border-sm"
+            @click="openEventDetails(event)"
+            class="flex items-center gap-4 bg-surface p-4 pixel-border-sm cursor-pointer hover:bg-surface-variant transition-colors"
           >
             <div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">
                 {{ event.date.split('-').pop() }}
@@ -142,6 +152,6 @@ const syncScore = computed(() => {
       </TangoCard>
     </section>
 
-    <NewEventSheet :show="showEventSheet" :initialDate="selectedDate" @close="showEventSheet = false" />
+    <NewEventSheet :show="showEventSheet" :initialDate="selectedDate" :initialEventId="selectedEventId" @close="showEventSheet = false; selectedEventId = null" />
   </div>
 </template>
