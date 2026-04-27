@@ -42,14 +42,18 @@ watch(() => props.goalId, (newId) => {
     errors.value = { title: '', target: '' };
 }, { immediate: true });
 
-const deleteGoal = () => {
+const deleteGoal = async () => {
   if (!props.goalId) return;
   if (!confirm('Delete this goal? This cannot be undone.')) return;
-  store.deleteGoal(props.goalId);
-  emit('close');
+  try {
+    await store.deleteGoal(props.goalId);
+    emit('close');
+  } catch (e: any) {
+    alert('Failed to delete goal: ' + (e.message || 'Unknown error'));
+  }
 };
 
-const saveGoal = () => {
+const saveGoal = async () => {
     errors.value = { title: '', target: '' };
     let hasError = false;
 
@@ -64,26 +68,30 @@ const saveGoal = () => {
 
     if (hasError) return;
 
-    if (props.goalId) {
-        store.editGoal(props.goalId, {
-            title: title.value,
-            description: description.value,
-            saved: saved.value,
-            target: target.value,
-            icon: icon.value,
-            deadline: deadline.value || undefined
-        });
-    } else {
-        store.addGoal({
-            title: title.value,
-            description: description.value,
-            saved: saved.value,
-            target: target.value,
-            icon: icon.value,
-            deadline: deadline.value || undefined
-        });
+    try {
+      if (props.goalId) {
+          await store.editGoal(props.goalId, {
+              title: title.value,
+              description: description.value,
+              saved: saved.value,
+              target: target.value,
+              icon: icon.value,
+              deadline: deadline.value || undefined
+          });
+      } else {
+          await store.addGoal({
+              title: title.value,
+              description: description.value,
+              saved: saved.value,
+              target: target.value,
+              icon: icon.value,
+              deadline: deadline.value || undefined
+          });
+      }
+      emit('close');
+    } catch (e: any) {
+      alert('Failed to save goal: ' + (e.message || 'Unknown error'));
     }
-    emit('close');
 };
 </script>
 

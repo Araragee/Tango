@@ -182,10 +182,7 @@ export const useAppStore = defineStore('app', () => {
     if (error) { console.error('[fetchBudget]', error); return }
 
     recentActivity.value = (data ?? []).map(mapTransaction)
-    balance.value = recentActivity.value.reduce((s, t) => s + t.amount, 0)
-    savedThisMonth.value = recentActivity.value
-      .filter(t => t.type === 'income')
-      .reduce((s, t) => s + t.amount, 0)
+    recalculateBudget()
   }
 
   async function fetchGoals() {
@@ -305,13 +302,43 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
+    // Optimistic update
+    const newTx = { ...transaction, id: crypto.randomUUID() } as Transaction
+    recentActivity.value.unshift(newTx)
+    recalculateBudget()
+
     const { error } = await supabase.from('transactions').insert({
       household_id: household.householdId,
       created_by: auth.user?.id,
       ...transaction,
     })
-    if (error) throw error
-    // Realtime will trigger fetchBudget
+    
+    if (error) {
+      // Rollback on error
+      recentActivity.value = recentActivity.value.filter(t => t.id !== newTx.id)
+      recalculateBudget()
+      throw error
+    }
+  }
+
+  function recalculateBudget() {
+    balance.value = recentActivity.value.reduce((s, t) => s + t.amount, 0)
+    savedThisMonth.value = recentActivity.value
+      .filter(t => t.type === 'income')
+      .reduce((s, t) => s + t.amount, 0)
+
+    const categories: Record<string, number> = {}
+    recentActivity.value.filter(t => t.type === 'expense').forEach(t => {
+      categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount)
+    })
+
+    monthlySpending.value = Object.entries(categories).map(([name, spent], i) => ({
+      id: String(i),
+      category: name,
+      spent,
+      limit: 1000,
+      icon: 'category'
+    }))
   }
 
   async function updateTransaction(id: string, updates: Partial<Transaction>) {
@@ -350,14 +377,22 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
+    // Optimistic update
+    const newGoal = { ...goal, id: crypto.randomUUID(), progress, status } as Goal
+    goals.value.push(newGoal)
+
     const { error } = await supabase.from('goals').insert({
       household_id: household.householdId,
       created_by: auth.user?.id,
-      ...goal,
       progress,
       status,
+      ...goal,
     })
-    if (error) throw error
+    
+    if (error) {
+      goals.value = goals.value.filter(g => g.id !== newGoal.id)
+      throw error
+    }
   }
 
   async function editGoal(id: string, updates: Partial<Goal>) {
@@ -367,10 +402,11 @@ export const useAppStore = defineStore('app', () => {
     const progress = calcProgress(saved, target)
     const status = calcStatus(progress)
 
-    if (!isConfigured) {
-      if (goal) Object.assign(goal, updates, { progress, status })
-      return
-    }
+    // Optimistic update
+    const oldGoal = { ...goal }
+    Object.assign(goal, updates, { progress, status })
+
+    if (!isConfigured) return
 
     const { error } = await supabase.from('goals').update({
       ...updates,
@@ -378,7 +414,11 @@ export const useAppStore = defineStore('app', () => {
       status,
       updated_at: new Date().toISOString(),
     }).eq('id', id)
-    if (error) throw error
+    
+    if (error) {
+      Object.assign(goal, oldGoal)
+      throw error
+    }
   }
 
   async function deleteGoal(id: string) {
@@ -426,6 +466,10 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
+    // Optimistic update
+    const newTask = { ...task, id: crypto.randomUUID(), completed: false } as Todo
+    todos.value.push(newTask)
+
     const { error } = await supabase.from('todos').insert({
       household_id: household.householdId,
       owner_id: auth.user?.id,
@@ -434,7 +478,11 @@ export const useAppStore = defineStore('app', () => {
       updated_by: auth.user?.id,
       ...task,
     })
-    if (error) throw error
+    
+    if (error) {
+      todos.value = todos.value.filter(t => t.id !== newTask.id)
+      throw error
+    }
   }
 
   async function deleteTask(id: string) {
@@ -450,17 +498,21 @@ export const useAppStore = defineStore('app', () => {
     const todo = todos.value.find(t => t.id === id)
     if (!todo) return
 
-    if (!isConfigured) {
-      todo.completed = !todo.completed
-      return
-    }
+    // Optimistic update
+    const oldStatus = todo.completed
+    todo.completed = !todo.completed
+
+    if (!isConfigured) return
 
     const { error } = await supabase.from('todos').update({
-      completed: !todo.completed,
+      completed: todo.completed,
       updated_at: new Date().toISOString(),
     }).eq('id', id)
-    if (error) throw error
-    // Realtime will sync the change back
+    
+    if (error) {
+      todo.completed = oldStatus
+      throw error
+    }
   }
 
   // ── Calendar ─────────────────────────────────────────────────────────────
@@ -520,10 +572,10 @@ export const useAppStore = defineStore('app', () => {
     userName,
     partnerName,
 
-    get budget() { return _budget.value },
-    get plans() { return _plans.value },
-    get todos() { return _todos.value },
-    get calendar() { return _calendar.value },
+    budget: _budget,
+    plans: _plans,
+    todos: _todos,
+    calendar: _calendar,
 
     // Actions
     updateProfile,

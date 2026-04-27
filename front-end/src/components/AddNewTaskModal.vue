@@ -16,24 +16,28 @@ const priority = ref('Normal');
 const dueDate = ref('');
 const error = ref('');
 
-const saveTask = () => {
+const saveTask = async () => {
   if (!taskName.value.trim()) {
     error.value = 'Task name is required';
     return;
   }
 
-  store.addTask({
-    text: taskName.value,
-    category: category.value,
-    assigned: assignee.value,
-    priority: priority.value as any,
-    subtext: dueDate.value ? `Due: ${dueDate.value}` : undefined
-  });
+  try {
+    await store.addTask({
+      text: taskName.value,
+      category: category.value,
+      assigned: assignee.value,
+      priority: priority.value as any,
+      subtext: dueDate.value ? `Due: ${dueDate.value}` : undefined
+    });
 
-  taskName.value = '';
-  category.value = 'General';
-  error.value = '';
-  emit('close');
+    taskName.value = '';
+    category.value = 'General';
+    error.value = '';
+    emit('close');
+  } catch (e: any) {
+    alert('Failed to save task: ' + (e.message || 'Unknown error'));
+  }
 };
 </script>
 

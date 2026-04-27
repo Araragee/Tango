@@ -31,7 +31,7 @@ create table public.household_members (
 create table public.transactions (
   id           uuid primary key default gen_random_uuid(),
   household_id uuid references public.households(id) on delete cascade not null,
-  created_by   uuid references auth.users(id) not null,
+  created_by   uuid references auth.users(id) on delete cascade not null,
   title        text not null,
   amount       numeric not null,
   type         text not null check (type in ('expense', 'income')),
@@ -45,7 +45,7 @@ create table public.transactions (
 create table public.goals (
   id           uuid primary key default gen_random_uuid(),
   household_id uuid references public.households(id) on delete cascade not null,
-  created_by   uuid references auth.users(id) not null,
+  created_by   uuid references auth.users(id) on delete cascade not null,
   title        text not null,
   description  text default '',
   saved        numeric not null default 0,
@@ -62,7 +62,7 @@ create table public.goals (
 create table public.todos (
   id           uuid primary key default gen_random_uuid(),
   household_id uuid references public.households(id) on delete cascade not null,
-  owner_id     uuid references auth.users(id) not null,
+  owner_id     uuid references auth.users(id) on delete cascade not null,
   text         text not null,
   completed    boolean not null default false,
   shared       boolean not null default false,
@@ -72,14 +72,14 @@ create table public.todos (
   subtext      text,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now(),
-  updated_by   uuid references auth.users(id)
+  updated_by   uuid references auth.users(id) on delete set null
 );
 
 -- Calendar events
 create table public.calendar_events (
   id           uuid primary key default gen_random_uuid(),
   household_id uuid references public.households(id) on delete cascade not null,
-  created_by   uuid references auth.users(id) not null,
+  created_by   uuid references auth.users(id) on delete cascade not null,
   title        text not null,
   date         text not null,
   time         text not null,

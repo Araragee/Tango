@@ -16,7 +16,7 @@ const type = ref<'expense' | 'income'>('expense');
 const date = ref(new Date().toISOString().split('T')[0]);
 const errors = ref({ title: '', amount: '' });
 
-const saveTransaction = () => {
+const saveTransaction = async () => {
     errors.value = { title: '', amount: '' };
     let hasError = false;
 
@@ -31,22 +31,26 @@ const saveTransaction = () => {
 
     if (hasError) return;
 
-    store.addTransaction({
-        title: title.value,
-        amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
-        date: date.value,
-        type: type.value,
-        icon: type.value === 'expense' ? 'shopping_cart' : 'account_balance',
-        category: category.value
-    });
+    try {
+        await store.addTransaction({
+            title: title.value,
+            amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
+            date: date.value,
+            type: type.value,
+            icon: type.value === 'expense' ? 'shopping_cart' : 'account_balance',
+            category: category.value
+        });
 
-    // Reset and close
-    title.value = '';
-    amount.value = 0;
-    category.value = 'General';
-    type.value = 'expense';
-    date.value = new Date().toISOString().split('T')[0];
-    emit('close');
+        // Reset and close
+        title.value = '';
+        amount.value = 0;
+        category.value = 'General';
+        type.value = 'expense';
+        date.value = new Date().toISOString().split('T')[0];
+        emit('close');
+    } catch (e: any) {
+        alert('Failed to add transaction: ' + (e.message || 'Unknown error'));
+    }
 };
 </script>
 
