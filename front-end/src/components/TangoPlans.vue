@@ -24,7 +24,7 @@ const openEditGoal = (id: string) => {
 <template>
   <div class="space-y-xl w-full">
     <!-- Header Section -->
-    <section class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black pb-lg gap-6 w-full">
+    <section class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black dark:border-white pb-lg gap-6 w-full">
       <div>
         <h2 class="text-headline-xl text-on-surface">Your Goals</h2>
         <p class="text-body-md text-on-surface-variant mt-sm">Keep tracking, you're doing great!</p>
@@ -48,7 +48,7 @@ const openEditGoal = (id: string) => {
         >
           <div 
             v-if="goal.status"
-            class="absolute top-0 right-0 border-l-2 border-b-2 border-black px-md py-sm text-label-sm z-10"
+            class="absolute top-0 right-0 border-l-2 border-b-2 border-black dark:border-white px-md py-sm text-label-sm z-10"
             :class="goal.status === 'On Track' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-variant text-on-surface-variant'"
           >
             {{ goal.status }}

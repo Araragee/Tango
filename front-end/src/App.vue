@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, provide } from 'vue';
+import { computed, ref, provide, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
+import { useThemeStore } from './stores/useThemeStore';
 import { isConfigured } from './lib/supabase';
 
 const router = useRouter();
@@ -12,8 +13,13 @@ const route = useRoute();
 const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null);
 const auth = useAuthStore();
 const household = useHouseholdStore();
+const themeStore = useThemeStore();
 
 const showNav = computed(() => route.path.startsWith('/app'));
+
+onMounted(() => {
+  themeStore.applyTheme();
+});
 
 /** Logo click: go home for the app, not the marketing landing */
 function goHome() {
@@ -38,7 +44,7 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
     <!-- TopAppBar -->
-    <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-surface dark:bg-stone-900 border-b-2 border-black">
+    <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-surface border-b-2 border-black dark:border-white">
       <div class="flex items-center gap-2 cursor-pointer" @click="goHome()">
         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <h1 class="text-2xl font-black text-primary tracking-[0.1em] italic uppercase">TANGO</h1>

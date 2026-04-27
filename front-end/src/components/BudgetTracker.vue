@@ -42,7 +42,7 @@ const openDetails = (tx: Transaction) => {
           <p class="text-body-md text-on-surface-variant mt-2">
             Updated just now
           </p>
-          <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black"></div>
+          <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black dark:border-white"></div>
         </TangoCard>
 
         <!-- Saved This Month Stat -->

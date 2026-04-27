@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { useThemeStore, type AccentColor } from '../stores/useThemeStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
@@ -12,12 +13,19 @@ const router = useRouter();
 const store = useAppStore();
 const auth = useAuthStore();
 const household = useHouseholdStore();
+const themeStore = useThemeStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const userName = ref(store.userName);
-const partnerName = ref(store.partnerName);
-const darkMode = ref(false);
 const notifications = ref(true);
+
+const themes: { name: string; color: AccentColor; bg: string }[] = [
+    { name: 'Rose', color: 'rose', bg: 'bg-[#983e4b]' },
+    { name: 'Blue', color: 'blue', bg: 'bg-[#3e5e98]' },
+    { name: 'Green', color: 'green', bg: 'bg-[#3e9854]' },
+    { name: 'Amber', color: 'amber', bg: 'bg-[#987a3e]' },
+    { name: 'Purple', color: 'purple', bg: 'bg-[#7a3e98]' },
+];
 
 const updateProfile = async () => {
     if (!userName.value.trim()) {
@@ -48,7 +56,7 @@ const signOut = async () => {
 
 <template>
   <div class="max-w-5xl mx-auto space-y-8">
-    <div class="border-b-2 border-black pb-4">
+    <div class="border-b-2 border-black dark:border-white pb-4">
       <h2 class="text-headline-xl">Settings</h2>
     </div>
 
@@ -69,19 +77,36 @@ const signOut = async () => {
       </TangoCard>
 
       <TangoCard padding="lg">
-        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Preferences</h3>
-        <div class="space-y-4">
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Appearance</h3>
+        <div class="space-y-6">
           <div class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">Dark Mode</span>
-            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
-                 :class="darkMode ? 'bg-primary' : 'bg-surface-variant'"
-                 @click="darkMode = !darkMode"
-                 role="switch" :aria-checked="darkMode">
+            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+                 :class="themeStore.isDark ? 'bg-primary' : 'bg-surface-variant'"
+                 @click="themeStore.toggleDark()"
+                 role="switch" :aria-checked="themeStore.isDark">
               <div class="absolute top-1 w-4 h-4 transition-all"
-                   :class="darkMode ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
+                   :class="themeStore.isDark ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
-          <div class="flex items-center justify-between">
+
+          <div class="space-y-3">
+            <span class="text-body-md font-bold uppercase block">Color Theme</span>
+            <div class="flex flex-wrap gap-3">
+                <button 
+                    v-for="t in themes" 
+                    :key="t.color"
+                    @click="themeStore.setAccent(t.color)"
+                    class="w-10 h-10 pixel-border transition-all flex items-center justify-center relative"
+                    :class="[t.bg, themeStore.accentColor === t.color ? 'scale-110 hard-shadow-dark z-10' : 'hover:scale-105']"
+                    :title="t.name"
+                >
+                    <span v-if="themeStore.accentColor === t.color" class="material-symbols-outlined text-white text-sm">check</span>
+                </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-on-surface pt-4">
             <span class="text-body-md font-bold uppercase">Notifications</span>
             <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
                  :class="notifications ? 'bg-primary' : 'bg-surface-variant'"
@@ -108,3 +133,4 @@ const signOut = async () => {
     </div>
   </div>
 </template>
+

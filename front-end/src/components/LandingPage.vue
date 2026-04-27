@@ -51,7 +51,7 @@ const router = useRouter();
     </div>
 
     <!-- Footer Stats -->
-    <div class="mt-20 grid grid-cols-2 gap-12 border-t-2 border-black pt-8 w-full max-w-2xl">
+    <div class="mt-20 grid grid-cols-2 gap-12 border-t-2 border-black dark:border-white pt-8 w-full max-w-2xl">
       <div>
         <div class="text-headline-md text-secondary">50k+</div>
         <div class="text-label-sm uppercase tracking-widest mt-1">Happy Couples</div>
