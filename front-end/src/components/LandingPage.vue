@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useAppStore } from '../stores/useStore';
+import { useRouter } from 'vue-router';
 import TangoButton from './TangoButton.vue';
 
-const store = useAppStore();
+const router = useRouter();
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const store = useAppStore();
         class="flex-1"
         size="lg"
         shadow="dark"
-        @click="store.setActiveView('Login')"
+        @click="router.push('/login')"
       >
         Get Started
       </TangoButton>
@@ -44,7 +44,7 @@ const store = useAppStore();
         class="flex-1"
         variant="outline"
         size="lg"
-        @click="store.setActiveView('Login')"
+        @click="router.push('/login')"
       >
         Sign In
       </TangoButton>

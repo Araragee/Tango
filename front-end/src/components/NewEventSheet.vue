@@ -21,7 +21,7 @@ const editingEventId = ref<number | null>(null);
 
 const dayEvents = computed(() => {
     if (!date.value) return [];
-    return store.calendar.events.filter(e => e.date === date.value);
+    return store.calendar.events.filter((e: CalendarEvent) => e.date === date.value);
 });
 
 watch(() => props.show, (isShown) => {

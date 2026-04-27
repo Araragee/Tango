@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { ref, inject } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
 
+const router = useRouter();
 const store = useAppStore();
+const auth = useAuthStore();
+const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const userName = ref(store.userName);
@@ -13,13 +19,17 @@ const partnerName = ref(store.partnerName);
 const darkMode = ref(false);
 const notifications = ref(true);
 
-const updateProfile = () => {
-    if (!userName.value.trim() || !partnerName.value.trim()) {
-        notify('Names cannot be empty.', 'error');
+const updateProfile = async () => {
+    if (!userName.value.trim()) {
+        notify('Name cannot be empty.', 'error');
         return;
     }
-    store.updateProfile(userName.value, partnerName.value);
-    notify('Profile updated successfully!', 'success');
+    try {
+        await store.updateProfile(userName.value.trim());
+        notify('Profile updated successfully!', 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to update profile.', 'error');
+    }
 };
 
 const resetAccount = () => {
@@ -27,6 +37,12 @@ const resetAccount = () => {
         localStorage.removeItem('tango-state');
         window.location.reload();
     }
+};
+
+const signOut = async () => {
+    await auth.logout();
+    household.reset();
+    router.push('/');
 };
 </script>
 
@@ -41,7 +57,13 @@ const resetAccount = () => {
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Profile</h3>
         <div class="space-y-4">
           <TangoInput label="Your Name" v-model="userName" />
-          <TangoInput label="Partner's Name" v-model="partnerName" />
+          <div class="flex flex-col gap-1">
+            <label class="text-label-sm text-on-surface-variant uppercase font-bold">Partner</label>
+            <div class="px-4 py-3 sunken-input bg-surface-variant text-on-surface-variant opacity-70">
+              {{ store.partnerName }}
+            </div>
+            <p class="text-[10px] text-on-surface-variant uppercase mt-1">Managed by partner</p>
+          </div>
           <TangoButton @click="updateProfile" shadow="dark" class="mt-4">Update Profile</TangoButton>
         </div>
       </TangoCard>
@@ -82,7 +104,7 @@ const resetAccount = () => {
     </div>
 
     <div class="flex justify-center pt-8">
-        <TangoButton @click="store.setActiveView('Landing')" variant="surface" shadow="dark">Sign Out</TangoButton>
+        <TangoButton @click="signOut" variant="surface" shadow="dark">Sign Out</TangoButton>
     </div>
   </div>
 </template>

@@ -10,12 +10,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.104.1",
     "clsx": "^2.1.1",
+    "idb": "^8.0.3",
     "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
     "tailwind-merge": "^3.5.0",
     "vite-plugin-pwa": "^1.2.0",
-    "vue": "^3.4.21"
+    "vue": "^3.4.21",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0-alpha.12",

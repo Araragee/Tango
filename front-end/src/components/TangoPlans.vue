@@ -8,14 +8,14 @@ import EditGoalModal from './EditGoalModal.vue';
 const store = useAppStore();
 
 const showEditModal = ref(false);
-const selectedGoalId = ref<number | null>(null);
+const selectedGoalId = ref<string | null>(null);
 
 const openNewGoal = () => {
     selectedGoalId.value = null;
     showEditModal.value = true;
 };
 
-const openEditGoal = (id: number) => {
+const openEditGoal = (id: string) => {
     selectedGoalId.value = id;
     showEditModal.value = true;
 };

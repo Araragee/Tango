@@ -7,7 +7,7 @@ import { useAppStore, type Goal } from '../stores/useStore';
 
 const props = defineProps<{
     show: boolean;
-    goalId?: number | null;
+    goalId?: string | null;
 }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
