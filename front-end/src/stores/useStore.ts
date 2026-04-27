@@ -38,6 +38,7 @@ export interface Todo {
   subtext?: string
   assigned?: string
   priority?: 'Chill' | 'Normal' | 'ASAP'
+  due_date?: string
 }
 
 export interface CalendarEvent {
@@ -88,6 +89,7 @@ function mapTodo(r: any): Todo {
     subtext: r.subtext,
     assigned: r.assigned,
     priority: r.priority,
+    due_date: r.due_date,
   }
 }
 
@@ -120,6 +122,7 @@ export const useAppStore = defineStore('app', () => {
 
   const balance = ref(0)
   const savedThisMonth = ref(0)
+  const budgetLastUpdated = ref<Date | null>(null)
   const monthlySpending = ref<{ id: string; category: string; spent: number; limit: number; icon: string }[]>([])
   const recentActivity = ref<Transaction[]>([])
 
@@ -323,9 +326,14 @@ export const useAppStore = defineStore('app', () => {
 
   function recalculateBudget() {
     balance.value = recentActivity.value.reduce((s, t) => s + t.amount, 0)
+
+    const now = new Date()
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
     savedThisMonth.value = recentActivity.value
-      .filter(t => t.type === 'income')
+      .filter(t => t.type === 'income' && t.date.startsWith(thisMonth))
       .reduce((s, t) => s + t.amount, 0)
+
+    budgetLastUpdated.value = new Date()
 
     const categories: Record<string, number> = {}
     recentActivity.value.filter(t => t.type === 'expense').forEach(t => {
@@ -515,6 +523,26 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  async function editTask(id: string, updates: Partial<Omit<Todo, 'id' | 'completed'>>) {
+    const todo = todos.value.find(t => t.id === id)
+    if (!todo) return
+
+    const oldTodo = { ...todo }
+    Object.assign(todo, updates)
+
+    if (!isConfigured) return
+
+    const { error } = await supabase.from('todos').update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }).eq('id', id)
+
+    if (error) {
+      Object.assign(todo, oldTodo)
+      throw error
+    }
+  }
+
   // ── Calendar ─────────────────────────────────────────────────────────────
 
   async function addEvent(event: Omit<CalendarEvent, 'id'>) {
@@ -568,6 +596,7 @@ export const useAppStore = defineStore('app', () => {
     savedThisMonth: savedThisMonth.value,
     monthlySpending: monthlySpending.value,
     recentActivity: recentActivity.value,
+    lastUpdated: budgetLastUpdated.value,
   }))
   const _plans = computed(() => ({ goals: goals.value }))
   const _todos = computed(() => ({ items: todos.value }))
@@ -605,6 +634,7 @@ export const useAppStore = defineStore('app', () => {
     updateGoalProgress,
 
     addTask,
+    editTask,
     deleteTask,
     toggleTodo,
 

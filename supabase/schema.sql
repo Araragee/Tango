@@ -70,6 +70,7 @@ create table public.todos (
   assigned     text default 'both',
   priority     text check (priority in ('Chill', 'Normal', 'ASAP')),
   subtext      text,
+  due_date     text,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now(),
   updated_by   uuid references auth.users(id) on delete set null

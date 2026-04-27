@@ -4,6 +4,8 @@ import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { useAppStore, type CalendarEvent } from '../stores/useStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 
 const props = defineProps<{ 
     show: boolean;
@@ -12,6 +14,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
+const household = useHouseholdStore();
+const prefs = usePreferencesStore();
+const newCategory = ref('');
 
 const title = ref('');
 const date = ref('');
@@ -89,8 +94,8 @@ const saveEvent = () => {
         date: date.value,
         time: time.value || 'All Day',
         category: category.value,
-        partners: ['P1', 'P2'],
-        icon: category.value === 'date' ? 'favorite' : category.value === 'bill' ? 'payments' : category.value === 'errand' ? 'shopping_cart' : 'event'
+        partners: household.members.map(m => m.user_id),
+        icon: ({ date: 'favorite', bill: 'payments', errand: 'shopping_cart' } as Record<string, string>)[category.value] ?? 'event'
     };
 
     if (editingEventId.value) {
@@ -167,18 +172,23 @@ const saveEvent = () => {
 
             <div class="flex flex-col gap-2">
                 <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-                <div class="flex gap-4 flex-wrap">
+                <div class="flex gap-2 flex-wrap">
                     <button
-                        v-for="cat in ['date', 'errand', 'bill', 'other']"
+                        v-for="cat in prefs.eventCategories"
                         :key="cat"
                         @click="category = cat"
-                        class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
+                        class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
                         :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
                         :aria-label="'Select ' + cat + ' category'"
                         :aria-pressed="category === cat"
-                    >
-                        {{ cat }}
-                    </button>
+                    >{{ cat }}</button>
+                </div>
+                <div class="flex gap-2 mt-1">
+                    <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
+                        @keyup.enter="() => { prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
+                    <TangoButton size="sm" variant="outline"
+                        @click="() => { prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
+                        aria-label="Add category">+</TangoButton>
                 </div>
             </div>
         </div>

@@ -73,9 +73,9 @@ const saveEdit = () => {
     <template #footer>
       <TangoButton v-if="!editMode" @click="deleteTx" variant="outline" class="text-error border-error mr-auto" size="sm">Delete</TangoButton>
       <TangoButton v-if="!editMode" @click="editMode = true" variant="surface" size="sm">Edit</TangoButton>
-      <TangoButton v-if="editMode" @click="saveEdit" shadow="dark" size="sm">Save</TangoButton>
+      <TangoButton v-if="!editMode" @click="emit('close')" shadow="dark" size="sm">Close</TangoButton>
       <TangoButton v-if="editMode" @click="editMode = false" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="emit('close')" shadow="dark" size="sm">{{ editMode ? 'Close' : 'Close' }}</TangoButton>
+      <TangoButton v-if="editMode" @click="saveEdit" shadow="dark" size="sm">Save</TangoButton>
     </template>
   </BaseModal>
 </template>

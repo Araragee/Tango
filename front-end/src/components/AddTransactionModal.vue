@@ -4,84 +4,90 @@ import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { useAppStore } from '../stores/useStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 
-const props = defineProps<{ show: boolean }>();
+defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
+const prefs = usePreferencesStore();
 
 const title = ref('');
 const amount = ref(0);
-const category = ref('General');
+const category = ref('Food');
 const type = ref<'expense' | 'income'>('expense');
 const date = ref(new Date().toISOString().split('T')[0]);
 const errors = ref({ title: '', amount: '' });
+const newCategory = ref('');
+
+const addCategory = () => {
+  if (!newCategory.value.trim()) return;
+  prefs.addTransactionCategory(newCategory.value);
+  category.value = newCategory.value.trim();
+  newCategory.value = '';
+};
 
 const saveTransaction = async () => {
-    errors.value = { title: '', amount: '' };
-    let hasError = false;
+  errors.value = { title: '', amount: '' };
+  let hasError = false;
+  if (!title.value.trim()) { errors.value.title = 'Title is required'; hasError = true; }
+  if (amount.value === 0) { errors.value.amount = 'Amount cannot be zero'; hasError = true; }
+  if (hasError) return;
 
-    if (!title.value.trim()) {
-        errors.value.title = 'Title is required';
-        hasError = true;
-    }
-    if (amount.value === 0) {
-        errors.value.amount = 'Amount cannot be zero';
-        hasError = true;
-    }
-
-    if (hasError) return;
-
-    try {
-        await store.addTransaction({
-            title: title.value,
-            amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
-            date: date.value,
-            type: type.value,
-            icon: type.value === 'expense' ? 'shopping_cart' : 'account_balance',
-            category: category.value
-        });
-
-        // Reset and close
-        title.value = '';
-        amount.value = 0;
-        category.value = 'General';
-        type.value = 'expense';
-        date.value = new Date().toISOString().split('T')[0];
-        emit('close');
-    } catch (e: any) {
-        alert('Failed to add transaction: ' + (e.message || 'Unknown error'));
-    }
+  try {
+    await store.addTransaction({
+      title: title.value,
+      amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
+      date: date.value,
+      type: type.value,
+      icon: type.value === 'expense' ? 'shopping_cart' : 'account_balance',
+      category: category.value,
+    });
+    title.value = '';
+    amount.value = 0;
+    category.value = 'Food';
+    type.value = 'expense';
+    date.value = new Date().toISOString().split('T')[0];
+    emit('close');
+  } catch (e: any) {
+    alert('Failed to add transaction: ' + (e.message || 'Unknown error'));
+  }
 };
 </script>
 
 <template>
   <BaseModal :show="show" title="New Transaction" @close="emit('close')">
     <div class="flex flex-col gap-6">
-        <div class="flex gap-4">
-            <button
-                @click="type = 'expense'"
-                class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-                :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'"
-            >
-                Expense
-            </button>
-            <button
-                @click="type = 'income'"
-                class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-                :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'"
-            >
-                Income
-            </button>
+      <!-- Type toggle -->
+      <div class="flex gap-4">
+        <button @click="type = 'expense'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
+          :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'">Expense</button>
+        <button @click="type = 'income'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
+          :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'">Income</button>
+      </div>
+
+      <TangoInput v-model="title" label="Title" placeholder="e.g. Weekly Groceries" :error="errors.title" required />
+
+      <div class="grid grid-cols-2 gap-4">
+        <TangoInput v-model.number="amount" label="Amount" type="number" :error="errors.amount" required />
+        <TangoInput v-model="date" label="Date" type="date" required />
+      </div>
+
+      <!-- Category picker -->
+      <div class="flex flex-col gap-2">
+        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
+        <div class="flex gap-2 flex-wrap">
+          <button
+            v-for="cat in prefs.transactionCategories" :key="cat"
+            @click="category = cat"
+            class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
+            :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+          >{{ cat }}</button>
         </div>
-
-        <TangoInput v-model="title" label="Title" placeholder="e.g. Weekly Groceries" :error="errors.title" required />
-
-        <div class="grid grid-cols-2 gap-4">
-            <TangoInput v-model.number="amount" label="Amount" type="number" :error="errors.amount" required />
-            <TangoInput v-model="date" label="Date" type="date" required />
+        <div class="flex gap-2 mt-1">
+          <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1" @keyup.enter="addCategory" />
+          <TangoButton size="sm" variant="outline" @click="addCategory" aria-label="Add category">+</TangoButton>
         </div>
-
-        <TangoInput v-model="category" label="Category" placeholder="e.g. Food" />
+      </div>
     </div>
 
     <template #footer>

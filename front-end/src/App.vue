@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, provide, onMounted } from 'vue';
+import { computed, ref, provide, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue';
+import GlobalSearch from './components/GlobalSearch.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
 import { useThemeStore } from './stores/useThemeStore';
@@ -11,14 +12,27 @@ import { isConfigured } from './lib/supabase';
 const router = useRouter();
 const route = useRoute();
 const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null);
+const showSearch = ref(false);
 const auth = useAuthStore();
 const household = useHouseholdStore();
 const themeStore = useThemeStore();
 
 const showNav = computed(() => route.path.startsWith('/app'));
 
+const onGlobalKey = (e: KeyboardEvent) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    showSearch.value = true;
+  }
+};
+
 onMounted(() => {
   themeStore.applyTheme();
+  window.addEventListener('keydown', onGlobalKey);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onGlobalKey);
 });
 
 /** Logo click: go home for the app, not the marketing landing */
@@ -51,6 +65,16 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
       </div>
 
       <div class="flex items-center gap-4">
+        <button
+          v-if="showNav"
+          @click="showSearch = true"
+          class="flex items-center gap-2 px-3 py-1.5 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
+          aria-label="Search (Cmd+K)"
+        >
+          <span class="material-symbols-outlined text-[16px]">search</span>
+          <span class="hidden sm:inline">Search</span>
+          <kbd class="hidden sm:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
+        </button>
         <button
           v-if="showNav"
           @click="router.push('/app/archive')"
@@ -91,6 +115,9 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
     <!-- Notifications -->
     <NotificationSystem ref="notificationRef" />
+
+    <!-- Global Search -->
+    <GlobalSearch :show="showSearch" @close="showSearch = false" />
   </div>
 </template>
 
