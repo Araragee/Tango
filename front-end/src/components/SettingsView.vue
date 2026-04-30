@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, watch, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -18,6 +18,10 @@ const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'i
 
 const userName = ref(store.userName);
 const notifications = ref(true);
+
+watch(() => store.userName, (val) => {
+    userName.value = val;
+});
 
 const themes: { name: string; color: AccentColor; bg: string }[] = [
     { name: 'Rose', color: 'rose', bg: 'bg-[#983e4b]' },

@@ -6,7 +6,7 @@ import TangoCard from './TangoCard.vue';
 const store = useAppStore();
 
 const completedGoals = computed(() => store.plans.goals.filter((g: Goal) => g.status === 'Completed'));
-const archivedTransactions = computed(() => store.budget.recentActivity.filter((tx: Transaction) => tx.type === 'expense').slice(-10));
+const archivedTransactions = computed(() => store.budget.recentActivity.filter((tx: Transaction) => tx.type === 'expense').slice(0, 10));
 </script>
 
 <template>

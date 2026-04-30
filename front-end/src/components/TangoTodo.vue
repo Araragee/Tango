@@ -49,16 +49,22 @@ const openEditModal = (task: Todo) => {
   showAddModal.value = true;
 };
 
-const quickAdd = () => {
+const quickAdd = async () => {
   if (!newTaskText.value.trim()) return;
-  store.addTask({
-    text: newTaskText.value,
-    category: 'Quick Add',
-    assigned: 'Both',
-    priority: 'Normal',
-  });
+  const text = newTaskText.value;
   newTaskText.value = '';
-  notify('Task added!', 'success');
+  try {
+    await store.addTask({
+      text,
+      category: 'Quick Add',
+      assigned: 'Both',
+      priority: 'Normal',
+    });
+    notify('Task added!', 'success');
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to add task.', 'error');
+    newTaskText.value = text;
+  }
 };
 
 const activeCount = computed(() => store.todos.items.filter(t => !t.completed).length);

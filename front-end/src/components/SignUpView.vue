@@ -33,10 +33,11 @@ const signup = async () => {
 
   loading.value = true;
   try {
-    const user = await auth.signup(email.value, password.value);
+    const user = await auth.signup(email.value, password.value, displayName.value.trim());
     if (user) {
       const { useAppStore } = await import('../stores/useStore');
       const store = useAppStore();
+      // Trigger creates profile row; this also covers display_name updates
       await store.updateProfile(displayName.value.trim());
     }
     router.push('/onboarding');

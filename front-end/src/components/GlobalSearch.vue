@@ -42,7 +42,7 @@ const results = computed<SearchResult[]>(() => {
       title: t.text,
       subtitle: `${t.category} · ${t.priority ?? 'Normal'}${t.due_date ? ' · Due ' + t.due_date : ''}`,
       icon: t.completed ? 'check_circle' : 'radio_button_unchecked',
-      route: '/app/todo',
+      route: '/app/todos',
     }));
 
   const events = store.calendar.events

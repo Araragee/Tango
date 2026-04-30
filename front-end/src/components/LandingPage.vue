@@ -36,7 +36,7 @@ const router = useRouter();
         class="flex-1"
         size="lg"
         shadow="dark"
-        @click="router.push('/login')"
+        @click="router.push('/signup')"
       >
         Get Started
       </TangoButton>

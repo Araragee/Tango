@@ -336,9 +336,11 @@ export const useAppStore = defineStore('app', () => {
     budgetLastUpdated.value = new Date()
 
     const categories: Record<string, number> = {}
-    recentActivity.value.filter(t => t.type === 'expense').forEach(t => {
-      categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount)
-    })
+    recentActivity.value
+      .filter(t => t.type === 'expense' && t.date.startsWith(thisMonth))
+      .forEach(t => {
+        categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount)
+      })
 
     monthlySpending.value = Object.entries(categories).map(([name, spent], i) => ({
       id: String(i),
@@ -350,26 +352,38 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function updateTransaction(id: string, updates: Partial<Transaction>) {
-    if (!isConfigured) {
-      const tx = recentActivity.value.find(t => t.id === id)
-      if (tx) Object.assign(tx, updates)
-      return
-    }
+    const tx = recentActivity.value.find(t => t.id === id)
+    if (!tx) return
+
+    const oldTx = { ...tx }
+    Object.assign(tx, updates)
+    recalculateBudget()
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('transactions').update(updates).eq('id', id)
-    if (error) throw error
+    if (error) {
+      Object.assign(tx, oldTx)
+      recalculateBudget()
+      throw error
+    }
   }
 
   async function deleteTransaction(id: string) {
-    if (!isConfigured) {
-      const idx = recentActivity.value.findIndex(t => t.id === id)
-      if (idx !== -1) {
-        balance.value -= recentActivity.value[idx].amount
-        recentActivity.value.splice(idx, 1)
-      }
-      return
-    }
+    const idx = recentActivity.value.findIndex(t => t.id === id)
+    if (idx === -1) return
+    const removed = recentActivity.value[idx]
+    recentActivity.value.splice(idx, 1)
+    recalculateBudget()
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('transactions').delete().eq('id', id)
-    if (error) throw error
+    if (error) {
+      recentActivity.value.splice(idx, 0, removed)
+      recalculateBudget()
+      throw error
+    }
   }
 
   // ── Goals ────────────────────────────────────────────────────────────────
@@ -405,12 +419,13 @@ export const useAppStore = defineStore('app', () => {
 
   async function editGoal(id: string, updates: Partial<Goal>) {
     const goal = goals.value.find(g => g.id === id)
-    const saved = updates.saved ?? goal?.saved ?? 0
-    const target = updates.target ?? goal?.target ?? 1
+    if (!goal) return
+
+    const saved = updates.saved ?? goal.saved
+    const target = updates.target ?? goal.target ?? 1
     const progress = calcProgress(saved, target)
     const status = calcStatus(progress)
 
-    // Optimistic update
     const oldGoal = { ...goal }
     Object.assign(goal, updates, { progress, status })
 
@@ -422,7 +437,7 @@ export const useAppStore = defineStore('app', () => {
       status,
       updated_at: new Date().toISOString(),
     }).eq('id', id)
-    
+
     if (error) {
       Object.assign(goal, oldGoal)
       throw error
@@ -570,22 +585,34 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function editEvent(id: string, updates: Partial<CalendarEvent>) {
-    if (!isConfigured) {
-      const event = events.value.find(e => e.id === id)
-      if (event) Object.assign(event, updates)
-      return
-    }
+    const event = events.value.find(e => e.id === id)
+    if (!event) return
+
+    const oldEvent = { ...event }
+    Object.assign(event, updates)
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('calendar_events').update(updates).eq('id', id)
-    if (error) throw error
+    if (error) {
+      Object.assign(event, oldEvent)
+      throw error
+    }
   }
 
   async function deleteEvent(id: string) {
-    if (!isConfigured) {
-      events.value = events.value.filter(e => e.id !== id)
-      return
-    }
+    const idx = events.value.findIndex(e => e.id === id)
+    if (idx === -1) return
+    const removed = events.value[idx]
+    events.value.splice(idx, 1)
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('calendar_events').delete().eq('id', id)
-    if (error) throw error
+    if (error) {
+      events.value.splice(idx, 0, removed)
+      throw error
+    }
   }
 
   // ── Compat shape ─────────────────────────────────────────────────────────

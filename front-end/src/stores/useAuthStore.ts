@@ -32,8 +32,12 @@ export const useAuthStore = defineStore('auth', () => {
     return data.user
   }
 
-  async function signup(email: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  async function signup(email: string, password: string, displayName?: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: displayName ? { display_name: displayName } : {} },
+    })
     if (error) throw error
     if (!data.session) {
       throw new Error('Check your email to confirm your account, then sign in.')
@@ -48,5 +52,13 @@ export const useAuthStore = defineStore('auth', () => {
     initialized.value = false
   }
 
-  return { user, initialized, init, login, signup, logout }
+  async function resetPassword(email: string) {
+    if (!isConfigured) throw new Error('Password reset requires Supabase to be configured.')
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    })
+    if (error) throw error
+  }
+
+  return { user, initialized, init, login, signup, logout, resetPassword }
 })

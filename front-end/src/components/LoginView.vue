@@ -16,6 +16,19 @@ const password = ref('');
 const error = ref('');
 const loading = ref(false);
 
+const forgotPassword = async () => {
+  if (!email.value.trim()) {
+    notify('Enter your email above first, then click Forgot password.', 'info');
+    return;
+  }
+  try {
+    await auth.resetPassword(email.value.trim());
+    notify('Reset link sent. Check your email.', 'success');
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to send reset link.', 'error');
+  }
+};
+
 const login = async () => {
   error.value = '';
   if (!email.value.trim() || !password.value) {
@@ -66,7 +79,7 @@ const login = async () => {
             <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password"/>
           </div>
           <div class="flex justify-end mt-xs">
-            <button type="button" @click="notify('Password reset is not yet available.', 'info')" class="text-label-sm text-outline hover:text-primary transition-colors">Forgot password?</button>
+            <button type="button" @click="forgotPassword" class="text-label-sm text-outline hover:text-primary transition-colors">Forgot password?</button>
           </div>
         </div>
 
