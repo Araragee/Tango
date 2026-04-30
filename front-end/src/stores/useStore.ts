@@ -123,7 +123,7 @@ export const useAppStore = defineStore('app', () => {
   const balance = ref(0)
   const savedThisMonth = ref(0)
   const budgetLastUpdated = ref<Date | null>(null)
-  const monthlySpending = ref<{ id: string; category: string; spent: number; limit: number; icon: string }[]>([])
+  const monthlySpending = ref<{ id: string; category: string; spent: number; icon: string }[]>([])
   const recentActivity = ref<Transaction[]>([])
 
   const goals = ref<Goal[]>([])
@@ -346,7 +346,6 @@ export const useAppStore = defineStore('app', () => {
       id: String(i),
       category: name,
       spent,
-      limit: 1000,
       icon: 'category'
     }))
   }
@@ -674,6 +673,3 @@ export const useAppStore = defineStore('app', () => {
   }
 })
 
-export function setupStorePersistence(_store: ReturnType<typeof useAppStore>) {
-  // Supabase is source of truth; localStorage not used
-}

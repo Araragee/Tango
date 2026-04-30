@@ -9,7 +9,6 @@ const store = useAppStore();
 
 const showEditModal = ref(false);
 const selectedGoalId = ref<string | null>(null);
-const viewType = ref<'Joint' | 'Personal'>('Joint');
 
 const openNewGoal = () => {
     selectedGoalId.value = null;
@@ -20,6 +19,15 @@ const openEditGoal = (id: string) => {
     selectedGoalId.value = id;
     showEditModal.value = true;
 };
+
+const confirmDelete = async (id: string, title: string) => {
+    if (!confirm(`Delete goal "${title}"? This cannot be undone.`)) return;
+    try {
+        await store.deleteGoal(id);
+    } catch (e: any) {
+        alert('Failed to delete goal: ' + (e.message ?? 'Unknown error'));
+    }
+};
 </script>
 
 <template>
@@ -27,16 +35,7 @@ const openEditGoal = (id: string) => {
     <!-- Header Section -->
     <section class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-black dark:border-white pb-lg gap-6 w-full">
       <div>
-        <div class="flex items-center gap-3">
-            <h2 class="text-headline-xl text-on-surface">{{ viewType }} Goals</h2>
-            <button 
-                @click="viewType = viewType === 'Joint' ? 'Personal' : 'Joint'"
-                class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors bg-surface-variant rounded-full p-1"
-                title="Toggle View"
-            >
-                swap_horiz
-            </button>
-        </div>
+        <h2 class="text-headline-xl text-on-surface">Joint Goals</h2>
         <p class="text-body-md text-on-surface-variant mt-sm">Keep tracking, you're doing great!</p>
       </div>
       <TangoButton @click="openNewGoal" shadow="dark" size="md" class="uppercase" aria-label="New Goal">
@@ -56,10 +55,14 @@ const openEditGoal = (id: string) => {
             class="relative w-full cursor-pointer hover:bg-surface-container-low transition-colors"
             @click="openEditGoal(goal.id)"
         >
-          <div 
+          <div
             v-if="goal.status"
             class="absolute top-0 right-0 border-l-2 border-b-2 border-black dark:border-white px-md py-sm text-label-sm z-10"
-            :class="goal.status === 'On Track' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-variant text-on-surface-variant'"
+            :class="{
+              'bg-secondary-container text-on-secondary-container': goal.status === 'Completed',
+              'bg-primary-container text-on-primary-container': goal.status === 'On Track',
+              'bg-error-container text-on-error-container': goal.status === 'Behind',
+            }"
           >
             {{ goal.status }}
           </div>
@@ -86,7 +89,7 @@ const openEditGoal = (id: string) => {
             <div class="flex items-center gap-2">
               <span>{{ goal.progress }}%</span>
               <button
-                @click.stop="store.deleteGoal(goal.id)"
+                @click.stop="confirmDelete(goal.id, goal.title)"
                 class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
                 aria-label="Delete goal"
               >

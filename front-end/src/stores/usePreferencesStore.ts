@@ -12,6 +12,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const transactionCategories = ref<string[]>([...DEFAULT_TRANSACTION_CATEGORIES])
   const eventCategories = ref<string[]>([...DEFAULT_EVENT_CATEGORIES])
   const budgetLimits = ref<Record<string, number>>({})
+  const notificationsEnabled = ref<boolean>(true)
 
   function _persist() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -19,6 +20,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
       transactionCategories: transactionCategories.value,
       eventCategories: eventCategories.value,
       budgetLimits: budgetLimits.value,
+      notificationsEnabled: notificationsEnabled.value,
     }))
   }
 
@@ -31,7 +33,13 @@ export const usePreferencesStore = defineStore('preferences', () => {
       if (Array.isArray(data.transactionCategories)) transactionCategories.value = data.transactionCategories
       if (Array.isArray(data.eventCategories)) eventCategories.value = data.eventCategories
       if (data.budgetLimits && typeof data.budgetLimits === 'object') budgetLimits.value = data.budgetLimits
+      if (typeof data.notificationsEnabled === 'boolean') notificationsEnabled.value = data.notificationsEnabled
     } catch {}
+  }
+
+  function setNotificationsEnabled(val: boolean) {
+    notificationsEnabled.value = val
+    _persist()
   }
 
   function addTodoCategory(cat: string) {
@@ -74,10 +82,12 @@ export const usePreferencesStore = defineStore('preferences', () => {
     transactionCategories,
     eventCategories,
     budgetLimits,
+    notificationsEnabled,
     addTodoCategory,
     addTransactionCategory,
     addEventCategory,
     getBudgetLimit,
     setBudgetLimit,
+    setNotificationsEnabled,
   }
 })

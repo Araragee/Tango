@@ -18,7 +18,6 @@ const emailInvite = ref('');
 const loading = ref(false);
 const error = ref('');
 const displayName = ref('');
-const isNameSet = ref(false);
 
 const next = () => {
   if (step.value < 3) {

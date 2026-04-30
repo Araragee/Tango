@@ -50,8 +50,8 @@ const saveEdit = () => {
                 <p class="text-label-sm text-outline uppercase">{{ transaction.category }} • {{ transaction.date }}</p>
             </div>
             <div v-else class="flex-1 flex flex-col gap-2">
-                <TangoInput v-model="editTitle" label="Title" size="sm" />
-                <TangoInput v-model="editCategory" label="Category" size="sm" />
+                <TangoInput v-model="editTitle" label="Title" />
+                <TangoInput v-model="editCategory" label="Category" />
             </div>
         </div>
 

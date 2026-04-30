@@ -7,6 +7,7 @@ import GlobalSearch from './components/GlobalSearch.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
 import { useThemeStore } from './stores/useThemeStore';
+import { usePreferencesStore } from './stores/usePreferencesStore';
 import { isConfigured } from './lib/supabase';
 
 const router = useRouter();
@@ -16,6 +17,7 @@ const showSearch = ref(false);
 const auth = useAuthStore();
 const household = useHouseholdStore();
 const themeStore = useThemeStore();
+const prefs = usePreferencesStore();
 
 const showNav = computed(() => route.path.startsWith('/app'));
 
@@ -51,7 +53,10 @@ function goHome() {
 }
 
 provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
-  notificationRef.value?.add(message, type);
+  // Errors always show; success/info gated by user preference
+  if (type === 'error' || prefs.notificationsEnabled) {
+    notificationRef.value?.add(message, type);
+  }
 });
 </script>
 

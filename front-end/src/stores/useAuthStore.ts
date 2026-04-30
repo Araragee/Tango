@@ -18,8 +18,12 @@ export const useAuthStore = defineStore('auth', () => {
     const { data: { session } } = await supabase.auth.getSession()
     user.value = session?.user ?? null
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       user.value = session?.user ?? null
+      if (event === 'SIGNED_OUT') {
+        const { useHouseholdStore } = await import('./useHouseholdStore')
+        await useHouseholdStore().reset()
+      }
     })
 
     initialized.value = true

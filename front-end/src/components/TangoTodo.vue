@@ -67,7 +67,6 @@ const quickAdd = async () => {
   }
 };
 
-const activeCount = computed(() => store.todos.items.filter(t => !t.completed).length);
 const doneCount = computed(() => store.todos.items.filter(t => t.completed).length);
 </script>
 

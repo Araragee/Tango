@@ -5,6 +5,7 @@ import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { useThemeStore, type AccentColor } from '../stores/useThemeStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
@@ -14,10 +15,10 @@ const store = useAppStore();
 const auth = useAuthStore();
 const household = useHouseholdStore();
 const themeStore = useThemeStore();
+const prefs = usePreferencesStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const userName = ref(store.userName);
-const notifications = ref(true);
 
 watch(() => store.userName, (val) => {
     userName.value = val;
@@ -44,11 +45,12 @@ const updateProfile = async () => {
     }
 };
 
-const resetAccount = () => {
-    if (confirm('Are you sure you want to reset all data?')) {
-        localStorage.removeItem('tango-state');
-        window.location.reload();
-    }
+const resetPreferences = () => {
+    if (!confirm('Reset categories, budget limits, and theme to defaults? Your household data (transactions, goals, todos, events) will not be touched.')) return;
+    localStorage.removeItem('tango:preferences');
+    localStorage.removeItem('tango-dark');
+    localStorage.removeItem('tango-accent');
+    window.location.reload();
 };
 
 const signOut = async () => {
@@ -113,21 +115,21 @@ const signOut = async () => {
           <div class="flex items-center justify-between border-t border-on-surface pt-4">
             <span class="text-body-md font-bold uppercase">Notifications</span>
             <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
-                 :class="notifications ? 'bg-primary' : 'bg-surface-variant'"
-                 @click="notifications = !notifications"
-                 role="switch" :aria-checked="notifications">
+                 :class="prefs.notificationsEnabled ? 'bg-primary' : 'bg-surface-variant'"
+                 @click="prefs.setNotificationsEnabled(!prefs.notificationsEnabled)"
+                 role="switch" :aria-checked="prefs.notificationsEnabled">
               <div class="absolute top-1 w-4 h-4 transition-all"
-                   :class="notifications ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
+                   :class="prefs.notificationsEnabled ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
         </div>
       </TangoCard>
 
       <TangoCard padding="lg" class="md:col-span-2">
-        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2 text-error">Danger Zone</h3>
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Local Preferences</h3>
         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p class="text-body-md text-on-surface-variant">Reset all data and start over. This cannot be undone.</p>
-          <TangoButton @click="resetAccount" variant="outline" class="text-error border-error border-2 hover:bg-error-container">Reset Account</TangoButton>
+          <p class="text-body-md text-on-surface-variant">Reset categories, budget limits, and theme to defaults. Household data on the server is not affected.</p>
+          <TangoButton @click="resetPreferences" variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap">Reset Preferences</TangoButton>
         </div>
       </TangoCard>
     </div>
