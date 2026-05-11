@@ -7,6 +7,12 @@ const store = useAppStore();
 
 const completedGoals = computed(() => store.plans.goals.filter((g: Goal) => g.status === 'Completed'));
 const archivedTransactions = computed(() => store.budget.recentActivity.filter((tx: Transaction) => tx.type === 'expense').slice(0, 10));
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return '–';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
 </script>
 
 <template>
@@ -23,7 +29,7 @@ const archivedTransactions = computed(() => store.budget.recentActivity.filter((
           <div class="flex justify-between items-center">
             <div>
               <h4 class="text-headline-md">{{ goal.title }}</h4>
-              <p class="text-label-sm text-outline uppercase">Reached: –</p>
+              <p class="text-label-sm text-outline uppercase">Reached: {{ formatDate(goal.completed_at || '') }}</p>
             </div>
             <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
           </div>

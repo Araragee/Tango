@@ -68,6 +68,34 @@ const signOut = async () => {
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       <TangoCard padding="lg">
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Household</h3>
+        <div class="space-y-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-label-sm text-on-surface-variant uppercase font-bold">Invite Code</label>
+            <div class="px-4 py-3 bg-primary-container text-on-primary-container pixel-border-sm flex items-center justify-between">
+              <span class="text-headline-md font-black tracking-widest">{{ household.inviteCode || '---' }}</span>
+              <button
+                v-if="household.inviteCode"
+                @click="navigator.clipboard.writeText(household.inviteCode); notify('Code copied!', 'success')"
+                class="material-symbols-outlined hover:opacity-70 transition-opacity"
+              >content_copy</button>
+            </div>
+            <p class="text-[10px] text-on-surface-variant uppercase mt-1">Share this with your partner to join up</p>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-label-sm text-on-surface-variant uppercase font-bold">Members</label>
+            <div class="space-y-2">
+              <div v-for="member in household.members" :key="member.id" class="flex items-center gap-2 text-body-md">
+                <span class="material-symbols-outlined text-primary">person</span>
+                <span>{{ member.email || 'Anonymous Member' }}</span>
+                <span class="text-label-sm bg-surface-variant px-2 py-0.5 pixel-border-sm uppercase">{{ member.role }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </TangoCard>
+
+      <TangoCard padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Profile</h3>
         <div class="space-y-4">
           <TangoInput label="Your Name" v-model="userName" />

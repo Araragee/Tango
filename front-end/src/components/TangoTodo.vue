@@ -39,6 +39,12 @@ const formatDueDate = (date: string) => {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
+const formatAssignee = (assigned?: string) => {
+  if (assigned === 'me') return store.userName;
+  if (assigned === 'partner') return store.partnerName;
+  return assigned || 'Both';
+};
+
 const openAddModal = () => {
   editingTask.value = null;
   showAddModal.value = true;
@@ -135,7 +141,7 @@ const doneCount = computed(() => store.todos.items.filter(t => t.completed).leng
             {{ todo.text }}
           </span>
           <div class="flex gap-2 items-center mt-1 flex-wrap">
-            <span class="text-label-sm text-outline uppercase">{{ todo.assigned }}</span>
+            <span class="text-label-sm text-outline uppercase">{{ formatAssignee(todo.assigned) }}</span>
             <span v-if="todo.category && todo.category !== 'Quick Add'" class="text-label-sm text-outline uppercase">• {{ todo.category }}</span>
             <span
               v-if="todo.due_date"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, inject } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { isConfigured } from '../lib/supabase';
 import TangoButton from './TangoButton.vue';
@@ -17,7 +18,8 @@ const inviteInput = ref('');
 const emailInvite = ref('');
 const loading = ref(false);
 const error = ref('');
-const displayName = ref('');
+const auth = useAuthStore();
+const displayName = ref(auth.user?.user_metadata?.display_name || '');
 
 const next = () => {
   if (step.value < 3) {

@@ -27,6 +27,7 @@ export interface Goal {
   icon: string
   progress: number
   deadline?: string
+  completed_at?: string
 }
 
 export interface Todo {
@@ -76,6 +77,7 @@ function mapGoal(r: any): Goal {
     icon: r.icon,
     progress: r.progress,
     deadline: r.deadline,
+    completed_at: r.completed_at,
   }
 }
 
@@ -271,7 +273,12 @@ export const useAppStore = defineStore('app', () => {
       }, () => fetchCalendar())
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'profiles',
-      }, () => fetchProfiles())
+      }, (payload) => {
+        // Only re-fetch if the profile belongs to someone in our household
+        if (household.members.some(m => m.user_id === payload.new.id)) {
+          fetchProfiles()
+        }
+      })
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'household_members',
         filter: `household_id=eq.${householdId}`,
@@ -453,12 +460,19 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function completeGoal(id: string) {
+    const now = new Date().toISOString()
     if (!isConfigured) {
       const goal = goals.value.find(g => g.id === id)
-      if (goal) goal.status = 'Completed'
+      if (goal) {
+        goal.status = 'Completed'
+        goal.completed_at = now
+      }
       return
     }
-    const { error } = await supabase.from('goals').update({ status: 'Completed' }).eq('id', id)
+    const { error } = await supabase.from('goals').update({
+      status: 'Completed',
+      completed_at: now
+    }).eq('id', id)
     if (error) throw error
   }
 
