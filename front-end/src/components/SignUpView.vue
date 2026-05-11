@@ -33,16 +33,22 @@ const signup = async () => {
 
   loading.value = true;
   try {
-    const user = await auth.signup(email.value, password.value, displayName.value.trim());
-    if (user) {
-      const { useAppStore } = await import('../stores/useStore');
-      const store = useAppStore();
-      // Trigger creates profile row; this also covers display_name updates
-      await store.updateProfile(displayName.value.trim());
-    }
+    await auth.signup(email.value, password.value, displayName.value.trim());
+
+    // If signup is successful, we try to create the profile.
+    // If it requires email confirmation, signup() will throw an error with the info.
+    const { useAppStore } = await import('../stores/useStore');
+    const store = useAppStore();
+    await store.updateProfile(displayName.value.trim());
+
     router.push('/onboarding');
   } catch (e: any) {
-    error.value = e.message ?? 'Sign up failed.';
+    if (e.message?.includes('confirm your email')) {
+      error.value = e.message;
+      // We don't push to onboarding yet because they can't log in
+    } else {
+      error.value = e.message ?? 'Sign up failed.';
+    }
   } finally {
     loading.value = false;
   }

@@ -27,7 +27,12 @@ watch(() => props.show, (open) => {
   if (props.task) {
     taskName.value = props.task.text;
     category.value = props.task.category;
-    assignee.value = props.task.assigned ?? 'Both';
+
+    // Map display names back to sentinel values if needed
+    if (props.task.assigned === store.userName) assignee.value = 'me';
+    else if (props.task.assigned === store.partnerName) assignee.value = 'partner';
+    else assignee.value = props.task.assigned ?? 'Both';
+
     priority.value = props.task.priority ?? 'Normal';
     dueDate.value = props.task.due_date ?? '';
   } else {
@@ -77,28 +82,28 @@ const saveTask = async () => {
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Assign To</label>
         <div class="flex gap-4">
           <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.partnerName">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.partnerName"/>
+            <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="partner"/>
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-secondary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.partnerName }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === 'partner' }"
             >
               <div class="w-full h-full bg-secondary-container flex items-center justify-center text-headline-md font-bold text-on-secondary-container">
                 {{ store.partnerName.charAt(0).toUpperCase() }}
               </div>
             </div>
-            <span class="text-label-sm" :class="assignee === store.partnerName ? 'text-primary' : 'text-on-surface-variant'">{{ store.partnerName }}</span>
+            <span class="text-label-sm" :class="assignee === 'partner' ? 'text-primary' : 'text-on-surface-variant'">{{ store.partnerName }}</span>
           </label>
           <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.userName">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.userName"/>
+            <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="me"/>
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-tertiary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.userName }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === 'me' }"
             >
               <div class="w-full h-full bg-tertiary-container flex items-center justify-center text-headline-md font-bold text-on-tertiary-container">
                 {{ store.userName.charAt(0).toUpperCase() }}
               </div>
             </div>
-            <span class="text-label-sm" :class="assignee === store.userName ? 'text-primary' : 'text-on-surface-variant'">{{ store.userName }}</span>
+            <span class="text-label-sm" :class="assignee === 'me' ? 'text-primary' : 'text-on-surface-variant'">{{ store.userName }}</span>
           </label>
           <label class="cursor-pointer relative flex flex-col items-center gap-xs group" aria-label="Assign to Both">
             <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="Both"/>
