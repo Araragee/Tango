@@ -6,6 +6,12 @@ import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TransactionDetailsModal from './TransactionDetailsModal.vue';
 import AddTransactionModal from './AddTransactionModal.vue';
+import TangoSprites from './TangoSprites.vue';
+import RecurringList from './RecurringList.vue';
+import VibeCheckCard from './VibeCheckCard.vue';
+import BudgetAnalytics from './BudgetAnalytics.vue';
+import SkeletonBlock from './SkeletonBlock.vue';
+import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
 const prefs = usePreferencesStore();
@@ -59,16 +65,24 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
     <main class="w-full grid grid-cols-1 md:grid-cols-12 gap-8">
       <!-- Left Column -->
       <div class="md:col-span-7 flex flex-col gap-8 w-full">
-        <!-- Balance Card -->
-        <TangoCard padding="none" shadow="default" class="h-48 flex flex-col justify-center items-center relative w-full">
-          <div class="absolute top-4 left-4 px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm select-none">
-            Joint Balance
+        <!-- Balance Card with Sprites -->
+        <TangoCard padding="none" shadow="default" class="flex flex-row items-stretch relative w-full overflow-hidden" style="min-height:11rem">
+          <!-- Sprite Widget Panel -->
+          <div class="flex flex-col items-center justify-end gap-2 px-4 pt-4 pb-3 bg-surface-variant border-r-2 border-black dark:border-white shrink-0" style="min-width:140px">
+            <TangoSprites :size="64" />
           </div>
-          <h2 class="text-headline-xl text-on-surface mt-4">
-            ${{ store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
-          </h2>
-          <p class="text-body-md text-on-surface-variant mt-2">{{ lastUpdatedLabel }}</p>
-          <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black dark:border-white"></div>
+
+          <!-- Balance info -->
+          <div class="flex flex-col justify-center items-start px-6 py-4 flex-1 relative">
+            <div class="px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm select-none mb-2">
+              Joint Balance
+            </div>
+            <h2 class="text-headline-xl text-on-surface">
+              ${{ store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
+            </h2>
+            <p class="text-body-md text-on-surface-variant mt-1">{{ lastUpdatedLabel }}</p>
+            <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black dark:border-white"></div>
+          </div>
         </TangoCard>
 
         <!-- Saved This Month -->
@@ -77,6 +91,8 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
           <span class="text-body-lg font-bold text-on-secondary-container">+${{ store.budget.savedThisMonth.toLocaleString() }}</span>
         </div>
 
+        <VibeCheckCard />
+
         <!-- Category Breakdown -->
         <TangoCard padding="lg" shadow="dark" class="w-full">
           <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
@@ -84,7 +100,20 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
             <span class="text-label-sm text-on-surface-variant uppercase">Click limit to edit</span>
           </div>
           <div class="space-y-6">
-            <div v-for="cat in store.budget.monthlySpending" :key="cat.id">
+            <!-- Loading skeleton -->
+            <div v-if="store.loading" class="space-y-6">
+              <div v-for="n in 3" :key="n" class="space-y-2">
+                <div class="flex justify-between">
+                  <SkeletonBlock width="30%" height="0.75rem" />
+                  <SkeletonBlock width="20%" height="0.75rem" />
+                </div>
+                <SkeletonBlock height="1.5rem" />
+              </div>
+            </div>
+            <div v-else-if="store.budget.monthlySpending.length === 0">
+              <EmptyState icon="pie_chart" title="No spending yet" description="Expenses this month will appear here." />
+            </div>
+            <div v-else v-for="cat in store.budget.monthlySpending" :key="cat.id">
               <div class="flex justify-between text-label-sm mb-2 uppercase items-center">
                 <span :class="isOverBudget(cat.spent, cat.category) ? 'text-error font-bold' : ''">
                   {{ cat.category }}
@@ -121,9 +150,12 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
                 </div>
               </div>
             </div>
-            <p v-if="store.budget.monthlySpending.length === 0" class="text-body-md text-on-surface-variant">No expenses this month.</p>
           </div>
         </TangoCard>
+
+        <BudgetAnalytics />
+
+        <RecurringList />
       </div>
 
       <!-- Right Column -->
@@ -148,10 +180,26 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
           </div>
 
           <div class="flex-grow space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-            <p v-if="filteredActivity.length === 0" class="text-body-md text-on-surface-variant text-center py-8">
-              No transactions yet. Add one to get started.
-            </p>
+            <!-- Loading skeleton -->
+            <div v-if="store.loading" class="space-y-4">
+              <div v-for="n in 4" :key="n" class="flex items-center gap-4 p-3 pixel-border-sm bg-surface">
+                <SkeletonBlock width="2.5rem" height="2.5rem" />
+                <div class="flex-1 space-y-2">
+                  <SkeletonBlock height="0.875rem" width="60%" />
+                  <SkeletonBlock height="0.75rem" width="35%" />
+                </div>
+                <SkeletonBlock width="4rem" height="1rem" />
+              </div>
+            </div>
+            <!-- Empty state -->
+            <EmptyState
+              v-else-if="filteredActivity.length === 0"
+              icon="receipt_long"
+              title="No transactions yet"
+              description="Add your first transaction to start tracking."
+            />
             <div
+              v-else
               v-for="tx in filteredActivity"
               :key="tx.id"
               @click="openDetails(tx)"

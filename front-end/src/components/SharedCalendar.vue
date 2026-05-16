@@ -4,14 +4,34 @@ import { useAppStore, type CalendarEvent } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import NewEventSheet from './NewEventSheet.vue';
+import DateNightPlanner from './DateNightPlanner.vue';
+import SkeletonBlock from './SkeletonBlock.vue';
+import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
 const DAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const showEventSheet = ref(false);
+const showDatePlanner = ref(false);
 const selectedDate = ref('');
 const selectedEventId = ref<string | null>(null);
 const calendarView = ref<'month' | 'week' | 'day'>('month');
+
+const pendingDateReviews = computed(() => {
+  return store.calendar.events.filter((e: CalendarEvent) =>
+    e.category === 'date' && e.date < todayStr && (e.mood === null || e.mood === undefined)
+  );
+});
+
+const reviewOldestPending = () => {
+  const oldest = pendingDateReviews.value
+    .slice()
+    .sort((a: CalendarEvent, b: CalendarEvent) => a.date.localeCompare(b.date))[0];
+  if (!oldest) return;
+  selectedDate.value = oldest.date;
+  selectedEventId.value = oldest.id;
+  showEventSheet.value = true;
+};
 
 const currentDate = ref(new Date());
 const todayDate = new Date();
@@ -191,12 +211,33 @@ const syncScore = computed(() => {
         <TangoButton @click="nextPeriod" variant="surface" size="md" class="w-10 h-10" aria-label="Next">
           <span class="material-symbols-outlined">chevron_right</span>
         </TangoButton>
+        <TangoButton @click="showDatePlanner = true" variant="surface" size="md" aria-label="Plan Date Night">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+          Date Night
+        </TangoButton>
         <TangoButton @click="showEventSheet = true" variant="primary" size="md" aria-label="New Event">
           <span class="material-symbols-outlined">add</span>
           New Event
         </TangoButton>
       </div>
     </section>
+
+    <!-- Pending date review banner -->
+    <div
+      v-if="pendingDateReviews.length > 0"
+      class="flex items-center justify-between gap-3 p-3 bg-primary-container pixel-border-sm"
+    >
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <div class="min-w-0">
+          <p class="text-body-md font-bold text-on-primary-container truncate">
+            {{ pendingDateReviews.length }} date{{ pendingDateReviews.length === 1 ? '' : 's' }} need a vibe rating
+          </p>
+          <p class="text-label-sm text-on-primary-container truncate">Tap to leave a quick mood + note</p>
+        </div>
+      </div>
+      <TangoButton @click="reviewOldestPending" size="sm" shadow="dark">Review</TangoButton>
+    </div>
 
     <!-- ── MONTH VIEW ─────────────────────────────────────────────────── -->
     <TangoCard v-if="calendarView === 'month'" padding="none" shadow="default" class="bg-surface-container-lowest p-1 w-full">
@@ -272,9 +313,21 @@ const syncScore = computed(() => {
         </TangoButton>
       </div>
 
-      <div v-if="dayEvents.length === 0" class="text-body-md text-on-surface-variant py-8 text-center">
-        Nothing scheduled. Add an event!
+      <div v-if="store.loading" class="space-y-3">
+        <div v-for="n in 3" :key="n" class="p-3 pixel-border-sm flex items-center gap-3">
+          <SkeletonBlock width="1.5rem" height="1.5rem" />
+          <div class="flex-1 space-y-2">
+            <SkeletonBlock height="0.875rem" width="50%" />
+            <SkeletonBlock height="0.75rem" width="25%" />
+          </div>
+        </div>
       </div>
+      <EmptyState
+        v-else-if="dayEvents.length === 0"
+        icon="event"
+        title="Nothing scheduled"
+        description="Add an event to this day."
+      />
 
       <div v-else class="space-y-3">
         <!-- All Day -->
@@ -313,8 +366,8 @@ const syncScore = computed(() => {
           <h3 class="text-headline-md text-on-surface">Coming Up</h3>
         </div>
         <ul class="space-y-4">
-          <li v-if="upcomingEvents.length === 0" class="text-body-md text-on-surface-variant py-4">
-            Nothing coming up. Add an event!
+          <li v-if="upcomingEvents.length === 0">
+            <EmptyState icon="calendar_month" title="Nothing coming up" />
           </li>
           <li
             v-for="event in upcomingEvents" :key="event.id"
@@ -345,6 +398,8 @@ const syncScore = computed(() => {
         </div>
       </TangoCard>
     </section>
+
+    <DateNightPlanner :show="showDatePlanner" @close="showDatePlanner = false" />
 
     <NewEventSheet
       :show="showEventSheet"

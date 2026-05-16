@@ -1,23 +1,47 @@
 <script setup lang="ts">
-import { computed, ref, provide, onMounted, onUnmounted } from 'vue';
+import { computed, ref, provide, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue';
 import GlobalSearch from './components/GlobalSearch.vue';
+import FloatingBoy from './components/FloatingBoy.vue';
+import NotificationsBell from './components/NotificationsBell.vue';
+import ActivityFeed from './components/ActivityFeed.vue';
+import PresenceBadge from './components/PresenceBadge.vue';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
 import { useThemeStore } from './stores/useThemeStore';
 import { usePreferencesStore } from './stores/usePreferencesStore';
+import { useNotificationsStore } from './stores/useNotificationsStore';
+import { useActivityStore } from './stores/useActivityStore';
+import { usePresenceStore } from './stores/usePresenceStore';
+import { useOfflineQueue } from './stores/useOfflineQueue';
+import { useContributionsStore } from './stores/useContributionsStore';
+import { useRecurringStore } from './stores/useRecurringStore';
+import { useAchievementsStore } from './stores/useAchievementsStore';
+import { useAppStore } from './stores/useStore';
 import { isConfigured } from './lib/supabase';
 
 const router = useRouter();
 const route = useRoute();
 const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null);
 const showSearch = ref(false);
+const showActivity = ref(false);
+
 const auth = useAuthStore();
 const household = useHouseholdStore();
 const themeStore = useThemeStore();
 const prefs = usePreferencesStore();
+const notifications = useNotificationsStore();
+const activity = useActivityStore();
+const presence = usePresenceStore();
+const offline = useOfflineQueue();
+const contributions = useContributionsStore();
+const recurring = useRecurringStore();
+const achievements = useAchievementsStore();
+const store = useAppStore();
+
+const headerAvatar = computed(() => store.partnerAvatarUrl ?? store.avatarUrl ?? null);
 
 const showNav = computed(() => route.path.startsWith('/app'));
 
@@ -31,13 +55,73 @@ const onGlobalKey = (e: KeyboardEvent) => {
 onMounted(() => {
   themeStore.applyTheme();
   window.addEventListener('keydown', onGlobalKey);
+  offline.startAutoFlush();
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onGlobalKey);
+  presence.stopNetworkWatch();
 });
 
-/** Logo click: go home for the app, not the marketing landing */
+watch(
+  () => auth.user?.id ?? null,
+  (uid, prevUid) => {
+    if (uid && uid !== prevUid) {
+      notifications.fetch();
+      notifications.subscribe(uid);
+      achievements.fetch();
+      achievements.subscribe(uid);
+    }
+    if (!uid && prevUid) {
+      notifications.unsubscribe();
+      achievements.unsubscribe();
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => [
+    store.budget.recentActivity.length,
+    store.plans.goals.length,
+    store.plans.goals.filter(g => g.status === 'Completed').length,
+    store.todos.items.filter(t => t.completed).length,
+    store.calendar.events.length,
+    store.calendar.events.filter(e => e.category === 'date' && e.mood != null).length,
+  ],
+  () => {
+    if (!auth.user || !household.householdId) return;
+    achievements.evaluate({
+      transactions: store.budget.recentActivity as any,
+      goals: store.plans.goals as any,
+      todos: store.todos.items as any,
+      events: store.calendar.events as any,
+    });
+  },
+);
+
+watch(
+  () => household.householdId,
+  (hid, prevHid) => {
+    if (hid && hid !== prevHid) {
+      activity.fetch(hid);
+      activity.subscribe(hid);
+      presence.subscribe(hid);
+      contributions.fetchForHousehold(hid);
+      contributions.subscribe(hid);
+      recurring.fetch(hid);
+      recurring.subscribe(hid);
+    }
+    if (!hid && prevHid) {
+      activity.unsubscribe();
+      presence.unsubscribe();
+      contributions.unsubscribe();
+      recurring.unsubscribe();
+    }
+  },
+  { immediate: true }
+);
+
 function goHome() {
   if (!isConfigured) {
     router.push('/app/budget');
@@ -53,7 +137,6 @@ function goHome() {
 }
 
 provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
-  // Errors always show; success/info gated by user preference
   if (type === 'error' || prefs.notificationsEnabled) {
     notificationRef.value?.add(message, type);
   }
@@ -62,7 +145,6 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <!-- TopAppBar -->
     <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-surface border-b-2 border-black dark:border-white">
       <div class="flex items-center gap-2 cursor-pointer" @click="goHome()">
         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
@@ -70,6 +152,12 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
       </div>
 
       <div class="flex items-center gap-4">
+        <span
+          v-if="showNav && !presence.isOnline"
+          class="px-2 py-0.5 pixel-border-sm bg-error text-on-error text-[10px] uppercase font-bold"
+          title="You are offline"
+        >Offline</span>
+
         <button
           v-if="showNav"
           @click="showSearch = true"
@@ -80,6 +168,18 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
           <span class="hidden sm:inline">Search</span>
           <kbd class="hidden sm:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
         </button>
+
+        <NotificationsBell v-if="showNav" />
+
+        <button
+          v-if="showNav"
+          @click="showActivity = true"
+          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          aria-label="Activity"
+        >
+          timeline
+        </button>
+
         <button
           v-if="showNav"
           @click="router.push('/app/archive')"
@@ -88,22 +188,32 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
         >
           history
         </button>
+
         <div
           v-if="showNav"
-          class="w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+          class="relative w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
           @click="router.push('/app/settings')"
           aria-label="Settings"
         >
           <img
-            alt="Partner Profile"
-            class="w-full h-full object-cover grayscale"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuARsylQHyCixmFuURzGboOIi2XZhcz6LszBOMsRrj0mHIBOVwbK7OC6-1_Sfr9Co3z21kxhd1SrVg1A935uvoXEcXSBl4MYBU8gyoH_IXWl2HYkyKBHmtBc1JDK7kT1dVjm5JPoKE5x-8I1SLQPoTY-gW2u4zqYo82IooaPfF4thuX_gVFL4GruyLjiyZrJmFf5ah6dy3TzGRsXrmmuwP6KvKi4P0BYddYpQrG8c2tl58hV9BFZGfKTDZnPIfsb1Hv5wk3hfHLP5iU"
+            v-if="headerAvatar"
+            :alt="(household.partner ? store.partnerName : store.userName) + ' avatar'"
+            class="w-full h-full object-cover"
+            :src="headerAvatar"
+          />
+          <span
+            v-else
+            class="material-symbols-outlined text-on-surface-variant"
+            style="font-variation-settings: 'FILL' 1;"
+          >person</span>
+          <PresenceBadge
+            v-if="household.partner"
+            class="absolute -bottom-0.5 -right-0.5"
           />
         </div>
       </div>
     </header>
 
-    <!-- Main Content -->
     <main :class="[
       'min-h-screen transition-all duration-300',
       showNav ? 'pt-20 pb-28 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
@@ -115,14 +225,15 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
       </router-view>
     </main>
 
-    <!-- Navigation -->
     <BottomNav v-if="showNav" />
 
-    <!-- Notifications -->
     <NotificationSystem ref="notificationRef" />
 
-    <!-- Global Search -->
     <GlobalSearch :show="showSearch" @close="showSearch = false" />
+
+    <ActivityFeed :show="showActivity" @close="showActivity = false" />
+
+    <FloatingBoy />
   </div>
 </template>
 

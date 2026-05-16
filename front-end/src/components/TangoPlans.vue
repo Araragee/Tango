@@ -4,6 +4,10 @@ import { useAppStore } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import EditGoalModal from './EditGoalModal.vue';
+import DuoBar from './DuoBar.vue';
+import AchievementsCard from './AchievementsCard.vue';
+import SkeletonBlock from './SkeletonBlock.vue';
+import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
 
@@ -46,7 +50,23 @@ const confirmDelete = async (id: string, title: string) => {
 
     <!-- Goals Grid -->
     <section class="space-y-lg mt-xl w-full">
-      <div v-if="store.plans.goals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
+      <!-- Loading skeleton -->
+      <div v-if="store.loading" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
+        <TangoCard v-for="n in 2" :key="n" padding="lg" shadow="default" class="w-full space-y-4">
+          <div class="flex justify-between items-center pt-2">
+            <SkeletonBlock width="50%" height="1.25rem" />
+            <SkeletonBlock width="5rem" height="1rem" />
+          </div>
+          <SkeletonBlock height="0.75rem" width="80%" />
+          <SkeletonBlock height="1.5rem" />
+          <div class="flex justify-between">
+            <SkeletonBlock width="3rem" height="0.75rem" />
+            <SkeletonBlock width="2rem" height="0.75rem" />
+          </div>
+        </TangoCard>
+      </div>
+
+      <div v-else-if="store.plans.goals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
         <TangoCard
             v-for="goal in store.plans.goals"
             :key="goal.id"
@@ -76,13 +96,8 @@ const confirmDelete = async (id: string, title: string) => {
             </span>
           </div>
           <p class="text-body-md text-on-surface-variant mt-2">{{ goal.description }}</p>
-          <div class="w-full h-6 pixel-border bg-surface-variant relative my-lg">
-            <div 
-              class="h-full bg-primary-container flex justify-end transition-all duration-500"
-              :style="{ width: `${goal.progress}%` }"
-            >
-              <div v-if="goal.progress < 100" class="w-4 h-full bg-dither opacity-50"></div>
-            </div>
+          <div class="my-lg">
+            <DuoBar :goal-id="goal.id" :target="goal.target" :show-legend="true" />
           </div>
           <div class="flex justify-between text-label-sm text-outline mt-xs items-center">
             <span>Progress</span>
@@ -99,10 +114,20 @@ const confirmDelete = async (id: string, title: string) => {
           </div>
         </TangoCard>
       </div>
-      <p v-else class="text-body-md text-on-surface-variant py-8">
-        No goals yet. Create one to start tracking.
-      </p>
+      <EmptyState
+        v-else
+        icon="savings"
+        title="No goals yet"
+        description="Set your first joint goal and start tracking progress together."
+      >
+        <TangoButton @click="openNewGoal" shadow="dark" size="sm" class="uppercase mt-2">
+          <span class="material-symbols-outlined text-[16px]">add</span>
+          New Goal
+        </TangoButton>
+      </EmptyState>
     </section>
+
+    <AchievementsCard />
 
     <EditGoalModal
         :show="showEditModal"

@@ -2,28 +2,38 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isConfigured } from '@/lib/supabase'
 import { useAuthStore } from './useAuthStore'
+import { useAppStore } from './useStore'
 
 export interface HouseholdMember {
   id: string
   user_id: string
-  role: string
+  role: 'creator' | 'partner'
   email?: string
+}
+
+export interface ActiveInvite {
+  code: string
+  expires_at: string
 }
 
 export const useHouseholdStore = defineStore('household', () => {
   const householdId = ref<string | null>(null)
   const inviteCode = ref<string | null>(null)
   const members = ref<HouseholdMember[]>([])
+  const activeInvite = ref<ActiveInvite | null>(null)
 
   const auth = useAuthStore()
 
   const partner = computed(() => members.value.find(m => m.user_id !== auth.user?.id))
+  const isCreator = computed(() => {
+    const me = members.value.find(m => m.user_id === auth.user?.id)
+    return me?.role === 'creator'
+  })
 
   async function load() {
     if (!isConfigured) {
       householdId.value = 'demo-household'
       inviteCode.value = 'DEMO01'
-      // Kick off data fetch in demo mode too
       await _afterLoad()
       return
     }
@@ -39,16 +49,13 @@ export const useHouseholdStore = defineStore('household', () => {
       householdId.value = data.household_id
       inviteCode.value = (data.households as any)?.invite_code ?? null
       await loadMembers()
+      await loadActiveInvite()
       await _afterLoad()
     }
   }
 
-  /** Called after householdId is set: fetch data & start realtime */
   async function _afterLoad() {
-    // Lazy-import to avoid circular dependency at module load time
-    const { useAppStore } = await import('./useStore')
-    const appStore = useAppStore()
-    await appStore.fetchAll() // also subscribes realtime inside
+    await useAppStore().fetchAll()
   }
 
   async function loadMembers() {
@@ -59,7 +66,24 @@ export const useHouseholdStore = defineStore('household', () => {
       .select('*')
       .eq('household_id', householdId.value)
 
-    members.value = data ?? []
+    members.value = (data ?? []) as HouseholdMember[]
+  }
+
+  async function loadActiveInvite() {
+    if (!householdId.value || !isConfigured) return
+
+    const { data } = await supabase
+      .from('household_invites')
+      .select('code, expires_at')
+      .eq('household_id', householdId.value)
+      .is('used_at', null)
+      .is('revoked_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    activeInvite.value = data as ActiveInvite | null
   }
 
   async function createHousehold() {
@@ -68,20 +92,45 @@ export const useHouseholdStore = defineStore('household', () => {
     if (!isConfigured) {
       householdId.value = 'demo-household'
       inviteCode.value = 'DEMO01'
+      activeInvite.value = { code: 'DEMO01', expires_at: new Date(Date.now() + 86_400_000).toISOString() }
       await _afterLoad()
       return
     }
 
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
-
-    // RPC handles household + member insert atomically (security definer bypasses bootstrapping RLS issue)
     const { data: id, error } = await supabase.rpc('create_household', { invite_code: code })
-
     if (error) throw error
 
     householdId.value = id as string
     inviteCode.value = code
+    await loadMembers()
+    await createInvite()
     await _afterLoad()
+  }
+
+  async function createInvite() {
+    if (!isConfigured) {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+      activeInvite.value = { code, expires_at: new Date(Date.now() + 86_400_000).toISOString() }
+      return activeInvite.value
+    }
+
+    const { data, error } = await supabase.rpc('create_invite')
+    if (error) throw error
+
+    const row = Array.isArray(data) ? data[0] : data
+    activeInvite.value = { code: row.code, expires_at: row.expires_at }
+    return activeInvite.value
+  }
+
+  async function revokeInvites() {
+    if (!isConfigured) {
+      activeInvite.value = null
+      return
+    }
+    const { error } = await supabase.rpc('revoke_invites')
+    if (error) throw error
+    activeInvite.value = null
   }
 
   async function joinHousehold(code: string) {
@@ -94,41 +143,93 @@ export const useHouseholdStore = defineStore('household', () => {
       return
     }
 
-    const { data: id, error } = await supabase.rpc('join_household', { invite_code: code })
+    const trimmed = code.trim().toUpperCase()
 
-    if (error) throw new Error(error.message.includes('Invalid') ? 'Invalid invite code' : error.message)
+    let { data: id, error } = await supabase.rpc('redeem_invite', { invite_code: trimmed })
+
+    if (error && /Invalid invite code/i.test(error.message)) {
+      const fallback = await supabase.rpc('join_household', { invite_code: trimmed })
+      if (fallback.error) throw new Error(fallback.error.message.includes('Invalid') ? 'Invalid invite code' : fallback.error.message)
+      id = fallback.data
+    } else if (error) {
+      throw error
+    }
 
     householdId.value = id as string
-    inviteCode.value = code.toUpperCase()
+    inviteCode.value = trimmed
     await loadMembers()
     await _afterLoad()
   }
 
-  async function sendEmailInvite(email: string) {
-    if (!inviteCode.value) throw new Error('No invite code')
+  async function leaveHousehold() {
     if (!isConfigured) {
-      throw new Error('Email invite requires Supabase to be configured')
+      await reset()
+      return
     }
+    const { error } = await supabase.rpc('leave_household')
+    if (error) throw error
+    await reset()
+  }
+
+  async function transferCreator(newCreatorId: string) {
+    if (!isConfigured) return
+    const { error } = await supabase.rpc('transfer_creator', { new_creator: newCreatorId })
+    if (error) throw error
+    await loadMembers()
+  }
+
+  async function deleteAccount() {
+    if (!isConfigured) {
+      await reset()
+      return
+    }
+    const { error } = await supabase.rpc('delete_my_data')
+    if (error) throw error
+    await auth.logout()
+    await reset()
+  }
+
+  async function sendEmailInvite(email: string) {
+    const code = activeInvite.value?.code ?? inviteCode.value
+    if (!code) throw new Error('No invite code')
+    if (!isConfigured) throw new Error('Email invite requires Supabase to be configured')
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/signup?invite=${inviteCode.value}`,
+        emailRedirectTo: `${window.location.origin}/join/${code}`,
       },
     })
     if (error) throw error
   }
 
   async function reset() {
-    // Tear down realtime before clearing state
-    const { useAppStore } = await import('./useStore')
-    const appStore = useAppStore()
-    appStore.unsubscribeRealtime()
+    useAppStore().unsubscribeRealtime()
 
     householdId.value = null
     inviteCode.value = null
     members.value = []
+    activeInvite.value = null
   }
 
-  return { householdId, inviteCode, members, partner, load, createHousehold, joinHousehold, sendEmailInvite, loadMembers, reset }
+  return {
+    householdId,
+    inviteCode,
+    members,
+    partner,
+    isCreator,
+    activeInvite,
+    load,
+    loadMembers,
+    loadActiveInvite,
+    createHousehold,
+    createInvite,
+    revokeInvites,
+    joinHousehold,
+    leaveHousehold,
+    transferCreator,
+    deleteAccount,
+    sendEmailInvite,
+    reset,
+  }
 })

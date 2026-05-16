@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, inject } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { isConfigured } from '../lib/supabase';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
+import QrCode from './QrCode.vue';
 
 const router = useRouter();
+const route = useRoute();
 const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
@@ -19,88 +21,122 @@ const loading = ref(false);
 const error = ref('');
 const displayName = ref('');
 
+const inviteFromQuery = computed(() => String(route.query.invite ?? ''));
+
+const inviteLink = computed(() => {
+    const code = household.activeInvite?.code ?? household.inviteCode;
+    return code ? `${window.location.origin}/join/${code}` : '';
+});
+
+const expiresLabel = computed(() => {
+    const iso = household.activeInvite?.expires_at;
+    if (!iso) return '';
+    const ms = new Date(iso).getTime() - Date.now();
+    if (ms <= 0) return 'expired';
+    const hrs = Math.floor(ms / 3_600_000);
+    return hrs >= 1 ? `expires in ${hrs}h` : 'expires soon';
+});
+
 const next = () => {
-  if (step.value < 3) {
-    step.value++;
-  } else {
-    step.value = 4; // household setup
-  }
+    if (step.value < 3) step.value++;
+    else step.value = 4;
 };
 
 const createHousehold = async () => {
-  if (!displayName.value.trim()) {
-    error.value = 'What is your name?';
-    return;
-  }
-  loading.value = true;
-  error.value = '';
-  try {
-    const { useAppStore } = await import('../stores/useStore');
-    const store = useAppStore();
-    await store.updateProfile(displayName.value.trim());
-    
-    await household.createHousehold();
-    // Stay on page — template shows invite code + "Let's Go" button
-  } catch (e: any) {
-    error.value = e.message ?? 'Failed to create household.';
-  } finally {
-    loading.value = false;
-  }
+    if (!displayName.value.trim()) {
+        error.value = 'What is your name?';
+        return;
+    }
+    loading.value = true;
+    error.value = '';
+    try {
+        const { useAppStore } = await import('../stores/useStore');
+        const store = useAppStore();
+        await store.updateProfile(displayName.value.trim());
+        await household.createHousehold();
+    } catch (e: any) {
+        error.value = e.message ?? 'Failed to create household.';
+    } finally {
+        loading.value = false;
+    }
+};
+
+const regenerateInvite = async () => {
+    try {
+        await household.createInvite();
+        notify('New invite code generated.', 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to regenerate invite.', 'error');
+    }
 };
 
 const joinHousehold = async () => {
-  if (!displayName.value.trim()) {
-    error.value = 'What is your name?';
-    return;
-  }
-  if (!inviteInput.value.trim()) {
-    error.value = 'Enter an invite code.';
-    return;
-  }
-  loading.value = true;
-  error.value = '';
-  try {
-    const { useAppStore } = await import('../stores/useStore');
-    const store = useAppStore();
-    await store.updateProfile(displayName.value.trim());
-    
-    await household.joinHousehold(inviteInput.value.trim());
-    router.push('/app/budget');
-  } catch (e: any) {
-    error.value = e.message ?? 'Invalid invite code.';
-  } finally {
-    loading.value = false;
-  }
+    if (!displayName.value.trim()) {
+        error.value = 'What is your name?';
+        return;
+    }
+    if (!inviteInput.value.trim()) {
+        error.value = 'Enter an invite code.';
+        return;
+    }
+    loading.value = true;
+    error.value = '';
+    try {
+        const { useAppStore } = await import('../stores/useStore');
+        const store = useAppStore();
+        await store.updateProfile(displayName.value.trim());
+        await household.joinHousehold(inviteInput.value.trim());
+        router.push('/app/budget');
+    } catch (e: any) {
+        error.value = e.message ?? 'Invalid invite code.';
+    } finally {
+        loading.value = false;
+    }
 };
 
 const sendEmailInvite = async () => {
-  if (!emailInvite.value.trim()) return;
-  if (!isConfigured) {
-    notify('Email invite requires Supabase to be configured.', 'info');
-    return;
-  }
-  try {
-    await household.sendEmailInvite(emailInvite.value.trim());
-    notify('Invite sent!', 'success');
-    emailInvite.value = '';
-  } catch (e: any) {
-    notify(e.message ?? 'Failed to send invite.', 'error');
-  }
+    if (!emailInvite.value.trim()) return;
+    if (!isConfigured) {
+        notify('Email invite requires Supabase to be configured.', 'info');
+        return;
+    }
+    try {
+        await household.sendEmailInvite(emailInvite.value.trim());
+        notify('Invite sent!', 'success');
+        emailInvite.value = '';
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to send invite.', 'error');
+    }
 };
 
 const copyCode = () => {
-  if (household.inviteCode) {
-    navigator.clipboard.writeText(household.inviteCode);
-    notify('Invite code copied!', 'success');
-  }
+    const code = household.activeInvite?.code ?? household.inviteCode;
+    if (code) {
+        navigator.clipboard.writeText(code);
+        notify('Invite code copied!', 'success');
+    }
 };
+
+const copyLink = () => {
+    if (inviteLink.value) {
+        navigator.clipboard.writeText(inviteLink.value);
+        notify('Invite link copied!', 'success');
+    }
+};
+
+onMounted(() => {
+    if (inviteFromQuery.value) {
+        householdMode.value = 'join';
+        inviteInput.value = inviteFromQuery.value;
+        step.value = 4;
+    }
+});
 </script>
 
 <template>
   <div class="max-w-2xl mx-auto py-12 pt-16 min-h-screen flex flex-col justify-center">
     <TangoCard padding="xl" shadow="default" class="text-center">
 
-      <!-- Step 1: Track Together -->
       <div v-if="step === 1" class="space-y-6">
         <div class="w-32 h-32 bg-primary-container mx-auto pixel-border-sm flex items-center justify-center">
           <span class="material-symbols-outlined text-6xl text-on-primary-container" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
@@ -109,7 +145,6 @@ const copyCode = () => {
         <p class="text-body-lg text-on-surface-variant">Manage your joint finances with ease. Sync accounts and track spending as a duo.</p>
       </div>
 
-      <!-- Step 2: Plan Your Life -->
       <div v-if="step === 2" class="space-y-6">
         <div class="w-32 h-32 bg-secondary-container mx-auto pixel-border-sm flex items-center justify-center">
           <span class="material-symbols-outlined text-6xl text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
@@ -118,7 +153,6 @@ const copyCode = () => {
         <p class="text-body-lg text-on-surface-variant">A shared calendar for your shared life. Dates, bills, and errands all in one place.</p>
       </div>
 
-      <!-- Step 3: Achieve Goals -->
       <div v-if="step === 3" class="space-y-6">
         <div class="w-32 h-32 bg-tertiary-container mx-auto pixel-border-sm flex items-center justify-center">
           <span class="material-symbols-outlined text-6xl text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">flag</span>
@@ -127,7 +161,6 @@ const copyCode = () => {
         <p class="text-body-lg text-on-surface-variant">Set joint savings goals and watch your progress grow together.</p>
       </div>
 
-      <!-- Step 4: Household Setup -->
       <div v-if="step === 4" class="space-y-6 text-left">
         <div class="text-center">
           <span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1;">home_heart</span>
@@ -135,10 +168,9 @@ const copyCode = () => {
           <p class="text-body-md text-on-surface-variant">Create a household or join your partner's.</p>
         </div>
 
-        <!-- Mode toggle -->
         <div class="space-y-4">
           <TangoInput v-model="displayName" label="Your Name" placeholder="Alex" />
-          
+
           <div class="flex gap-2">
             <button
               @click="householdMode = 'create'; error = ''"
@@ -153,17 +185,27 @@ const copyCode = () => {
           </div>
         </div>
 
-        <!-- Create mode -->
         <div v-if="householdMode === 'create'" class="space-y-4">
-          <p class="text-body-md text-on-surface-variant">Create your household first, then share the invite code with your partner.</p>
+          <p class="text-body-md text-on-surface-variant">Create your household first, then share the invite with your partner.</p>
 
-          <!-- Show code after creation (demo mode auto-creates) -->
-          <div v-if="household.inviteCode" class="space-y-3">
+          <div v-if="household.activeInvite || household.inviteCode" class="space-y-4">
             <div class="bg-primary-container pixel-border-sm p-4 flex items-center justify-between">
-              <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.inviteCode }}</span>
-              <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
+              <div class="flex flex-col">
+                <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.activeInvite?.code ?? household.inviteCode }}</span>
+                <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
+              </div>
+              <div class="flex gap-2">
+                <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
+                <button @click="regenerateInvite" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate">refresh</button>
+              </div>
             </div>
-            <p class="text-label-sm text-on-surface-variant text-center uppercase tracking-wider">Share this code with your partner</p>
+
+            <div class="flex flex-col items-center gap-2">
+              <QrCode :value="inviteLink" :size="160" />
+              <button @click="copyLink" class="text-label-sm uppercase text-primary hover:underline">Copy invite link</button>
+            </div>
+
+            <p class="text-label-sm text-on-surface-variant text-center uppercase tracking-wider">Share code, link, or QR with your partner</p>
             <div class="flex gap-2">
               <TangoInput v-model="emailInvite" placeholder="partner@email.com" class="flex-1" />
               <TangoButton @click="sendEmailInvite" variant="surface" size="sm">Email</TangoButton>
@@ -180,7 +222,6 @@ const copyCode = () => {
           </TangoButton>
         </div>
 
-        <!-- Join mode -->
         <div v-if="householdMode === 'join'" class="space-y-4">
           <p class="text-body-md text-on-surface-variant">Enter the invite code your partner shared with you.</p>
           <TangoInput v-model="inviteInput" label="Invite Code" placeholder="ABC123" />
@@ -193,7 +234,6 @@ const copyCode = () => {
         <p v-if="error" class="text-error text-label-sm text-center">{{ error }}</p>
       </div>
 
-      <!-- Nav buttons (steps 1–3) -->
       <div v-if="step < 4" class="mt-12 flex flex-col gap-4">
         <TangoButton @click="next" size="lg" class="w-full">
           {{ step === 3 ? "Set Up Duo" : "Next" }}

@@ -4,6 +4,21 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase, isConfigured } from '@/lib/supabase'
 import { useHouseholdStore } from './useHouseholdStore'
 import { useAuthStore } from './useAuthStore'
+import { useOfflineQueue } from './useOfflineQueue'
+
+export class VersionConflictError extends Error {
+  constructor(public table: string, public id: string) {
+    super('This item was changed elsewhere. Please refresh to see the latest version.')
+    this.name = 'VersionConflictError'
+  }
+}
+
+function isNetworkError(e: any): boolean {
+  if (!e) return false
+  if (!navigator.onLine) return true
+  const msg = String(e.message ?? e).toLowerCase()
+  return msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network request failed')
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,6 +30,9 @@ export interface Transaction {
   type: 'expense' | 'income'
   icon: string
   category: string
+  note?: string
+  receipt_url?: string
+  version?: number
 }
 
 export interface Goal {
@@ -27,6 +45,8 @@ export interface Goal {
   icon: string
   progress: number
   deadline?: string
+  completed_at?: string | null
+  version?: number
 }
 
 export interface Todo {
@@ -37,8 +57,10 @@ export interface Todo {
   shared?: boolean
   subtext?: string
   assigned?: string
+  assignee_id?: string | null
   priority?: 'Chill' | 'Normal' | 'ASAP'
   due_date?: string
+  version?: number
 }
 
 export interface CalendarEvent {
@@ -49,6 +71,10 @@ export interface CalendarEvent {
   category: string
   partners: string[]
   icon: string
+  mood?: number | null
+  review_note?: string | null
+  notes?: string | null
+  version?: number
 }
 
 // ─── Mappers ─────────────────────────────────────────────────────────────────
@@ -62,6 +88,9 @@ function mapTransaction(r: any): Transaction {
     type: r.type,
     icon: r.icon,
     category: r.category,
+    note: r.note ?? undefined,
+    receipt_url: r.receipt_url ?? undefined,
+    version: r.version,
   }
 }
 
@@ -76,6 +105,8 @@ function mapGoal(r: any): Goal {
     icon: r.icon,
     progress: r.progress,
     deadline: r.deadline,
+    completed_at: r.completed_at ?? null,
+    version: r.version,
   }
 }
 
@@ -88,8 +119,10 @@ function mapTodo(r: any): Todo {
     shared: r.shared,
     subtext: r.subtext,
     assigned: r.assigned,
+    assignee_id: r.assignee_id ?? null,
     priority: r.priority,
     due_date: r.due_date,
+    version: r.version,
   }
 }
 
@@ -102,6 +135,10 @@ function mapEvent(r: any): CalendarEvent {
     category: r.category,
     partners: r.partners ?? [],
     icon: r.icon,
+    mood: r.mood ?? null,
+    review_note: r.review_note ?? null,
+    notes: r.notes ?? null,
+    version: r.version,
   }
 }
 
@@ -119,6 +156,8 @@ export const useAppStore = defineStore('app', () => {
   // State
   const userName = ref('Alex')
   const partnerName = ref('Sam')
+  const avatarUrl = ref<string | null>(null)
+  const partnerAvatarUrl = ref<string | null>(null)
 
   const balance = ref(0)
   const savedThisMonth = ref(0)
@@ -132,6 +171,7 @@ export const useAppStore = defineStore('app', () => {
 
   // Internal
   let _channel: RealtimeChannel | null = null
+  const loading = ref(false)
 
   // ── Profiles ──────────────────────────────────────────────────────────────
 
@@ -140,10 +180,9 @@ export const useAppStore = defineStore('app', () => {
     const auth = useAuthStore()
     if (!isConfigured || !household.householdId || !auth.user) return
 
-    // Get all members' profiles in the household
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, display_name')
+      .select('id, display_name, avatar_url')
       .in('id', household.members.map(m => m.user_id))
 
     if (error) { console.error('[fetchProfiles]', error); return }
@@ -151,8 +190,16 @@ export const useAppStore = defineStore('app', () => {
     const myProfile = data?.find(p => p.id === auth.user?.id)
     const partnerProfile = data?.find(p => p.id !== auth.user?.id)
 
-    if (myProfile) userName.value = myProfile.display_name
-    if (partnerProfile) partnerName.value = partnerProfile.display_name
+    if (myProfile) {
+      userName.value = myProfile.display_name
+      avatarUrl.value = myProfile.avatar_url ?? null
+    }
+    if (partnerProfile) {
+      partnerName.value = partnerProfile.display_name
+      partnerAvatarUrl.value = partnerProfile.avatar_url ?? null
+    } else {
+      partnerAvatarUrl.value = null
+    }
   }
 
   async function updateProfile(newDisplayName: string) {
@@ -168,6 +215,47 @@ export const useAppStore = defineStore('app', () => {
 
     if (error) throw error
     userName.value = newDisplayName
+  }
+
+  async function uploadAvatar(file: File): Promise<string> {
+    const auth = useAuthStore()
+    if (!auth.user) throw new Error('Not authenticated')
+    if (!isConfigured) throw new Error('Supabase not configured')
+
+    const ext = (file.name.split('.').pop() ?? 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
+    const path = `${auth.user.id}/${crypto.randomUUID()}.${ext}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(path, file, { upsert: true, contentType: file.type || 'image/png' })
+    if (uploadError) throw uploadError
+
+    const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
+    const publicUrl = publicData.publicUrl
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', auth.user.id)
+    if (updateError) throw updateError
+
+    avatarUrl.value = publicUrl
+    return publicUrl
+  }
+
+  async function removeAvatar() {
+    const auth = useAuthStore()
+    if (!auth.user) return
+    if (!isConfigured) {
+      avatarUrl.value = null
+      return
+    }
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: null })
+      .eq('id', auth.user.id)
+    if (error) throw error
+    avatarUrl.value = null
   }
 
   // ── Fetch helpers ────────────────────────────────────────────────────────
@@ -235,9 +323,12 @@ export const useAppStore = defineStore('app', () => {
   async function fetchAll() {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
-
-    await Promise.all([fetchBudget(), fetchGoals(), fetchTodos(), fetchCalendar(), fetchProfiles()])
-
+    loading.value = true
+    try {
+      await Promise.all([fetchBudget(), fetchGoals(), fetchTodos(), fetchCalendar(), fetchProfiles()])
+    } finally {
+      loading.value = false
+    }
     // Boot realtime after initial fetch (idempotent)
     subscribeRealtime(household.householdId)
   }
@@ -299,26 +390,32 @@ export const useAppStore = defineStore('app', () => {
     const auth = useAuthStore()
 
     if (!isConfigured || !household.householdId) {
-      // Demo / offline fallback
       recentActivity.value.unshift({ ...transaction, id: crypto.randomUUID() })
       balance.value += transaction.amount
       return
     }
 
-    // Optimistic update
-    const newTx = { ...transaction, id: crypto.randomUUID() } as Transaction
+    const id = crypto.randomUUID()
+    const newTx = { ...transaction, id } as Transaction
     recentActivity.value.unshift(newTx)
     recalculateBudget()
 
-    const { error } = await supabase.from('transactions').insert({
+    const payload = {
+      id,
       household_id: household.householdId,
       created_by: auth.user?.id,
+      updated_by: auth.user?.id,
       ...transaction,
-    })
-    
+    }
+
+    const { error } = await supabase.from('transactions').insert(payload)
+
     if (error) {
-      // Rollback on error
-      recentActivity.value = recentActivity.value.filter(t => t.id !== newTx.id)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('transactions', 'insert', payload, id)
+        return
+      }
+      recentActivity.value = recentActivity.value.filter(t => t.id !== id)
       recalculateBudget()
       throw error
     }
@@ -354,18 +451,29 @@ export const useAppStore = defineStore('app', () => {
     const tx = recentActivity.value.find(t => t.id === id)
     if (!tx) return
 
+    const auth = useAuthStore()
+    const expectedVersion = tx.version
     const oldTx = { ...tx }
     Object.assign(tx, updates)
     recalculateBudget()
 
     if (!isConfigured) return
 
-    const { error } = await supabase.from('transactions').update(updates).eq('id', id)
+    let q = supabase.from('transactions').update({ ...updates, updated_by: auth.user?.id }).eq('id', id)
+    if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
+    const { data, error } = await q.select('version')
+
     if (error) {
       Object.assign(tx, oldTx)
       recalculateBudget()
       throw error
     }
+    if (!data || data.length === 0) {
+      Object.assign(tx, oldTx)
+      recalculateBudget()
+      throw new VersionConflictError('transactions', id)
+    }
+    tx.version = data[0].version
   }
 
   async function deleteTransaction(id: string) {
@@ -379,6 +487,10 @@ export const useAppStore = defineStore('app', () => {
 
     const { error } = await supabase.from('transactions').delete().eq('id', id)
     if (error) {
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('transactions', 'delete', {}, id)
+        return
+      }
       recentActivity.value.splice(idx, 0, removed)
       recalculateBudget()
       throw error
@@ -398,20 +510,27 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
-    // Optimistic update
-    const newGoal = { ...goal, id: crypto.randomUUID(), progress, status } as Goal
+    const id = crypto.randomUUID()
+    const newGoal = { ...goal, id, progress, status } as Goal
     goals.value.push(newGoal)
 
-    const { error } = await supabase.from('goals').insert({
+    const payload = {
+      id,
       household_id: household.householdId,
       created_by: auth.user?.id,
       progress,
       status,
       ...goal,
-    })
-    
+    }
+
+    const { error } = await supabase.from('goals').insert(payload)
+
     if (error) {
-      goals.value = goals.value.filter(g => g.id !== newGoal.id)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goals', 'insert', payload, id)
+        return
+      }
+      goals.value = goals.value.filter(g => g.id !== id)
       throw error
     }
   }
@@ -425,22 +544,30 @@ export const useAppStore = defineStore('app', () => {
     const progress = calcProgress(saved, target)
     const status = calcStatus(progress)
 
+    const expectedVersion = goal.version
     const oldGoal = { ...goal }
     Object.assign(goal, updates, { progress, status })
 
     if (!isConfigured) return
 
-    const { error } = await supabase.from('goals').update({
+    let q = supabase.from('goals').update({
       ...updates,
       progress,
       status,
       updated_at: new Date().toISOString(),
     }).eq('id', id)
+    if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
+    const { data, error } = await q.select('version')
 
     if (error) {
       Object.assign(goal, oldGoal)
       throw error
     }
+    if (!data || data.length === 0) {
+      Object.assign(goal, oldGoal)
+      throw new VersionConflictError('goals', id)
+    }
+    goal.version = data[0].version
   }
 
   async function deleteGoal(id: string) {
@@ -488,21 +615,28 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
-    // Optimistic update
-    const newTask = { ...task, id: crypto.randomUUID(), completed: false } as Todo
+    const id = crypto.randomUUID()
+    const newTask = { ...task, id, completed: false } as Todo
     todos.value.push(newTask)
 
-    const { error } = await supabase.from('todos').insert({
+    const payload = {
+      id,
       household_id: household.householdId,
       owner_id: auth.user?.id,
       completed: false,
       shared: true,
       updated_by: auth.user?.id,
       ...task,
-    })
-    
+    }
+
+    const { error } = await supabase.from('todos').insert(payload)
+
     if (error) {
-      todos.value = todos.value.filter(t => t.id !== newTask.id)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('todos', 'insert', payload, id)
+        return
+      }
+      todos.value = todos.value.filter(t => t.id !== id)
       throw error
     }
   }
@@ -520,41 +654,60 @@ export const useAppStore = defineStore('app', () => {
     const todo = todos.value.find(t => t.id === id)
     if (!todo) return
 
-    // Optimistic update
+    const auth = useAuthStore()
     const oldStatus = todo.completed
+    const expectedVersion = todo.version
     todo.completed = !todo.completed
 
     if (!isConfigured) return
 
-    const { error } = await supabase.from('todos').update({
+    let q = supabase.from('todos').update({
       completed: todo.completed,
       updated_at: new Date().toISOString(),
+      updated_by: auth.user?.id,
     }).eq('id', id)
-    
+    if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
+    const { data, error } = await q.select('version')
+
     if (error) {
       todo.completed = oldStatus
       throw error
     }
+    if (!data || data.length === 0) {
+      todo.completed = oldStatus
+      throw new VersionConflictError('todos', id)
+    }
+    todo.version = data[0].version
   }
 
   async function editTask(id: string, updates: Partial<Omit<Todo, 'id' | 'completed'>>) {
     const todo = todos.value.find(t => t.id === id)
     if (!todo) return
 
+    const auth = useAuthStore()
+    const expectedVersion = todo.version
     const oldTodo = { ...todo }
     Object.assign(todo, updates)
 
     if (!isConfigured) return
 
-    const { error } = await supabase.from('todos').update({
+    let q = supabase.from('todos').update({
       ...updates,
       updated_at: new Date().toISOString(),
+      updated_by: auth.user?.id,
     }).eq('id', id)
+    if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
+    const { data, error } = await q.select('version')
 
     if (error) {
       Object.assign(todo, oldTodo)
       throw error
     }
+    if (!data || data.length === 0) {
+      Object.assign(todo, oldTodo)
+      throw new VersionConflictError('todos', id)
+    }
+    todo.version = data[0].version
   }
 
   // ── Calendar ─────────────────────────────────────────────────────────────
@@ -568,17 +721,26 @@ export const useAppStore = defineStore('app', () => {
       return
     }
 
-    const newEvent = { ...event, id: crypto.randomUUID() } as CalendarEvent
+    const id = crypto.randomUUID()
+    const newEvent = { ...event, id } as CalendarEvent
     events.value.push(newEvent)
 
-    const { error } = await supabase.from('calendar_events').insert({
+    const payload = {
+      id,
       household_id: household.householdId,
       created_by: auth.user?.id,
+      updated_by: auth.user?.id,
       ...event,
-    })
-    
+    }
+
+    const { error } = await supabase.from('calendar_events').insert(payload)
+
     if (error) {
-      events.value = events.value.filter(e => e.id !== newEvent.id)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('calendar_events', 'insert', payload, id)
+        return
+      }
+      events.value = events.value.filter(e => e.id !== id)
       throw error
     }
   }
@@ -587,16 +749,26 @@ export const useAppStore = defineStore('app', () => {
     const event = events.value.find(e => e.id === id)
     if (!event) return
 
+    const auth = useAuthStore()
+    const expectedVersion = event.version
     const oldEvent = { ...event }
     Object.assign(event, updates)
 
     if (!isConfigured) return
 
-    const { error } = await supabase.from('calendar_events').update(updates).eq('id', id)
+    let q = supabase.from('calendar_events').update({ ...updates, updated_by: auth.user?.id }).eq('id', id)
+    if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
+    const { data, error } = await q.select('version')
+
     if (error) {
       Object.assign(event, oldEvent)
       throw error
     }
+    if (!data || data.length === 0) {
+      Object.assign(event, oldEvent)
+      throw new VersionConflictError('calendar_events', id)
+    }
+    event.version = data[0].version
   }
 
   async function deleteEvent(id: string) {
@@ -631,8 +803,11 @@ export const useAppStore = defineStore('app', () => {
   // ── Exposed ──────────────────────────────────────────────────────────────
 
   return {
+    loading,
     userName,
     partnerName,
+    avatarUrl,
+    partnerAvatarUrl,
 
     budget: _budget,
     plans: _plans,
@@ -641,6 +816,8 @@ export const useAppStore = defineStore('app', () => {
 
     // Actions
     updateProfile,
+    uploadAvatar,
+    removeAvatar,
     fetchBudget,
     fetchGoals,
     fetchTodos,

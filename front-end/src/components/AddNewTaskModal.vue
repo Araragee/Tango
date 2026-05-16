@@ -1,25 +1,52 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { useAppStore, type Todo } from '../stores/useStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 
 const props = defineProps<{ show: boolean; task?: Todo | null }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
+const auth = useAuthStore();
+const household = useHouseholdStore();
 const prefs = usePreferencesStore();
+
+type AssigneeKey = 'me' | 'partner' | 'both';
 
 const taskName = ref('');
 const category = ref('General');
 const newCategory = ref('');
-const assignee = ref('Both');
+const assigneeKey = ref<AssigneeKey>('both');
 const priority = ref<'Chill' | 'Normal' | 'ASAP'>('Normal');
 const dueDate = ref('');
 const error = ref('');
 
-const isEditing = () => !!props.task;
+const isEditing = computed(() => !!props.task);
+
+const resolveKey = (todo: Todo | null | undefined): AssigneeKey => {
+    if (!todo) return 'both';
+    if (todo.assignee_id === auth.user?.id) return 'me';
+    if (todo.assignee_id === household.partner?.user_id) return 'partner';
+    if (todo.assigned === store.userName) return 'me';
+    if (todo.assigned === store.partnerName) return 'partner';
+    return 'both';
+};
+
+const assigneeIdFor = (key: AssigneeKey): string | null => {
+    if (key === 'me') return auth.user?.id ?? null;
+    if (key === 'partner') return household.partner?.user_id ?? null;
+    return null;
+};
+
+const assigneeLabelFor = (key: AssigneeKey): string => {
+    if (key === 'me') return store.userName;
+    if (key === 'partner') return store.partnerName;
+    return 'Both';
+};
 
 watch(() => props.show, (open) => {
   if (!open) return;
@@ -27,13 +54,13 @@ watch(() => props.show, (open) => {
   if (props.task) {
     taskName.value = props.task.text;
     category.value = props.task.category;
-    assignee.value = props.task.assigned ?? 'Both';
+    assigneeKey.value = resolveKey(props.task);
     priority.value = props.task.priority ?? 'Normal';
     dueDate.value = props.task.due_date ?? '';
   } else {
     taskName.value = '';
     category.value = 'General';
-    assignee.value = 'Both';
+    assigneeKey.value = 'both';
     priority.value = 'Normal';
     dueDate.value = '';
   }
@@ -49,7 +76,8 @@ const saveTask = async () => {
     const payload = {
       text: taskName.value,
       category: category.value,
-      assigned: assignee.value,
+      assigned: assigneeLabelFor(assigneeKey.value),
+      assignee_id: assigneeIdFor(assigneeKey.value),
       priority: priority.value,
       due_date: dueDate.value || undefined,
     };
@@ -68,56 +96,56 @@ const saveTask = async () => {
 </script>
 
 <template>
-  <BaseModal :show="show" :title="isEditing() ? 'Edit Task' : 'New Task'" max-width="max-w-xl" @close="emit('close')">
+  <BaseModal :show="show" :title="isEditing ? 'Edit Task' : 'New Task'" max-width="max-w-xl" @close="emit('close')">
     <div class="flex flex-col gap-6">
       <TangoInput v-model="taskName" label="Task Name" placeholder="e.g. Buy groceries..." :error="error" required />
 
-      <!-- Assignee -->
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Assign To</label>
         <div class="flex gap-4">
-          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.partnerName">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.partnerName"/>
-            <div
-              class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-secondary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.partnerName }"
-            >
-              <div class="w-full h-full bg-secondary-container flex items-center justify-center text-headline-md font-bold text-on-secondary-container">
-                {{ store.partnerName.charAt(0).toUpperCase() }}
-              </div>
-            </div>
-            <span class="text-label-sm" :class="assignee === store.partnerName ? 'text-primary' : 'text-on-surface-variant'">{{ store.partnerName }}</span>
-          </label>
-          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" :aria-label="'Assign to ' + store.userName">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" :value="store.userName"/>
+          <label class="cursor-pointer relative flex flex-col items-center gap-xs group">
+            <input v-model="assigneeKey" class="sr-only" name="assigneeKey" type="radio" value="me" />
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-tertiary-container hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === store.userName }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assigneeKey === 'me' }"
             >
-              <div class="w-full h-full bg-tertiary-container flex items-center justify-center text-headline-md font-bold text-on-tertiary-container">
+              <div class="w-full h-full flex items-center justify-center text-headline-md font-bold text-on-tertiary-container">
                 {{ store.userName.charAt(0).toUpperCase() }}
               </div>
             </div>
-            <span class="text-label-sm" :class="assignee === store.userName ? 'text-primary' : 'text-on-surface-variant'">{{ store.userName }}</span>
+            <span class="text-label-sm" :class="assigneeKey === 'me' ? 'text-primary' : 'text-on-surface-variant'">{{ store.userName }}</span>
           </label>
-          <label class="cursor-pointer relative flex flex-col items-center gap-xs group" aria-label="Assign to Both">
-            <input v-model="assignee" class="sr-only" name="assignee" type="radio" value="Both"/>
+
+          <label v-if="household.partner" class="cursor-pointer relative flex flex-col items-center gap-xs group">
+            <input v-model="assigneeKey" class="sr-only" name="assigneeKey" type="radio" value="partner" />
+            <div
+              class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-secondary-container hard-shadow-dark transition-all"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assigneeKey === 'partner' }"
+            >
+              <div class="w-full h-full flex items-center justify-center text-headline-md font-bold text-on-secondary-container">
+                {{ store.partnerName.charAt(0).toUpperCase() }}
+              </div>
+            </div>
+            <span class="text-label-sm" :class="assigneeKey === 'partner' ? 'text-primary' : 'text-on-surface-variant'">{{ store.partnerName }}</span>
+          </label>
+
+          <label class="cursor-pointer relative flex flex-col items-center gap-xs group">
+            <input v-model="assigneeKey" class="sr-only" name="assigneeKey" type="radio" value="both" />
             <div
               class="w-14 h-14 rounded-full pixel-border overflow-hidden bg-surface-variant flex items-center justify-center hard-shadow-dark transition-all"
-              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assignee === 'Both' }"
+              :class="{ 'ring-2 ring-primary ring-offset-2 ring-offset-surface shadow-none translate-x-[2px] translate-y-[2px]': assigneeKey === 'both' }"
             >
               <span class="material-symbols-outlined text-on-surface-variant text-2xl">group</span>
             </div>
-            <span class="text-label-sm" :class="assignee === 'Both' ? 'text-primary' : 'text-on-surface-variant'">Both</span>
+            <span class="text-label-sm" :class="assigneeKey === 'both' ? 'text-primary' : 'text-on-surface-variant'">Both</span>
           </label>
         </div>
       </div>
 
-      <!-- Priority -->
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Priority</label>
         <div class="grid grid-cols-3 gap-4">
-          <label v-for="p in (['Chill', 'Normal', 'ASAP'] as const)" :key="p" class="cursor-pointer" :aria-label="'Set priority to ' + p">
+          <label v-for="p in (['Chill', 'Normal', 'ASAP'] as const)" :key="p" class="cursor-pointer">
             <input v-model="priority" class="sr-only peer" name="priority" type="radio" :value="p"/>
             <div
               class="pixel-border bg-surface text-on-surface text-center py-2 text-label-sm uppercase hard-shadow-dark transition-all hover:bg-surface-variant"
@@ -133,7 +161,6 @@ const saveTask = async () => {
         </div>
       </div>
 
-      <!-- Category picker -->
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
         <div class="flex gap-2 flex-wrap">
@@ -157,9 +184,9 @@ const saveTask = async () => {
     </div>
 
     <template #footer>
-      <TangoButton @click="emit('close')" variant="surface" size="sm" aria-label="Cancel">Cancel</TangoButton>
-      <TangoButton @click="saveTask" shadow="dark" size="sm" :aria-label="isEditing() ? 'Save Changes' : 'Save Task'">
-        {{ isEditing() ? 'SAVE CHANGES' : 'SAVE TASK' }}
+      <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
+      <TangoButton @click="saveTask" shadow="dark" size="sm">
+        {{ isEditing ? 'SAVE CHANGES' : 'SAVE TASK' }}
       </TangoButton>
     </template>
   </BaseModal>

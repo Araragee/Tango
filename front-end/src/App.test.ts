@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('./stores/useOfflineQueue', () => ({
+  useOfflineQueue: () => ({ startAutoFlush: vi.fn(), enqueue: vi.fn() }),
+}));
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createRouter, createMemoryHistory } from 'vue-router';

@@ -1,15 +1,19 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { User } from '@supabase/supabase-js'
+import { ref, computed } from 'vue'
+import type { User, Provider } from '@supabase/supabase-js'
 import { supabase, isConfigured } from '@/lib/supabase'
+import { useHouseholdStore } from './useHouseholdStore'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const initialized = ref(false)
 
+  const isPasswordRecovery = ref(false)
+
+  const email = computed(() => user.value?.email ?? null)
+
   async function init() {
     if (!isConfigured) {
-      // Demo mode: mock session
       user.value = { id: 'demo', email: 'demo@tango.app' } as User
       initialized.value = true
       return
@@ -20,8 +24,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     supabase.auth.onAuthStateChange(async (event, session) => {
       user.value = session?.user ?? null
-      if (event === 'SIGNED_OUT') {
-        const { useHouseholdStore } = await import('./useHouseholdStore')
+      if (event === 'PASSWORD_RECOVERY') {
+        isPasswordRecovery.value = true
+      }
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
         await useHouseholdStore().reset()
       }
     })
@@ -29,25 +35,55 @@ export const useAuthStore = defineStore('auth', () => {
     initialized.value = true
   }
 
-  async function login(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  async function login(emailAddr: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: emailAddr, password })
     if (error) throw error
     user.value = data.user
     return data.user
   }
 
-  async function signup(email: string, password: string, displayName?: string) {
+  async function signup(emailAddr: string, password: string, displayName?: string, inviteCode?: string) {
     const { data, error } = await supabase.auth.signUp({
-      email,
+      email: emailAddr,
       password,
-      options: { data: displayName ? { display_name: displayName } : {} },
+      options: {
+        data: displayName ? { display_name: displayName } : {},
+        emailRedirectTo: `${window.location.origin}/auth/confirm${inviteCode ? `?invite=${encodeURIComponent(inviteCode)}` : ''}`,
+      },
     })
     if (error) throw error
     if (!data.session) {
-      throw new Error('Check your email to confirm your account, then sign in.')
+      return { user: data.user, needsConfirm: true }
     }
     user.value = data.user
-    return data.user
+    return { user: data.user, needsConfirm: false }
+  }
+
+  async function loginWithOAuth(provider: Provider, inviteCode?: string) {
+    const redirect = `${window.location.origin}/auth/confirm${inviteCode ? `?invite=${encodeURIComponent(inviteCode)}` : ''}`
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: redirect },
+    })
+    if (error) throw error
+  }
+
+  async function loginWithMagicLink(emailAddr: string, inviteCode?: string) {
+    const redirect = `${window.location.origin}/auth/confirm${inviteCode ? `?invite=${encodeURIComponent(inviteCode)}` : ''}`
+    const { error } = await supabase.auth.signInWithOtp({
+      email: emailAddr,
+      options: { emailRedirectTo: redirect },
+    })
+    if (error) throw error
+  }
+
+  async function resendConfirmation(emailAddr: string) {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: emailAddr,
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+    })
+    if (error) throw error
   }
 
   async function logout() {
@@ -56,13 +92,39 @@ export const useAuthStore = defineStore('auth', () => {
     initialized.value = false
   }
 
-  async function resetPassword(email: string) {
+  async function resetPassword(emailAddr: string) {
     if (!isConfigured) throw new Error('Password reset requires Supabase to be configured.')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+    const { error } = await supabase.auth.resetPasswordForEmail(emailAddr, {
+      redirectTo: `${window.location.origin}/reset-password`,
     })
     if (error) throw error
   }
 
-  return { user, initialized, init, login, signup, logout, resetPassword }
+  async function updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+    isPasswordRecovery.value = false
+  }
+
+  async function updateEmail(newEmail: string) {
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    if (error) throw error
+  }
+
+  return {
+    user,
+    email,
+    initialized,
+    isPasswordRecovery,
+    init,
+    login,
+    signup,
+    loginWithOAuth,
+    loginWithMagicLink,
+    resendConfirmation,
+    logout,
+    resetPassword,
+    updatePassword,
+    updateEmail,
+  }
 })

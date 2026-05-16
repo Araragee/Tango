@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref, inject, computed } from 'vue';
 import { useAppStore, type Todo } from '../stores/useStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
 import AddNewTaskModal from './AddNewTaskModal.vue';
+import SkeletonBlock from './SkeletonBlock.vue';
+import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
+const auth = useAuthStore();
+const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: string) => void;
 
 const newTaskText = ref('');
@@ -58,6 +64,7 @@ const quickAdd = async () => {
       text,
       category: 'Quick Add',
       assigned: 'Both',
+      assignee_id: null,
       priority: 'Normal',
     });
     notify('Task added!', 'success');
@@ -68,6 +75,39 @@ const quickAdd = async () => {
 };
 
 const doneCount = computed(() => store.todos.items.filter(t => t.completed).length);
+
+const handoff = async (todo: Todo) => {
+  const me = auth.user?.id ?? null;
+  const partnerId = household.partner?.user_id ?? null;
+  const cur = todo.assignee_id ?? null;
+
+  let nextId: string | null;
+  let nextLabel: string;
+  if (cur === me)              { nextId = partnerId; nextLabel = store.partnerName; }
+  else if (cur === partnerId)  { nextId = null;       nextLabel = 'Both';            }
+  else                         { nextId = me;         nextLabel = store.userName;    }
+
+  if (nextId === null && nextLabel !== 'Both') return;
+  if (!partnerId && !me) return;
+
+  try {
+    await store.editTask(todo.id, {
+      assignee_id: nextId,
+      assigned: nextLabel,
+    });
+    notify(nextLabel === 'Both' ? 'Handed off to both.' : `Handed off to ${nextLabel}.`, 'success');
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to hand off.', 'error');
+  }
+};
+
+const assigneeLabel = (todo: Todo): string => {
+  if (todo.assignee_id) {
+    if (todo.assignee_id === auth.user?.id) return store.userName;
+    if (todo.assignee_id === household.partner?.user_id) return store.partnerName;
+  }
+  return todo.assigned ?? 'Both';
+};
 </script>
 
 <template>
@@ -104,10 +144,24 @@ const doneCount = computed(() => store.todos.items.filter(t => t.completed).leng
         </button>
       </div>
 
+      <!-- Loading skeleton -->
+      <div v-if="store.loading" class="space-y-3">
+        <div v-for="n in 3" :key="n" class="bg-surface pixel-border p-4 flex items-center gap-4">
+          <SkeletonBlock width="1.5rem" height="1.5rem" />
+          <div class="flex-1 space-y-2">
+            <SkeletonBlock height="0.875rem" width="55%" />
+            <SkeletonBlock height="0.75rem" width="30%" />
+          </div>
+        </div>
+      </div>
+
       <!-- Empty state -->
-      <p v-if="filteredTodos.length === 0" class="text-body-md text-on-surface-variant py-8 text-center">
-        {{ filter === 'done' ? 'Nothing completed yet.' : filter === 'active' ? 'All caught up!' : 'No tasks. Add one below.' }}
-      </p>
+      <EmptyState
+        v-else-if="filteredTodos.length === 0"
+        :icon="filter === 'done' ? 'check_circle' : filter === 'active' ? 'celebration' : 'checklist'"
+        :title="filter === 'done' ? 'Nothing completed yet' : filter === 'active' ? 'All caught up!' : 'No tasks yet'"
+        :description="filter === 'done' ? 'Finish a task to see it here.' : filter === 'active' ? 'Great work!' : 'Add a task to get started.'"
+      />
 
       <!-- Task Items -->
       <div
@@ -135,7 +189,7 @@ const doneCount = computed(() => store.todos.items.filter(t => t.completed).leng
             {{ todo.text }}
           </span>
           <div class="flex gap-2 items-center mt-1 flex-wrap">
-            <span class="text-label-sm text-outline uppercase">{{ todo.assigned }}</span>
+            <span class="text-label-sm text-outline uppercase">{{ assigneeLabel(todo) }}</span>
             <span v-if="todo.category && todo.category !== 'Quick Add'" class="text-label-sm text-outline uppercase">• {{ todo.category }}</span>
             <span
               v-if="todo.due_date"
@@ -163,6 +217,14 @@ const doneCount = computed(() => store.todos.items.filter(t => t.completed).leng
           >
             {{ todo.priority }}
           </span>
+          <button
+            @click.stop="handoff(todo)"
+            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
+            aria-label="Hand off task"
+            title="Hand off to partner / cycle assignee"
+          >
+            swap_horiz
+          </button>
           <button
             @click.stop="openEditModal(todo)"
             class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"

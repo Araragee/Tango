@@ -22,6 +22,21 @@ const router = createRouter({
       meta: { public: true },
     },
     {
+      path: '/join/:code',
+      component: () => import('@/components/JoinInviteView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/reset-password',
+      component: () => import('@/components/ResetPasswordView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/auth/confirm',
+      component: () => import('@/components/AuthConfirmView.vue'),
+      meta: { public: true },
+    },
+    {
       path: '/onboarding',
       component: () => import('@/components/OnboardingView.vue'),
       meta: { requiresAuth: true },
@@ -61,7 +76,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  // Demo mode: Supabase not configured → bypass all guards
   if (!isConfigured) return true
 
   const auth = useAuthStore()
@@ -72,10 +86,16 @@ router.beforeEach(async (to) => {
     if (auth.user) await household.load()
   }
 
-  if (to.meta.requiresAuth && !auth.user) return '/login'
+  if (auth.isPasswordRecovery && to.path !== '/reset-password') {
+    return '/reset-password'
+  }
+
+  if (to.meta.requiresAuth && !auth.user) {
+    const redirectAfter = encodeURIComponent(to.fullPath)
+    return `/login?redirect=${redirectAfter}`
+  }
   if (to.meta.requiresHousehold && !household.householdId) return '/onboarding'
 
-  // Redirect logged-in users away from public pages
   if (auth.user && (to.path === '/login' || to.path === '/signup' || to.path === '/')) {
     return household.householdId ? '/app/budget' : '/onboarding'
   }

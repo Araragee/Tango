@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, inject } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { isConfigured } from '../lib/supabase';
 import TangoButton from './TangoButton.vue';
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
+const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const email = ref('');
 const displayName = ref('');
@@ -14,39 +16,84 @@ const password = ref('');
 const confirmPassword = ref('');
 const error = ref('');
 const loading = ref(false);
+const needsConfirm = ref(false);
+
+const inviteCode = computed(() => String(route.query.invite ?? ''));
+
+const passwordStrength = computed(() => {
+    const p = password.value;
+    if (p.length === 0) return { score: 0, label: '' };
+    let score = 0;
+    if (p.length >= 8) score++;
+    if (/[A-Z]/.test(p)) score++;
+    if (/[0-9]/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    const labels = ['Too short', 'Weak', 'Okay', 'Good', 'Strong'];
+    return { score, label: labels[score] ?? '' };
+});
 
 const signup = async () => {
-  error.value = '';
-  if (!email.value.trim() || !displayName.value.trim() || !password.value) {
-    error.value = 'Please fill in all fields.';
-    return;
-  }
-  if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match.';
-    return;
-  }
-
-  if (!isConfigured) {
-    router.push('/onboarding');
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const user = await auth.signup(email.value, password.value, displayName.value.trim());
-    if (user) {
-      const { useAppStore } = await import('../stores/useStore');
-      const store = useAppStore();
-      // Trigger creates profile row; this also covers display_name updates
-      await store.updateProfile(displayName.value.trim());
+    error.value = '';
+    if (!email.value.trim() || !displayName.value.trim() || !password.value) {
+        error.value = 'Please fill in all fields.';
+        return;
     }
-    router.push('/onboarding');
-  } catch (e: any) {
-    error.value = e.message ?? 'Sign up failed.';
-  } finally {
-    loading.value = false;
-  }
+    if (password.value.length < 8) {
+        error.value = 'Password must be at least 8 characters.';
+        return;
+    }
+    if (password.value !== confirmPassword.value) {
+        error.value = 'Passwords do not match.';
+        return;
+    }
+
+    if (!isConfigured) {
+        router.push('/onboarding');
+        return;
+    }
+
+    loading.value = true;
+    try {
+        const result = await auth.signup(email.value, password.value, displayName.value.trim(), inviteCode.value || undefined);
+        if (result.needsConfirm) {
+            needsConfirm.value = true;
+            return;
+        }
+        if (inviteCode.value) {
+            router.push(`/join/${inviteCode.value}`);
+        } else {
+            router.push('/onboarding');
+        }
+    } catch (e: any) {
+        error.value = e.message ?? 'Sign up failed.';
+    } finally {
+        loading.value = false;
+    }
 };
+
+const resend = async () => {
+    try {
+        await auth.resendConfirmation(email.value.trim());
+        notify('Confirmation email resent.', 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to resend.', 'error');
+    }
+};
+
+const oauth = async (provider: 'google') => {
+    error.value = '';
+    try {
+        await auth.loginWithOAuth(provider, inviteCode.value || undefined);
+    } catch (e: any) {
+        error.value = e.message ?? 'OAuth sign-in failed.';
+    }
+};
+
+onMounted(() => {
+    if (inviteCode.value) {
+        notify(`Sign up to join household ${inviteCode.value}.`, 'info');
+    }
+});
 </script>
 
 <template>
@@ -58,12 +105,22 @@ const signup = async () => {
         <p class="text-body-md text-on-surface-variant font-bold uppercase tracking-wider">Create your duo account</p>
       </div>
 
-      <form @submit.prevent="signup" class="w-full flex flex-col gap-lg">
+      <div v-if="needsConfirm" class="text-center space-y-4">
+        <span class="material-symbols-outlined text-primary text-5xl" style="font-variation-settings: 'FILL' 1;">mark_email_read</span>
+        <h2 class="text-headline-md">Confirm your email</h2>
+        <p class="text-body-md text-on-surface-variant">We sent a confirmation link to <strong>{{ email }}</strong>. Tap it to finish signing up.</p>
+        <div class="flex flex-col gap-2">
+          <TangoButton @click="resend" variant="surface" class="w-full">Resend Email</TangoButton>
+          <TangoButton @click="router.push('/login')" shadow="dark" class="w-full">Back to Sign In</TangoButton>
+        </div>
+      </div>
+
+      <form v-else @submit.prevent="signup" class="w-full flex flex-col gap-lg">
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm text-on-background uppercase" for="name">Your Name</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">person</span>
-            <input v-model="displayName" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="name" placeholder="Alex" type="text"/>
+            <input v-model="displayName" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="name" placeholder="Alex" type="text" autocomplete="name"/>
           </div>
         </div>
 
@@ -71,7 +128,7 @@ const signup = async () => {
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email"/>
+            <input v-model="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
           </div>
         </div>
 
@@ -79,7 +136,15 @@ const signup = async () => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password"/>
+            <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="new-password"/>
+          </div>
+          <div v-if="password" class="flex items-center gap-2 mt-1">
+            <div class="flex-1 h-1.5 bg-surface-variant pixel-border-sm overflow-hidden">
+              <div class="h-full transition-all"
+                   :class="passwordStrength.score >= 3 ? 'bg-primary' : passwordStrength.score >= 2 ? 'bg-secondary' : 'bg-error'"
+                   :style="{ width: (passwordStrength.score * 25) + '%' }"></div>
+            </div>
+            <span class="text-label-sm text-on-surface-variant uppercase">{{ passwordStrength.label }}</span>
           </div>
         </div>
 
@@ -87,7 +152,7 @@ const signup = async () => {
           <label class="text-label-sm text-on-background uppercase" for="confirmPassword">Confirm Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="confirmPassword" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="confirmPassword" placeholder="••••••••" type="password"/>
+            <input v-model="confirmPassword" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="confirmPassword" placeholder="••••••••" type="password" autocomplete="new-password"/>
           </div>
         </div>
 
@@ -98,9 +163,20 @@ const signup = async () => {
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_forward</span>
         </TangoButton>
 
+        <div class="flex items-center gap-sm my-md w-full">
+          <div class="h-px bg-outline-variant flex-1"></div>
+          <span class="text-label-sm text-outline-variant">OR</span>
+          <div class="h-px bg-outline-variant flex-1"></div>
+        </div>
+
+        <TangoButton @click="oauth('google')" type="button" variant="surface" shadow="dark" class="w-full py-3">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">google</span>
+          Continue with Google
+        </TangoButton>
+
         <div class="text-center mt-md">
           <p class="text-body-md text-on-surface-variant">Already have an account?</p>
-          <button @click="router.push('/login')" type="button" class="inline-block mt-xs text-body-md font-bold text-primary hover:text-primary-container transition-colors border-b-2 border-transparent hover:border-primary">Sign In instead</button>
+          <button @click="router.push(`/login${inviteCode ? '?invite=' + encodeURIComponent(inviteCode) : ''}`)" type="button" class="inline-block mt-xs text-body-md font-bold text-primary hover:text-primary-container transition-colors border-b-2 border-transparent hover:border-primary">Sign In instead</button>
         </div>
       </form>
     </div>
