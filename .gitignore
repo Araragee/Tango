@@ -37,3 +37,9 @@ dist/
 # Vite
 .vite/
 */.vite/
+
+# Claude Code local state (worktrees, settings.local.json)
+.claude/
+
+# Supabase CLI cache
+supabase/.temp/
