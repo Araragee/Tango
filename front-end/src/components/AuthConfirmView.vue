@@ -22,10 +22,20 @@ onMounted(async () => {
         const tokenHash = Array.isArray(rawTokenHash) ? String(rawTokenHash[0]) : String(rawTokenHash ?? '');
         const typeStr = Array.isArray(rawType) ? String(rawType[0]) : String(rawType ?? '');
 
+        const rawCode = route.query.code;
+        const codeStr = Array.isArray(rawCode) ? String(rawCode[0]) : String(rawCode ?? '');
+
         const validTypes = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'] as const;
         type ValidType = typeof validTypes[number];
 
-        if (isConfigured && tokenHash && validTypes.includes(typeStr as ValidType)) {
+        if (isConfigured && codeStr) {
+            const { error } = await supabase.auth.exchangeCodeForSession(codeStr);
+            if (error) {
+                status.value = 'error';
+                message.value = error.message;
+                return;
+            }
+        } else if (isConfigured && tokenHash && validTypes.includes(typeStr as ValidType)) {
             const { error } = await supabase.auth.verifyOtp({
                 token_hash: tokenHash,
                 type: typeStr as ValidType,
