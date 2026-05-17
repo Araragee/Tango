@@ -16,9 +16,6 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export const usePushStore = defineStore('push', () => {
-  const auth = useAuthStore()
-  const household = useHouseholdStore()
-
   const subscribed = ref(false)
   const busy = ref(false)
   const supported = computed(
@@ -39,6 +36,7 @@ export const usePushStore = defineStore('push', () => {
 
   // ── Subscribe ────────────────────────────────────────────────────────────
   async function subscribe() {
+    const auth = useAuthStore()
     if (!supported.value || !auth.user) return
     if (busy.value) return
     busy.value = true
@@ -85,6 +83,8 @@ export const usePushStore = defineStore('push', () => {
 
   // ── Persist to Supabase ──────────────────────────────────────────────────
   async function persistSubscription(sub: PushSubscription) {
+    const auth = useAuthStore()
+    const household = useHouseholdStore()
     if (!isConfigured || !auth.user) return
     const json = sub.toJSON()
     const row = {

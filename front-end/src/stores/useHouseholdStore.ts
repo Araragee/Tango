@@ -22,10 +22,12 @@ export const useHouseholdStore = defineStore('household', () => {
   const members = ref<HouseholdMember[]>([])
   const activeInvite = ref<ActiveInvite | null>(null)
 
-  const auth = useAuthStore()
-
-  const partner = computed(() => members.value.find(m => m.user_id !== auth.user?.id))
+  const partner = computed(() => {
+    const auth = useAuthStore()
+    return members.value.find(m => m.user_id !== auth.user?.id)
+  })
   const isCreator = computed(() => {
+    const auth = useAuthStore()
     const me = members.value.find(m => m.user_id === auth.user?.id)
     return me?.role === 'creator'
   })
@@ -37,6 +39,7 @@ export const useHouseholdStore = defineStore('household', () => {
       await _afterLoad()
       return
     }
+    const auth = useAuthStore()
     if (!auth.user) return
 
     const { data } = await supabase
@@ -87,6 +90,7 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   async function createHousehold() {
+    const auth = useAuthStore()
     if (!auth.user) throw new Error('Not authenticated')
 
     if (!isConfigured) {
@@ -134,6 +138,7 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   async function joinHousehold(code: string) {
+    const auth = useAuthStore()
     if (!auth.user) throw new Error('Not authenticated')
 
     if (!isConfigured) {
@@ -185,6 +190,7 @@ export const useHouseholdStore = defineStore('household', () => {
     }
     const { error } = await supabase.rpc('delete_my_data')
     if (error) throw error
+    const auth = useAuthStore()
     await auth.logout()
     await reset()
   }

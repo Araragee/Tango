@@ -163,18 +163,7 @@ onMounted(() => {
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_forward</span>
         </TangoButton>
 
-        <div class="flex items-center gap-sm my-md w-full">
-          <div class="h-px bg-outline-variant flex-1"></div>
-          <span class="text-label-sm text-outline-variant">OR</span>
-          <div class="h-px bg-outline-variant flex-1"></div>
-        </div>
-
-        <TangoButton @click="oauth('google')" type="button" variant="surface" shadow="dark" class="w-full py-3">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">google</span>
-          Continue with Google
-        </TangoButton>
-
-        <div class="text-center mt-md">
+<div class="text-center mt-md">
           <p class="text-body-md text-on-surface-variant">Already have an account?</p>
           <button @click="router.push(`/login${inviteCode ? '?invite=' + encodeURIComponent(inviteCode) : ''}`)" type="button" class="inline-block mt-xs text-body-md font-bold text-primary hover:text-primary-container transition-colors border-b-2 border-transparent hover:border-primary">Sign In instead</button>
         </div>
