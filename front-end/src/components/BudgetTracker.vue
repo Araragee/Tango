@@ -66,9 +66,9 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
       <!-- Left Column -->
       <div class="md:col-span-7 flex flex-col gap-8 w-full">
         <!-- Balance Card with Sprites -->
-        <TangoCard padding="none" shadow="default" class="flex flex-row items-stretch relative w-full overflow-hidden" style="min-height:11rem">
+        <TangoCard padding="none" shadow="default" class="flex flex-row items-stretch relative w-full overflow-hidden min-h-44">
           <!-- Sprite Widget Panel -->
-          <div class="flex flex-col items-center justify-end gap-2 px-4 pt-4 pb-3 bg-surface-variant border-r-2 border-black dark:border-white shrink-0" style="min-width:140px">
+          <div class="flex flex-col items-center justify-end gap-2 px-3 sm:px-4 pt-4 pb-3 bg-surface-variant border-r-2 border-black dark:border-white shrink-0 min-w-[100px] sm:min-w-[140px]">
             <TangoSprites :size="64" />
           </div>
 

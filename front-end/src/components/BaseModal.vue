@@ -21,14 +21,8 @@ const emit = defineEmits(['close']);
       <div class="absolute inset-0 bg-dither opacity-90" @click="emit('close')"></div>
 
       <!-- Modal Container -->
-      <div 
-        :class="[
-          'relative z-20 w-[90%] min-w-[320px] bg-surface pixel-border hard-shadow flex flex-col',
-          maxWidth === 'max-w-md' ? 'max-w-[448px]' : 
-          maxWidth === 'max-w-lg' ? 'max-w-[512px]' : 
-          maxWidth === 'max-w-xl' ? 'max-w-[576px]' : 
-          maxWidth === 'max-w-2xl' ? 'max-w-[672px]' : 'max-w-[512px]'
-        ]"
+      <div
+        :class="['relative z-20 w-[90%] min-w-[280px] bg-surface pixel-border hard-shadow flex flex-col', maxWidth]"
       >
         <!-- Modal Header -->
         <div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">

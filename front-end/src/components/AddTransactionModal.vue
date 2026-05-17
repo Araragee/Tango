@@ -67,7 +67,7 @@ const saveTransaction = async () => {
 
       <TangoInput v-model="title" label="Title" placeholder="e.g. Weekly Groceries" :error="errors.title" required />
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <TangoInput v-model.number="amount" label="Amount" type="number" :error="errors.amount" required />
         <TangoInput v-model="date" label="Date" type="date" required />
       </div>

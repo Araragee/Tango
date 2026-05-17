@@ -157,7 +157,7 @@ const savingsRate = computed(() => {
             :key="m.key"
             class="flex-1 flex flex-col items-center gap-1"
           >
-            <div class="w-full flex items-end justify-center gap-0.5" style="height:100px">
+            <div class="w-full flex items-end justify-center gap-0.5 h-[100px]">
               <!-- Income bar -->
               <div
                 class="flex-1 bg-primary pixel-border-sm"
@@ -210,14 +210,14 @@ const savingsRate = computed(() => {
         <!-- Y-axis labels + bars -->
         <div class="flex gap-4 items-end">
           <!-- Y labels -->
-          <div class="flex flex-col justify-between text-right pr-2 shrink-0" style="height:128px">
+          <div class="flex flex-col justify-between text-right pr-2 shrink-0 h-[128px]">
             <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly).toLocaleString() }}</span>
             <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly / 2).toLocaleString() }}</span>
             <span class="text-[10px] text-on-surface-variant">$0</span>
           </div>
 
           <!-- Bars + grid -->
-          <div class="relative flex-1 flex items-end gap-2" style="height:128px">
+          <div class="relative flex-1 flex items-end gap-2 h-[128px]">
             <!-- Grid lines -->
             <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
               <div class="border-t border-on-surface/10 w-full"></div>
@@ -230,7 +230,7 @@ const savingsRate = computed(() => {
               :key="m.key"
               class="flex-1 flex flex-col items-center gap-1 z-10"
             >
-              <div class="w-full flex items-end justify-center gap-1" style="height:112px">
+              <div class="w-full flex items-end justify-center gap-1 h-[112px]">
                 <div
                   class="flex-1 bg-primary pixel-border-sm transition-all duration-500"
                   :style="{ height: barH(m.income) + 'px' }"
