@@ -242,7 +242,7 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
     <main :class="[
       'min-h-screen transition-all duration-300',
-      showNav ? 'pt-20 pb-28 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
+      showNav ? 'pt-20 max-md:pb-28 md:pb-8 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
     ]">
       <router-view v-slot="{ Component }">
         <transition name="slide-fade" mode="out-in">

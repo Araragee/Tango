@@ -15,7 +15,7 @@ const isActive = (path: string) => route.path === path;
 </script>
 
 <template>
-  <nav class="md:hidden bg-surface border-t-2 border-black dark:border-white fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2">
+  <nav class="hidden max-md:flex bg-surface border-t-2 border-black dark:border-white fixed bottom-0 left-0 w-full z-50 justify-around items-center px-4 py-2">
     <button
       v-for="item in navItems"
       :key="item.path"
