@@ -29,14 +29,15 @@ onMounted(async () => {
         type ValidType = typeof validTypes[number];
 
         if (isConfigured && codeStr) {
-            const { error } = await supabase.auth.exchangeCodeForSession(codeStr);
+            const { error, data } = await supabase.auth.exchangeCodeForSession(codeStr);
             if (error) {
                 status.value = 'error';
                 message.value = error.message;
                 return;
             }
+            if (data?.user) auth.user = data.user;
         } else if (isConfigured && tokenHash && validTypes.includes(typeStr as ValidType)) {
-            const { error } = await supabase.auth.verifyOtp({
+            const { error, data } = await supabase.auth.verifyOtp({
                 token_hash: tokenHash,
                 type: typeStr as ValidType,
             });
@@ -45,9 +46,15 @@ onMounted(async () => {
                 message.value = error.message;
                 return;
             }
+            if (data?.user) auth.user = data.user;
         }
 
         if (!auth.initialized) await auth.init();
+        
+        if (isConfigured && !auth.user) {
+            const { data } = await supabase.auth.getSession();
+            if (data?.session?.user) auth.user = data.session.user;
+        }
 
         if (!auth.user) {
             status.value = 'error';
