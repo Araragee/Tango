@@ -81,7 +81,6 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
               ${{ store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
             </h2>
             <p class="text-body-md text-on-surface-variant mt-1">{{ lastUpdatedLabel }}</p>
-            <div class="absolute bottom-0 left-0 w-full h-2 bg-dither pixel-border-sm border-b-0 border-x-0 border-t-2 border-black dark:border-white"></div>
           </div>
         </TangoCard>
 

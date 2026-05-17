@@ -4,7 +4,6 @@ import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue';
 import GlobalSearch from './components/GlobalSearch.vue';
-import FloatingBoy from './components/FloatingBoy.vue';
 import NotificationsBell from './components/NotificationsBell.vue';
 import ActivityFeed from './components/ActivityFeed.vue';
 import PresenceBadge from './components/PresenceBadge.vue';
@@ -237,8 +236,6 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
     <GlobalSearch :show="showSearch" @close="showSearch = false" />
 
     <ActivityFeed :show="showActivity" @close="showActivity = false" />
-
-    <FloatingBoy />
 
     <PushPromptBanner />
     <IosInstallHint />

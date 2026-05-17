@@ -38,14 +38,14 @@ defineExpose({ add });
                 'border-primary': n.type === 'info',
             }"
         >
-            <span class="material-symbols-outlined" :class="{
+            <span class="material-symbols-outlined shrink-0" :class="{
                 'text-secondary': n.type === 'success',
                 'text-error': n.type === 'error',
                 'text-primary': n.type === 'info',
             }">
                 {{ n.type === 'success' ? 'check_circle' : n.type === 'error' ? 'error' : 'info' }}
             </span>
-            <span class="text-label-sm uppercase font-bold">{{ n.message }}</span>
+            <span class="flex-1 min-w-0 text-label-sm uppercase font-bold break-words">{{ n.message }}</span>
         </div>
     </TransitionGroup>
   </div>

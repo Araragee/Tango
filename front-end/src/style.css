@@ -159,6 +159,20 @@
   --spacing-gutter: 16px;
   --spacing-margin: 20px;
   --spacing-unit: 4px;
+
+  /* Uniform responsive breakpoints (mobile-first). */
+  --breakpoint-xs: 24rem;   /* 384px  — tiny phones */
+  --breakpoint-sm: 40rem;   /* 640px  — large phone / portrait tablet */
+  --breakpoint-md: 48rem;   /* 768px  — tablet */
+  --breakpoint-lg: 64rem;   /* 1024px — laptop */
+  --breakpoint-xl: 80rem;   /* 1280px — desktop */
+  --breakpoint-2xl: 96rem;  /* 1536px — wide desktop */
+
+  /* Common content widths to use across cards / forms / empty states. */
+  --container-narrow: 24rem;  /* 384px */
+  --container-content: 32rem; /* 512px */
+  --container-wide: 48rem;    /* 768px */
+  --container-page: 72rem;    /* 1152px */
 }
 
 :root {
