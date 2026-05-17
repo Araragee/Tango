@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { usePushSubscription } from '@/composables/usePushSubscription'
 import { useAuthStore } from '@/stores/useAuthStore'
 
@@ -7,6 +8,7 @@ const DISMISS_KEY = 'tango.push.bannerDismissed'
 
 const push = usePushSubscription()
 const auth = useAuthStore()
+const route = useRoute()
 
 const dismissed = ref(false)
 const justEnabled = ref(false)
@@ -17,6 +19,7 @@ onMounted(() => {
 
 const visible = computed(() => {
   if (!auth.user) return false
+  if (!route.path.startsWith('/app')) return false
   if (dismissed.value) return false
   if (justEnabled.value) return false
   return push.canPrompt.value

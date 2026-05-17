@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const DISMISS_KEY = 'tango.ios.installHintDismissed'
 
 const auth = useAuthStore()
+const route = useRoute()
 const dismissed = ref(false)
 
 onMounted(() => {
@@ -30,6 +32,7 @@ const isStandalone = computed(() => {
 
 const visible = computed(() => {
   if (!auth.user) return false
+  if (!route.path.startsWith('/app')) return false
   if (dismissed.value) return false
   if (!isIosSafari.value) return false
   if (isStandalone.value) return false
