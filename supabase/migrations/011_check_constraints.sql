@@ -55,6 +55,11 @@ alter table public.todos
   drop constraint if exists todos_subtext_len,
   drop constraint if exists todos_assigned_enum;
 
+-- Coerce any legacy or null values to a valid enum member so the check passes.
+update public.todos
+  set assigned = 'me'
+  where assigned is null or assigned not in ('me', 'partner', 'both');
+
 alter table public.todos
   add constraint todos_text_len        check (length(trim(text)) between 1 and 500),
   add constraint todos_category_len    check (length(category) between 1 and 60),
