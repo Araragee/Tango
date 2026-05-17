@@ -62,7 +62,7 @@ const unlockedCount = computed(() => achievements.unlocked.length);
           :class="unlockedCodes.has(def.code) ? 'text-on-secondary-container' : 'text-outline'"
           :style="unlockedCodes.has(def.code) ? `font-variation-settings: 'FILL' 1;` : ''"
         >{{ unlockedCodes.has(def.code) ? def.icon : 'lock' }}</span>
-        <div class="text-label-sm font-bold leading-tight"
+        <div class="w-full text-label-sm font-bold leading-tight break-words"
              :class="unlockedCodes.has(def.code) ? 'text-on-secondary-container' : 'text-on-surface-variant'">
           {{ def.title }}
         </div>
