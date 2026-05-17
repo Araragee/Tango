@@ -51,17 +51,33 @@ Deno.serve(async (req: Request) => {
     return new Response('title and body required', { status: 400 })
   }
 
-  // Build query for subscriptions
-  let query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth_key')
+  // Resolve target user_ids
+  let userIds: string[] = []
   if (payload.user_id) {
-    query = query.eq('user_id', payload.user_id)
+    userIds = [payload.user_id]
   } else if (payload.household_id) {
-    query = query.eq('household_id', payload.household_id)
+    const { data: members, error: memErr } = await supabase
+      .from('household_members')
+      .select('user_id')
+      .eq('household_id', payload.household_id)
+    if (memErr) {
+      console.error('[dispatch_push] household lookup error', memErr)
+      return new Response('DB error', { status: 500 })
+    }
+    userIds = (members ?? []).map((m: { user_id: string }) => m.user_id)
+    if (userIds.length === 0) {
+      return new Response(JSON.stringify({ sent: 0 }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
   } else {
     return new Response('user_id or household_id required', { status: 400 })
   }
 
-  const { data: subs, error } = await query
+  const { data: subs, error } = await supabase
+    .from('push_subscriptions')
+    .select('endpoint, p256dh, auth_key')
+    .in('user_id', userIds)
   if (error) {
     console.error('[dispatch_push] DB error', error)
     return new Response('DB error', { status: 500 })

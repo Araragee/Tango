@@ -8,6 +8,9 @@ import FloatingBoy from './components/FloatingBoy.vue';
 import NotificationsBell from './components/NotificationsBell.vue';
 import ActivityFeed from './components/ActivityFeed.vue';
 import PresenceBadge from './components/PresenceBadge.vue';
+import PushPromptBanner from './components/PushPromptBanner.vue';
+import IosInstallHint from './components/IosInstallHint.vue';
+import { usePwaUpdate } from './composables/usePwaUpdate';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
 import { useThemeStore } from './stores/useThemeStore';
@@ -44,6 +47,8 @@ const store = useAppStore();
 const headerAvatar = computed(() => store.partnerAvatarUrl ?? store.avatarUrl ?? null);
 
 const showNav = computed(() => route.path.startsWith('/app'));
+
+const pwa = usePwaUpdate();
 
 const onGlobalKey = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -234,6 +239,31 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
     <ActivityFeed :show="showActivity" @close="showActivity = false" />
 
     <FloatingBoy />
+
+    <PushPromptBanner />
+    <IosInstallHint />
+
+    <Transition name="slide-fade">
+      <div
+        v-if="pwa.needRefresh.value"
+        class="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 w-[calc(100%-2rem)] max-w-md p-3 pixel-border bg-primary-container text-on-primary-container flex items-center gap-3"
+        role="alert"
+      >
+        <span class="material-symbols-outlined">system_update</span>
+        <p class="flex-1 text-sm font-bold uppercase tracking-wide">New version ready</p>
+        <button
+          type="button"
+          @click="pwa.applyUpdate()"
+          class="px-3 py-1 pixel-border-sm bg-primary text-on-primary text-xs font-bold uppercase hover:opacity-90"
+        >Reload</button>
+        <button
+          type="button"
+          @click="pwa.dismissNeedRefresh()"
+          class="material-symbols-outlined text-on-primary-container hover:opacity-70"
+          aria-label="Dismiss update"
+        >close</button>
+      </div>
+    </Transition>
   </div>
 </template>
 
