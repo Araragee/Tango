@@ -245,10 +245,10 @@ const syncScore = computed(() => {
         <div v-for="day in DAY_LABELS" :key="day" class="text-label-sm text-on-surface uppercase">{{ day }}</div>
       </div>
       <div class="grid grid-cols-7 gap-[1px] bg-surface-variant">
-        <div v-for="i in firstDayOffset" :key="'e'+i" class="bg-surface-container-low min-h-[100px] p-xs"></div>
+        <div v-for="i in firstDayOffset" :key="'e'+i" class="bg-surface-container-low min-h-[60px] sm:min-h-[100px] p-xs"></div>
         <div
           v-for="day in daysInMonth" :key="day"
-          class="min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors cursor-pointer"
+          class="min-h-[60px] sm:min-h-[100px] p-xs relative border border-transparent hover:border-primary-container transition-colors cursor-pointer"
           :class="isToday(day) ? 'bg-primary-container' : 'bg-surface-container-lowest'"
           @click="handleDayClick(day)"
         >
@@ -286,7 +286,7 @@ const syncScore = computed(() => {
         <!-- Event cells -->
         <div
           v-for="d in weekDays" :key="'ev-'+d.toISOString()"
-          class="border-r border-surface-variant last:border-r-0 min-h-[200px] p-1 flex flex-col gap-1"
+          class="border-r border-surface-variant last:border-r-0 min-h-[120px] sm:min-h-[200px] p-1 flex flex-col gap-1"
           :class="isDateToday(d) ? 'bg-primary-container/10' : 'bg-surface-container-lowest'"
           @click="openNewEventForDate(dateStr(d))"
         >

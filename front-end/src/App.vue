@@ -156,7 +156,7 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <header class="fixed top-0 left-0 w-full z-40 flex items-center px-6 h-16 bg-surface border-b-2 border-black dark:border-white">
+    <header class="fixed top-0 left-0 w-full z-40 flex items-center px-4 md:px-8 h-16 bg-surface border-b-2 border-black dark:border-white">
       <!-- Logo -->
       <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="goHome()">
         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>

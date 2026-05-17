@@ -49,7 +49,7 @@ const unlockedCount = computed(() => achievements.unlocked.length);
       </div>
     </div>
 
-    <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
       <div
         v-for="def in achievements.definitions"
         :key="def.code"
