@@ -5,6 +5,7 @@ import { supabase, isConfigured } from '@/lib/supabase'
 import { useHouseholdStore } from './useHouseholdStore'
 import { useAuthStore } from './useAuthStore'
 import { useOfflineQueue } from './useOfflineQueue'
+import { saveReadCache, loadReadCache } from '@/composables/useReadCache'
 
 export class VersionConflictError extends Error {
   constructor(public table: string, public id: string) {
@@ -264,6 +265,10 @@ export const useAppStore = defineStore('app', () => {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
 
+    const cacheKey = `${household.householdId}:transactions`
+    const cached = await loadReadCache<Transaction>(cacheKey)
+    if (cached) { recentActivity.value = cached; recalculateBudget() }
+
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -274,11 +279,16 @@ export const useAppStore = defineStore('app', () => {
 
     recentActivity.value = (data ?? []).map(mapTransaction)
     recalculateBudget()
+    saveReadCache(cacheKey, recentActivity.value)
   }
 
   async function fetchGoals() {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
+
+    const cacheKey = `${household.householdId}:goals`
+    const cached = await loadReadCache<Goal>(cacheKey)
+    if (cached) goals.value = cached
 
     const { data, error } = await supabase
       .from('goals')
@@ -288,11 +298,16 @@ export const useAppStore = defineStore('app', () => {
 
     if (error) { console.error('[fetchGoals]', error); return }
     goals.value = (data ?? []).map(mapGoal)
+    saveReadCache(cacheKey, goals.value)
   }
 
   async function fetchTodos() {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
+
+    const cacheKey = `${household.householdId}:todos`
+    const cached = await loadReadCache<Todo>(cacheKey)
+    if (cached) todos.value = cached
 
     const { data, error } = await supabase
       .from('todos')
@@ -302,11 +317,16 @@ export const useAppStore = defineStore('app', () => {
 
     if (error) { console.error('[fetchTodos]', error); return }
     todos.value = (data ?? []).map(mapTodo)
+    saveReadCache(cacheKey, todos.value)
   }
 
   async function fetchCalendar() {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
+
+    const cacheKey = `${household.householdId}:calendar_events`
+    const cached = await loadReadCache<CalendarEvent>(cacheKey)
+    if (cached) events.value = cached
 
     const { data, error } = await supabase
       .from('calendar_events')
@@ -316,6 +336,7 @@ export const useAppStore = defineStore('app', () => {
 
     if (error) { console.error('[fetchCalendar]', error); return }
     events.value = (data ?? []).map(mapEvent)
+    saveReadCache(cacheKey, events.value)
   }
 
   // ── fetchAll + Realtime ──────────────────────────────────────────────────

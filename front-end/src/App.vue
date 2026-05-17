@@ -47,6 +47,13 @@ const headerAvatar = computed(() => store.partnerAvatarUrl ?? store.avatarUrl ??
 
 const showNav = computed(() => route.path.startsWith('/app'));
 
+const navItems = [
+  { name: 'Budget', path: '/app/budget' },
+  { name: 'Plans', path: '/app/plans' },
+  { name: 'To-Dos', path: '/app/todos' },
+  { name: 'Calendar', path: '/app/calendar' },
+];
+
 const pwa = usePwaUpdate();
 
 const onGlobalKey = (e: KeyboardEvent) => {
@@ -149,13 +156,28 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 h-16 bg-surface border-b-2 border-black dark:border-white">
-      <div class="flex items-center gap-2 cursor-pointer" @click="goHome()">
+    <header class="fixed top-0 left-0 w-full z-40 flex items-center px-6 h-16 bg-surface border-b-2 border-black dark:border-white">
+      <!-- Logo -->
+      <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="goHome()">
         <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <h1 class="text-2xl font-black text-primary tracking-[0.1em] italic uppercase">TANGO</h1>
       </div>
 
-      <div class="flex items-center gap-4">
+      <!-- Desktop nav (center) -->
+      <nav v-if="showNav" class="hidden md:flex items-center gap-1 mx-auto">
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          @click="router.push(item.path)"
+          class="px-4 py-1.5 text-label-sm uppercase font-bold tracking-wider transition-all"
+          :class="route.path === item.path
+            ? 'bg-primary text-on-primary pixel-border hard-shadow-dark'
+            : 'text-on-surface hover:text-primary'"
+        >{{ item.name }}</button>
+      </nav>
+
+      <!-- Actions (right) -->
+      <div class="flex items-center gap-3 ml-auto">
         <span
           v-if="showNav && !presence.isOnline"
           class="px-2 py-0.5 pixel-border-sm bg-error text-on-error text-[10px] uppercase font-bold"
@@ -169,8 +191,8 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
           aria-label="Search (Cmd+K)"
         >
           <span class="material-symbols-outlined text-[16px]">search</span>
-          <span class="hidden sm:inline">Search</span>
-          <kbd class="hidden sm:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
+          <span class="hidden lg:inline">Search</span>
+          <kbd class="hidden lg:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
         </button>
 
         <NotificationsBell v-if="showNav" />

@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { supabase, isConfigured } from '../lib/supabase';
 import TangoCard from './TangoCard.vue';
 import TangoButton from './TangoButton.vue';
 
@@ -16,6 +17,21 @@ const message = ref('Confirming your account…');
 
 onMounted(async () => {
     try {
+        const tokenHash = route.query.token_hash as string | undefined;
+        const type = route.query.type as string | undefined;
+
+        if (isConfigured && tokenHash && type) {
+            const { error } = await supabase.auth.verifyOtp({
+                token_hash: tokenHash,
+                type: type as any,
+            });
+            if (error) {
+                status.value = 'error';
+                message.value = error.message;
+                return;
+            }
+        }
+
         if (!auth.initialized) await auth.init();
 
         if (!auth.user) {

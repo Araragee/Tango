@@ -34,20 +34,4 @@ const isActive = (path: string) => route.path === path;
     </button>
   </nav>
 
-  <!-- Desktop Navigation -->
-  <div class="hidden md:flex fixed top-0 right-24 h-16 items-center gap-6 z-50">
-    <button
-      v-for="item in navItems"
-      :key="item.path"
-      @click="router.push(item.path)"
-      class="px-4 py-1 text-label-sm uppercase font-bold transition-all"
-      :class="[
-        isActive(item.path)
-          ? 'bg-primary text-on-primary pixel-border hard-shadow-dark'
-          : 'text-on-surface hover:text-primary'
-      ]"
-    >
-      {{ item.name }}
-    </button>
-  </div>
 </template>
