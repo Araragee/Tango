@@ -17,13 +17,18 @@ const message = ref('Confirming your account…');
 
 onMounted(async () => {
     try {
-        const tokenHash = route.query.token_hash as string | undefined;
-        const type = route.query.type as string | undefined;
+        const rawTokenHash = route.query.token_hash;
+        const rawType = route.query.type;
+        const tokenHash = Array.isArray(rawTokenHash) ? String(rawTokenHash[0]) : String(rawTokenHash ?? '');
+        const typeStr = Array.isArray(rawType) ? String(rawType[0]) : String(rawType ?? '');
 
-        if (isConfigured && tokenHash && type) {
+        const validTypes = ['signup', 'invite', 'magiclink', 'recovery', 'email_change', 'email'] as const;
+        type ValidType = typeof validTypes[number];
+
+        if (isConfigured && tokenHash && validTypes.includes(typeStr as ValidType)) {
             const { error } = await supabase.auth.verifyOtp({
                 token_hash: tokenHash,
-                type: type as any,
+                type: typeStr as ValidType,
             });
             if (error) {
                 status.value = 'error';

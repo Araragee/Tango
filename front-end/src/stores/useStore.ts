@@ -268,6 +268,7 @@ export const useAppStore = defineStore('app', () => {
     const cacheKey = `${household.householdId}:transactions`
     const cached = await loadReadCache<Transaction>(cacheKey)
     if (cached) { recentActivity.value = cached; recalculateBudget() }
+    else { recentActivity.value = []; recalculateBudget() }
 
     const { data, error } = await supabase
       .from('transactions')
@@ -327,6 +328,7 @@ export const useAppStore = defineStore('app', () => {
     const cacheKey = `${household.householdId}:calendar_events`
     const cached = await loadReadCache<CalendarEvent>(cacheKey)
     if (cached) events.value = cached
+    else events.value = []
 
     const { data, error } = await supabase
       .from('calendar_events')
