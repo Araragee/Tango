@@ -179,11 +179,28 @@ export const useAppStore = defineStore('app', () => {
   async function fetchProfiles() {
     const household = useHouseholdStore()
     const auth = useAuthStore()
-    if (!isConfigured || !household.householdId || !auth.user) return
+    if (!household.householdId || !auth.user) return
+
+    const cacheKey = `profiles:${household.householdId}`
+    const cached = await loadReadCache<any>(cacheKey)
+    if (cached) {
+      const myProfile = cached.find(p => p.id === auth.user?.id)
+      const partnerProfile = cached.find(p => p.id !== auth.user?.id)
+      if (myProfile) {
+        userName.value = myProfile.display_name
+        avatarUrl.value = myProfile.avatar_url ?? null
+      }
+      if (partnerProfile) {
+        partnerName.value = partnerProfile.display_name
+        partnerAvatarUrl.value = partnerProfile.avatar_url ?? null
+      }
+    }
+
+    if (!isConfigured) return
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, display_name, avatar_url')
+      .select('id, display_name, avatar_url, theme_dark, theme_accent')
       .in('id', household.members.map(m => m.user_id))
 
     if (error) { console.error('[fetchProfiles]', error); return }
@@ -194,6 +211,15 @@ export const useAppStore = defineStore('app', () => {
     if (myProfile) {
       userName.value = myProfile.display_name
       avatarUrl.value = myProfile.avatar_url ?? null
+
+      // Sync theme from profile
+      const themeStore = (await import('./useThemeStore')).useThemeStore()
+      if (typeof myProfile.theme_dark === 'boolean') {
+        themeStore.isDark = myProfile.theme_dark
+      }
+      if (myProfile.theme_accent) {
+        themeStore.accentColor = myProfile.theme_accent
+      }
     }
     if (partnerProfile) {
       partnerName.value = partnerProfile.display_name
@@ -201,21 +227,40 @@ export const useAppStore = defineStore('app', () => {
     } else {
       partnerAvatarUrl.value = null
     }
+
+    if (data) saveReadCache(cacheKey, data)
   }
 
   async function updateProfile(newDisplayName: string) {
     const auth = useAuthStore()
-    if (!isConfigured || !auth.user) {
-      userName.value = newDisplayName
-      return
+    const household = useHouseholdStore()
+    if (!auth.user) return
+
+    userName.value = newDisplayName
+
+    // Update read cache for profile
+    if (household.householdId) {
+      const cacheKey = `profiles:${household.householdId}`
+      const cached = (await loadReadCache<any>(cacheKey) as any[]) || []
+      const myIdx = cached.findIndex((p: any) => p.id === auth.user?.id)
+      const myData = { id: auth.user.id, display_name: newDisplayName, avatar_url: avatarUrl.value }
+      if (myIdx > -1) cached[myIdx] = myData
+      else cached.push(myData)
+      await saveReadCache(cacheKey, cached)
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({ id: auth.user.id, display_name: newDisplayName })
+    if (!isConfigured) return
 
-    if (error) throw error
-    userName.value = newDisplayName
+    const payload = { id: auth.user.id, display_name: newDisplayName, avatar_url: avatarUrl.value }
+    const { error } = await supabase.from('profiles').upsert(payload)
+
+    if (error) {
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('profiles', 'upsert', payload)
+        return
+      }
+      throw error
+    }
   }
 
   async function uploadAvatar(file: File): Promise<string> {
@@ -263,7 +308,7 @@ export const useAppStore = defineStore('app', () => {
 
   async function fetchBudget() {
     const household = useHouseholdStore()
-    if (!isConfigured || !household.householdId) return
+    if (!household.householdId) return
 
     const cacheKey = `${household.householdId}:transactions`
     const cached = await loadReadCache<Transaction>(cacheKey)
@@ -285,7 +330,7 @@ export const useAppStore = defineStore('app', () => {
 
   async function fetchGoals() {
     const household = useHouseholdStore()
-    if (!isConfigured || !household.householdId) return
+    if (!household.householdId) return
 
     const cacheKey = `${household.householdId}:goals`
     const cached = await loadReadCache<Goal>(cacheKey)
@@ -304,7 +349,7 @@ export const useAppStore = defineStore('app', () => {
 
   async function fetchTodos() {
     const household = useHouseholdStore()
-    if (!isConfigured || !household.householdId) return
+    if (!household.householdId) return
 
     const cacheKey = `${household.householdId}:todos`
     const cached = await loadReadCache<Todo>(cacheKey)
@@ -323,7 +368,7 @@ export const useAppStore = defineStore('app', () => {
 
   async function fetchCalendar() {
     const household = useHouseholdStore()
-    if (!isConfigured || !household.householdId) return
+    if (!household.householdId) return
 
     const cacheKey = `${household.householdId}:calendar_events`
     const cached = await loadReadCache<CalendarEvent>(cacheKey)
@@ -345,7 +390,7 @@ export const useAppStore = defineStore('app', () => {
 
   async function fetchAll() {
     const household = useHouseholdStore()
-    if (!isConfigured || !household.householdId) return
+    if (!household.householdId) return
     loading.value = true
     try {
       await Promise.all([fetchBudget(), fetchGoals(), fetchTodos(), fetchCalendar(), fetchProfiles()])

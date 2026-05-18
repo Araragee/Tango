@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { openDB, type IDBPDatabase } from 'idb'
 import { supabase, isConfigured } from '@/lib/supabase'
 
-export type QueueOp = 'insert' | 'update' | 'delete'
+export type QueueOp = 'insert' | 'update' | 'delete' | 'upsert'
 
 export interface QueuedMutation {
   id: string
@@ -78,6 +78,9 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     if (!isConfigured) return
     if (entry.op === 'insert') {
       const { error } = await supabase.from(entry.table).insert(entry.payload)
+      if (error) throw error
+    } else if (entry.op === 'upsert') {
+      const { error } = await supabase.from(entry.table).upsert(entry.payload)
       if (error) throw error
     } else if (entry.op === 'update') {
       if (!entry.row_id) throw new Error('Missing row_id for update')

@@ -14,12 +14,10 @@ app.use(pinia)
 app.use(router)
 
 // Init auth + household before router resolves first navigation
-if (isConfigured) {
-  const auth = useAuthStore()
-  const household = useHouseholdStore()
-  auth.init().then(() => {
-    if (auth.user) household.load()
-  })
-}
+const auth = useAuthStore()
+const household = useHouseholdStore()
+auth.init().then(() => {
+  if (auth.user) household.load()
+})
 
 app.mount('#app')
