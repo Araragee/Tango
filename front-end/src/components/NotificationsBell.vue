@@ -90,7 +90,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="open"
-      class="absolute right-0 top-10 w-[min(320px,calc(100vw-2rem))] max-h-[calc(100dvh-80px)] sm:max-h-[420px] bg-surface pixel-border hard-shadow overflow-hidden z-50 flex flex-col"
+      class="fixed sm:absolute left-1/2 sm:left-auto -translate-x-1/2 sm:translate-x-0 sm:right-0 top-16 sm:top-10 w-[90vw] sm:w-[380px] max-h-[calc(100dvh-80px)] sm:max-h-[420px] bg-surface pixel-border hard-shadow overflow-hidden z-50 flex flex-col"
     >
       <div class="flex items-center justify-between p-3 border-b-2 border-on-surface">
         <span class="text-label-md uppercase font-bold">Notifications</span>

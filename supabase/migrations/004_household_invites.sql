@@ -67,9 +67,9 @@ begin
     new_code := upper(substr(encode(gen_random_bytes(6), 'base64'), 1, 6));
     new_code := regexp_replace(new_code, '[^A-Z0-9]', 'X', 'g');
     begin
+      new_exp := now() + interval '24 hours';
       insert into public.household_invites (household_id, code, created_by, expires_at)
-        values (hid, new_code, auth.uid(), now() + interval '24 hours')
-        returning household_invites.expires_at into new_exp;
+        values (hid, new_code, auth.uid(), new_exp);
       return query select new_code, new_exp;
       return;
     exception when unique_violation then

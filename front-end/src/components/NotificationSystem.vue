@@ -26,12 +26,12 @@ defineExpose({ add });
 </script>
 
 <template>
-  <div class="fixed bottom-24 left-0 right-0 z-[100] pointer-events-none flex flex-col items-center gap-2 px-4">
+  <div class="fixed top-4 left-0 right-0 z-[100] pointer-events-none flex flex-col items-center gap-2 px-4">
     <TransitionGroup name="toast">
         <div
             v-for="n in notifications"
             :key="n.id"
-            class="pointer-events-auto bg-surface pixel-border hard-shadow-dark px-6 py-3 flex items-center gap-3 max-w-md w-full"
+            class="pointer-events-auto bg-surface pixel-border hard-shadow-dark px-6 py-3 flex items-center gap-3 w-full lg:max-w-[30vw] max-w-[70vw]"
             :class="{
                 'border-secondary-container': n.type === 'success',
                 'border-error': n.type === 'error',
@@ -58,7 +58,7 @@ defineExpose({ add });
 }
 .toast-enter-from {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(-20px);
 }
 .toast-leave-to {
   opacity: 0;

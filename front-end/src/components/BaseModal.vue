@@ -9,7 +9,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  maxWidth: 'max-w-lg'
+  maxWidth: 'max-w-[90vw]'
 });
 const emit = defineEmits(['close']);
 </script>
@@ -22,7 +22,7 @@ const emit = defineEmits(['close']);
 
       <!-- Modal Container -->
       <div
-        :class="['relative z-20 w-[90%] min-w-[280px] bg-surface pixel-border hard-shadow flex flex-col', maxWidth]"
+        :class="['relative z-20 w-[90vw] min-w-[280px] bg-surface pixel-border hard-shadow flex flex-col', maxWidth]"
       >
         <!-- Modal Header -->
         <div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">

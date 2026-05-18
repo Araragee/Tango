@@ -116,7 +116,7 @@ const typeColors: Record<string, string> = {
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="emit('close')"></div>
 
       <!-- Search panel -->
-      <div class="relative z-10 w-full max-w-xl bg-surface pixel-border shadow-2xl flex flex-col overflow-hidden">
+      <div class="relative z-10 lg:w-[30vw] w-[90vw] bg-surface pixel-border shadow-2xl flex flex-col overflow-hidden">
         <!-- Input -->
         <div class="flex items-center gap-3 px-4 py-3 border-b-2 border-on-surface">
           <span class="material-symbols-outlined text-on-surface-variant">search</span>

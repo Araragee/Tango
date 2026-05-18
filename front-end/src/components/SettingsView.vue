@@ -368,13 +368,11 @@ onMounted(() => {
           <div v-else class="space-y-4">
             <p class="text-body-md text-on-surface-variant">Invite your partner to start sharing data.</p>
 
-            <div v-if="household.activeInvite || household.inviteCode" class="space-y-3">
-              <div class="bg-primary-container pixel-border-sm p-4 flex items-center justify-between">
-                <div class="flex flex-col">
-                  <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.activeInvite?.code ?? household.inviteCode }}</span>
-                  <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
-                </div>
-                <div class="flex gap-2">
+            <div v-if="household.activeInvite || household.inviteCode" class="space-y-3 flex flex-col items-center">
+              <div class="bg-primary-container pixel-border-sm p-4 flex flex-col items-center gap-2 w-full text-center">
+                <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.activeInvite?.code ?? household.inviteCode }}</span>
+                <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
+                <div class="flex gap-3 mt-1">
                   <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
                   <button @click="regenerateInvite" :disabled="inviteBusy" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate">refresh</button>
                 </div>
