@@ -8,14 +8,14 @@ const supabaseKey =
   ''
 
 export const isConfigured =
-  supabaseUrl.startsWith('https://') && supabaseKey.length > 20
+  /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(supabaseUrl) && supabaseKey.length > 20
 
 export const supabase = createClient(
   isConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
   isConfigured ? supabaseKey : 'placeholder-key',
   {
     auth: {
-      flowType: 'implicit',
+      flowType: 'pkce',
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true,

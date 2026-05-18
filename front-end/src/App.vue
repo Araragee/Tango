@@ -10,6 +10,7 @@ import PresenceBadge from './components/PresenceBadge.vue';
 import PushPromptBanner from './components/PushPromptBanner.vue';
 import IosInstallHint from './components/IosInstallHint.vue';
 import { usePwaUpdate } from './composables/usePwaUpdate';
+import { useIdleTimeout } from './composables/useIdleTimeout';
 import { useAuthStore } from './stores/useAuthStore';
 import { useHouseholdStore } from './stores/useHouseholdStore';
 import { useThemeStore } from './stores/useThemeStore';
@@ -56,6 +57,19 @@ const navItems = [
 
 const pwa = usePwaUpdate();
 
+useIdleTimeout(
+  () => {
+    if (!auth.user) return;
+    auth.logout();
+    router.push('/login');
+    notificationRef.value?.add('Signed out due to inactivity.', 'info');
+  },
+  () => {
+    if (!auth.user) return;
+    notificationRef.value?.add('Session will expire in 1 minute due to inactivity.', 'info');
+  }
+);
+
 const onGlobalKey = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault();
@@ -86,6 +100,11 @@ watch(
     if (!uid && prevUid) {
       notifications.unsubscribe();
       achievements.unsubscribe();
+      offline.clearAll();
+      if (auth.sessionExpired) {
+        notificationRef.value?.add('Session expired. Please sign in again.', 'error');
+        auth.sessionExpired = false;
+      }
     }
   },
   { immediate: true }

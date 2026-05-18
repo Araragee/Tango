@@ -7,8 +7,10 @@ import { useHouseholdStore } from './useHouseholdStore'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const initialized = ref(false)
-
   const isPasswordRecovery = ref(false)
+  const sessionExpired = ref(false)
+
+  let _loggingOut = false
 
   const email = computed(() => user.value?.email ?? null)
 
@@ -27,7 +29,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (event === 'PASSWORD_RECOVERY') {
         isPasswordRecovery.value = true
       }
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !session) {
+      if (event === 'SIGNED_OUT') {
+        if (!_loggingOut) sessionExpired.value = true
         await useHouseholdStore().reset()
       }
     })
@@ -87,9 +90,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout() {
+    _loggingOut = true
     if (isConfigured) await supabase.auth.signOut()
     user.value = null
     initialized.value = false
+    _loggingOut = false
+  }
+
+  async function logoutAllDevices() {
+    _loggingOut = true
+    if (isConfigured) await supabase.auth.signOut({ scope: 'global' })
+    user.value = null
+    initialized.value = false
+    _loggingOut = false
   }
 
   async function resetPassword(emailAddr: string) {
@@ -116,6 +129,7 @@ export const useAuthStore = defineStore('auth', () => {
     email,
     initialized,
     isPasswordRecovery,
+    sessionExpired,
     init,
     login,
     signup,
@@ -123,6 +137,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithMagicLink,
     resendConfirmation,
     logout,
+    logoutAllDevices,
     resetPassword,
     updatePassword,
     updateEmail,

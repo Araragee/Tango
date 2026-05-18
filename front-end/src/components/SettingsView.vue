@@ -216,6 +216,21 @@ const signOut = async () => {
     router.push('/');
 };
 
+const loggingOutAll = ref(false);
+const signOutAllDevices = async () => {
+    if (!confirm('Sign out from all devices? You will need to sign in again.')) return;
+    loggingOutAll.value = true;
+    try {
+        await auth.logoutAllDevices();
+        household.reset();
+        router.push('/');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to sign out all devices.', 'error');
+    } finally {
+        loggingOutAll.value = false;
+    }
+};
+
 const togglePush = async () => {
     try {
         if (push.subscribed) {
@@ -420,6 +435,16 @@ onMounted(() => {
               <TangoInput label="Change Password" v-model="newPassword" type="password" placeholder="••••••••" />
             </div>
             <TangoButton @click="changePassword" variant="surface" :disabled="newPassword.length < 8">Update Password</TangoButton>
+          </div>
+
+          <div class="border-t border-on-surface pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <p class="text-body-md font-bold uppercase">Active Sessions</p>
+              <p class="text-label-sm text-on-surface-variant">Sign out on all devices</p>
+            </div>
+            <TangoButton @click="signOutAllDevices" variant="surface" :disabled="loggingOutAll">
+              {{ loggingOutAll ? 'Signing out…' : 'Sign Out All Devices' }}
+            </TangoButton>
           </div>
 
           <div class="border-t border-error/30 pt-4 space-y-2">

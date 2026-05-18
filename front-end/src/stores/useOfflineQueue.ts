@@ -90,9 +90,17 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     }
   }
 
+  async function clearAll() {
+    const d = await db()
+    await d.clear(STORE)
+    pending.value = []
+  }
+
   async function flush() {
     if (flushing.value) return
     if (!navigator.onLine) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
     flushing.value = true
     try {
       await load()
@@ -126,6 +134,7 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     load,
     enqueue,
     clearEntry,
+    clearAll,
     flush,
     startAutoFlush,
   }
