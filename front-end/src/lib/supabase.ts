@@ -12,5 +12,13 @@ export const isConfigured =
 
 export const supabase = createClient(
   isConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
-  isConfigured ? supabaseKey : 'placeholder-key'
+  isConfigured ? supabaseKey : 'placeholder-key',
+  {
+    auth: {
+      flowType: 'implicit',
+      detectSessionInUrl: true,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  }
 )
