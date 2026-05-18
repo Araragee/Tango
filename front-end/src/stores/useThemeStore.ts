@@ -4,18 +4,8 @@ import { ref, watch } from 'vue'
 export type AccentColor = 'rose' | 'blue' | 'green' | 'amber' | 'purple'
 
 export const useThemeStore = defineStore('theme', () => {
-  const isDark = ref(localStorage.getItem('tango-dark') === 'true')
-  const accentColor = ref<AccentColor>((localStorage.getItem('tango-accent') as AccentColor) || 'rose')
-
-  watch(isDark, (val) => {
-    localStorage.setItem('tango-dark', String(val))
-    applyTheme()
-  })
-
-  watch(accentColor, (val) => {
-    localStorage.setItem('tango-accent', val)
-    applyTheme()
-  })
+  const isDark = ref(false)
+  const accentColor = ref<AccentColor>('rose')
 
   function applyTheme() {
     const root = document.documentElement
@@ -28,10 +18,14 @@ export const useThemeStore = defineStore('theme', () => {
     // Remove old accent classes
     const accentColors: AccentColor[] = ['rose', 'blue', 'green', 'amber', 'purple']
     accentColors.forEach(c => root.classList.remove(`theme-${c}`))
-    
+
     // Add new accent class
     root.classList.add(`theme-${accentColor.value}`)
   }
+
+  // Re-apply theme to DOM whenever values change
+  watch(isDark, applyTheme)
+  watch(accentColor, applyTheme)
 
   function toggleDark() {
     isDark.value = !isDark.value
@@ -46,6 +40,14 @@ export const useThemeStore = defineStore('theme', () => {
     accentColor,
     toggleDark,
     setAccent,
-    applyTheme
+    applyTheme,
   }
+}, {
+  persist: {
+    key: 'tango-theme',
+    afterHydrate(ctx) {
+      // Re-apply theme to DOM after state is restored from localStorage
+      ctx.store.applyTheme()
+    },
+  },
 })

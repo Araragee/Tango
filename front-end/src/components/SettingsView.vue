@@ -205,8 +205,9 @@ const deleteAccount = async () => {
 const resetPreferences = () => {
     if (!confirm('Reset categories, budget limits, and theme to defaults? Your household data (transactions, goals, todos, events) will not be touched.')) return;
     localStorage.removeItem('tango:preferences');
-    localStorage.removeItem('tango-dark');
-    localStorage.removeItem('tango-accent');
+    localStorage.removeItem('tango-theme'); // plugin key (was tango-dark + tango-accent)
+    localStorage.removeItem('tango-dark');   // legacy key — keep for clean migration
+    localStorage.removeItem('tango-accent'); // legacy key — keep for clean migration
     window.location.reload();
 };
 

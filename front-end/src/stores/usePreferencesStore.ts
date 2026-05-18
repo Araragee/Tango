@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-const STORAGE_KEY = 'tango:preferences'
-
 const DEFAULT_TODO_CATEGORIES = ['General', 'Grocery', 'Home', 'Work', 'Health', 'Finance']
 const DEFAULT_TRANSACTION_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Health', 'Entertainment', 'Salary']
 const DEFAULT_EVENT_CATEGORIES = ['date', 'errand', 'bill', 'other']
@@ -14,39 +12,14 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const budgetLimits = ref<Record<string, number>>({})
   const notificationsEnabled = ref<boolean>(true)
 
-  function _persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      todoCategories: todoCategories.value,
-      transactionCategories: transactionCategories.value,
-      eventCategories: eventCategories.value,
-      budgetLimits: budgetLimits.value,
-      notificationsEnabled: notificationsEnabled.value,
-    }))
-  }
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const data = JSON.parse(raw)
-      if (Array.isArray(data.todoCategories)) todoCategories.value = data.todoCategories
-      if (Array.isArray(data.transactionCategories)) transactionCategories.value = data.transactionCategories
-      if (Array.isArray(data.eventCategories)) eventCategories.value = data.eventCategories
-      if (data.budgetLimits && typeof data.budgetLimits === 'object') budgetLimits.value = data.budgetLimits
-      if (typeof data.notificationsEnabled === 'boolean') notificationsEnabled.value = data.notificationsEnabled
-    } catch {}
-  }
-
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
-    _persist()
   }
 
   function addTodoCategory(cat: string) {
     const t = cat.trim()
     if (t && !todoCategories.value.includes(t)) {
       todoCategories.value.push(t)
-      _persist()
     }
   }
 
@@ -54,7 +27,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     const t = cat.trim()
     if (t && !transactionCategories.value.includes(t)) {
       transactionCategories.value.push(t)
-      _persist()
     }
   }
 
@@ -62,7 +34,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     const t = cat.trim()
     if (t && !eventCategories.value.includes(t)) {
       eventCategories.value.push(t)
-      _persist()
     }
   }
 
@@ -72,10 +43,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
 
   function setBudgetLimit(category: string, limit: number) {
     budgetLimits.value[category] = Math.max(0, limit)
-    _persist()
   }
-
-  load()
 
   return {
     todoCategories,
@@ -90,4 +58,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     setBudgetLimit,
     setNotificationsEnabled,
   }
+}, {
+  persist: {
+    key: 'tango:preferences',
+  },
 })

@@ -205,23 +205,41 @@ export const useAppStore = defineStore('app', () => {
 
   async function updateProfile(newDisplayName: string) {
     const auth = useAuthStore()
-    if (!isConfigured || !auth.user) {
-      userName.value = newDisplayName
-      return
-    }
 
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({ id: auth.user.id, display_name: newDisplayName })
-
-    if (error) throw error
+    // Apply immediately (optimistic) — works in demo mode and offline
+    const previousName = userName.value
     userName.value = newDisplayName
+
+    if (!isConfigured || !auth.user) return
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({ id: auth.user.id, display_name: newDisplayName })
+
+      if (error) throw error
+    } catch (e: any) {
+      if (isNetworkError(e)) {
+        // Queue for retry when the network comes back
+        await useOfflineQueue().enqueue(
+          'profiles',
+          'update',
+          { display_name: newDisplayName },
+          auth.user.id,
+        )
+        return
+      }
+      // Non-network error — roll back the optimistic update
+      userName.value = previousName
+      throw e
+    }
   }
 
   async function uploadAvatar(file: File): Promise<string> {
     const auth = useAuthStore()
     if (!auth.user) throw new Error('Not authenticated')
     if (!isConfigured) throw new Error('Supabase not configured')
+    if (!navigator.onLine) throw new Error('Cannot upload avatar while offline.')
 
     const ext = (file.name.split('.').pop() ?? 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
     const path = `${auth.user.id}/${crypto.randomUUID()}.${ext}`
@@ -872,4 +890,3 @@ export const useAppStore = defineStore('app', () => {
     updateBalance(amount: number) { balance.value = amount },
   }
 })
-
