@@ -60,7 +60,7 @@ begin
     where household_id = hid
       and used_at is null
       and revoked_at is null
-      and expires_at > now();
+      and household_invites.expires_at > now();
 
   -- Generate 6-char code, retry on rare collision
   for i in 1..5 loop

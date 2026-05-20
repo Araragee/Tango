@@ -54,6 +54,9 @@ export const useHouseholdStore = defineStore('household', () => {
       await loadMembers()
       await loadActiveInvite()
       await _afterLoad()
+    } else if (householdId.value) {
+      // Network unavailable but have persisted householdId — boot from IndexedDB cache
+      await _afterLoad()
     }
   }
 
@@ -238,4 +241,9 @@ export const useHouseholdStore = defineStore('household', () => {
     sendEmailInvite,
     reset,
   }
+}, {
+  persist: {
+    key: 'tango:household',
+    paths: ['householdId', 'inviteCode', 'members'],
+  },
 })

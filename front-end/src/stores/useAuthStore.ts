@@ -108,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function resetPassword(emailAddr: string) {
     if (!isConfigured) throw new Error('Password reset requires Supabase to be configured.')
     const { error } = await supabase.auth.resetPasswordForEmail(emailAddr, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/confirm`,
     })
     if (error) throw error
   }

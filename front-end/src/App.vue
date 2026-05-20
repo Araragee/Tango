@@ -284,7 +284,7 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
     <Transition name="slide-fade">
       <div
         v-if="pwa.needRefresh.value && showNav"
-        class="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 w-[calc(100%-2rem)] max-w-md p-3 pixel-border bg-primary-container text-on-primary-container flex items-center gap-3"
+        class="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 w-[80vw] p-3 pixel-border bg-primary-container text-on-primary-container flex items-center gap-3"
         role="alert"
       >
         <span class="material-symbols-outlined">system_update</span>

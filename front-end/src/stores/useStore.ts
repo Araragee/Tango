@@ -889,4 +889,9 @@ export const useAppStore = defineStore('app', () => {
     syncWithPartner() { /* handled by Realtime */ },
     updateBalance(amount: number) { balance.value = amount },
   }
+}, {
+  persist: {
+    key: 'tango:app',
+    paths: ['userName', 'partnerName', 'avatarUrl', 'partnerAvatarUrl'],
+  },
 })

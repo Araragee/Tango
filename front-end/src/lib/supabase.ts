@@ -15,7 +15,7 @@ export const supabase = createClient(
   isConfigured ? supabaseKey : 'placeholder-key',
   {
     auth: {
-      flowType: 'pkce',
+      flowType: 'implicit',
       detectSessionInUrl: true,
       persistSession: true,
       autoRefreshToken: true,

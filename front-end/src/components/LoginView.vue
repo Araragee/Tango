@@ -20,6 +20,26 @@ const password = ref('');
 const error = ref('');
 const loading = ref(false);
 const magicSent = ref(false);
+const showResendConfirm = ref(false);
+
+const RESET_COOLDOWN_KEY = 'tango:reset_pw_last';
+const RESET_COOLDOWN_MS = 5 * 60 * 1000;
+
+const resetCooldownRemaining = ref(0);
+let _cooldownTimer: ReturnType<typeof setInterval> | null = null;
+
+function startCooldownTimer() {
+    if (_cooldownTimer) clearInterval(_cooldownTimer);
+    _cooldownTimer = setInterval(() => {
+        const last = Number(localStorage.getItem(RESET_COOLDOWN_KEY) ?? 0);
+        const remaining = Math.max(0, RESET_COOLDOWN_MS - (Date.now() - last));
+        resetCooldownRemaining.value = Math.ceil(remaining / 1000);
+        if (remaining === 0 && _cooldownTimer) {
+            clearInterval(_cooldownTimer);
+            _cooldownTimer = null;
+        }
+    }, 1000);
+}
 
 const inviteCode = computed(() => String(route.query.invite ?? ''));
 const redirectTo  = computed(() => String(route.query.redirect ?? ''));
@@ -29,9 +49,18 @@ const forgotPassword = async () => {
         notify('Enter your email above first, then click Forgot password.', 'info');
         return;
     }
+    const last = Number(localStorage.getItem(RESET_COOLDOWN_KEY) ?? 0);
+    const remaining = RESET_COOLDOWN_MS - (Date.now() - last);
+    if (remaining > 0) {
+        notify(`Wait ${Math.ceil(remaining / 1000)}s before requesting another reset link.`, 'info');
+        return;
+    }
     try {
         await auth.resetPassword(email.value.trim());
-        notify('Reset link sent. Check your email.', 'success');
+        localStorage.setItem(RESET_COOLDOWN_KEY, String(Date.now()));
+        resetCooldownRemaining.value = RESET_COOLDOWN_MS / 1000;
+        startCooldownTimer();
+        notify('Reset link sent. Check your email (and spam folder).', 'success');
     } catch (e: any) {
         notify(e.message ?? 'Failed to send reset link.', 'error');
     }
@@ -62,12 +91,21 @@ const login = async () => {
         return;
     }
 
+    showResendConfirm.value = false;
     loading.value = true;
     try {
-        await auth.login(email.value, password.value);
+        await auth.login(email.value.trim(), password.value);
         await goAfterLogin();
     } catch (e: any) {
-        error.value = e.message ?? 'Login failed.';
+        const msg: string = e.message ?? '';
+        if (/email not confirmed/i.test(msg)) {
+            error.value = 'Email not confirmed. Check your inbox or resend below.';
+            showResendConfirm.value = true;
+        } else if (/invalid login credentials/i.test(msg)) {
+            error.value = 'Wrong email or password.';
+        } else {
+            error.value = msg || 'Login failed.';
+        }
     } finally {
         loading.value = false;
     }
@@ -99,9 +137,26 @@ const oauth = async (provider: 'google') => {
     }
 };
 
+const resendConfirmation = async () => {
+    if (!email.value.trim()) return;
+    try {
+        await auth.resendConfirmation(email.value.trim());
+        notify('Confirmation email resent. Check your inbox.', 'success');
+        showResendConfirm.value = false;
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to resend.', 'error');
+    }
+};
+
 onMounted(() => {
     if (inviteCode.value) {
         notify(`Sign in to join household ${inviteCode.value}.`, 'info');
+    }
+    const last = Number(localStorage.getItem(RESET_COOLDOWN_KEY) ?? 0);
+    const remaining = RESET_COOLDOWN_MS - (Date.now() - last);
+    if (remaining > 0) {
+        resetCooldownRemaining.value = Math.ceil(remaining / 1000);
+        startCooldownTimer();
     }
 });
 </script>
@@ -147,11 +202,26 @@ onMounted(() => {
             <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="current-password"/>
           </div>
           <div class="flex justify-end mt-xs">
-            <button type="button" @click="forgotPassword" class="text-label-sm text-outline hover:text-primary transition-colors">Forgot password?</button>
+            <button
+              type="button"
+              @click="forgotPassword"
+              :disabled="resetCooldownRemaining > 0"
+              class="text-label-sm transition-colors"
+              :class="resetCooldownRemaining > 0 ? 'text-outline/50 cursor-not-allowed' : 'text-outline hover:text-primary'"
+            >
+              {{ resetCooldownRemaining > 0 ? `Forgot password? (${resetCooldownRemaining}s)` : 'Forgot password?' }}
+            </button>
           </div>
         </div>
 
         <p v-if="error" class="text-error text-label-sm">{{ error }}</p>
+
+        <button
+          v-if="showResendConfirm"
+          type="button"
+          @click="resendConfirmation"
+          class="text-label-sm text-secondary hover:text-secondary-fixed-dim transition-colors underline"
+        >Resend confirmation email</button>
 
         <TangoButton type="submit" shadow="dark" class="w-full py-3" :disabled="loading">
           {{ loading ? 'Signing in…' : 'Sign In' }}

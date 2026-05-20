@@ -22,6 +22,7 @@ onMounted(async () => {
         const tokenHash = Array.isArray(rawTokenHash) ? String(rawTokenHash[0]) : String(rawTokenHash ?? '');
         const typeStr = Array.isArray(rawType) ? String(rawType[0]) : String(rawType ?? '');
 
+        // PKCE OAuth code exchange — kept for back-compat, non-fatal if no verifier
         const rawCode = route.query.code;
         const codeStr = Array.isArray(rawCode) ? String(rawCode[0]) : String(rawCode ?? '');
 
@@ -29,12 +30,9 @@ onMounted(async () => {
         type ValidType = typeof validTypes[number];
 
         if (isConfigured && codeStr) {
-            const { error, data } = await supabase.auth.exchangeCodeForSession(codeStr);
-            if (error) {
-                status.value = 'error';
-                message.value = error.message;
-                return;
-            }
+            // May fail if no PKCE verifier in storage (cross-browser magic link).
+            // In that case fall through — implicit flow may have already set the session.
+            const { data } = await supabase.auth.exchangeCodeForSession(codeStr).catch(() => ({ data: null }));
             if (data?.user) auth.user = data.user;
         } else if (isConfigured && tokenHash && validTypes.includes(typeStr as ValidType)) {
             const { error, data } = await supabase.auth.verifyOtp({
@@ -49,8 +47,10 @@ onMounted(async () => {
             if (data?.user) auth.user = data.user;
         }
 
+        // Implicit flow: detectSessionInUrl auto-processes #access_token from hash.
+        // Give the Supabase client a moment to settle, then read the session.
         if (!auth.initialized) await auth.init();
-        
+
         if (isConfigured && !auth.user) {
             const { data } = await supabase.auth.getSession();
             if (data?.session?.user) auth.user = data.session.user;
@@ -74,10 +74,14 @@ onMounted(async () => {
         }
 
         status.value = 'ok';
-        message.value = 'Account confirmed!';
+        message.value = auth.isPasswordRecovery ? 'Identity confirmed. Set your new password.' : 'Account confirmed!';
 
         setTimeout(() => {
-            router.replace(household.householdId ? '/app/budget' : '/onboarding');
+            if (auth.isPasswordRecovery) {
+                router.replace('/reset-password');
+            } else {
+                router.replace(household.householdId ? '/app/budget' : '/onboarding');
+            }
         }, 800);
     } catch (e: any) {
         status.value = 'error';
