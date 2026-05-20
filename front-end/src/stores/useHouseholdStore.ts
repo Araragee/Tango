@@ -244,6 +244,6 @@ export const useHouseholdStore = defineStore('household', () => {
 }, {
   persist: {
     key: 'tango:household',
-    paths: ['householdId', 'inviteCode', 'members'],
+    pick: ['householdId', 'inviteCode', 'members'],
   },
 })

@@ -892,6 +892,6 @@ export const useAppStore = defineStore('app', () => {
 }, {
   persist: {
     key: 'tango:app',
-    paths: ['userName', 'partnerName', 'avatarUrl', 'partnerAvatarUrl'],
+    pick: ['userName', 'partnerName', 'avatarUrl', 'partnerAvatarUrl'],
   },
 })

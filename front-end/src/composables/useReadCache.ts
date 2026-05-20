@@ -19,7 +19,7 @@ function db() {
 export async function saveReadCache(key: string, data: unknown[]): Promise<void> {
   try {
     const d = await db()
-    await d.put(STORE, data, key)
+    await d.put(STORE, JSON.parse(JSON.stringify(data)), key)
   } catch (e) {
     console.warn('[readCache] save failed', e)
   }
