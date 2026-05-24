@@ -104,7 +104,11 @@ export const useHouseholdStore = defineStore('household', () => {
       return
     }
 
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+    // Use crypto.randomUUID() instead of Math.random().toString(36).substring(2,8)
+    // which can produce codes shorter than 6 chars (e.g. Math.random()=0.5 →
+    // "0.i".substring(2,8) = "i", length 1). UUID hex digits are always 32 chars
+    // so slicing 6 gives a reliably fixed-length code. (B84)
+    const code = crypto.randomUUID().replace(/-/g, '').substring(0, 6).toUpperCase()
     const { data: id, error } = await supabase.rpc('create_household', { invite_code: code })
     if (error) throw error
 
@@ -117,7 +121,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
   async function createInvite() {
     if (!isConfigured) {
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+      const code = crypto.randomUUID().replace(/-/g, '').substring(0, 6).toUpperCase()
       activeInvite.value = { code, expires_at: new Date(Date.now() + 86_400_000).toISOString() }
       return activeInvite.value
     }

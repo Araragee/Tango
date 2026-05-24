@@ -57,7 +57,14 @@ export const useActivityStore = defineStore('activity', () => {
         filter: `household_id=eq.${householdId}`,
       }, (payload) => {
         const row = payload.new as AuditEntry
-        entries.value = [row, ...entries.value].slice(0, PAGE_SIZE * 2)
+        // Guard against duplicate entries: Supabase may replay recent INSERT
+        // events when the channel reconnects after a CHANNEL_ERROR. Prepending
+        // without checking would show the same audit row twice. (B95)
+        if (entries.value.some(e => e.id === row.id)) return
+        // Trim to PAGE_SIZE (50) to stay consistent with the fetch() limit.
+        // Previously sliced to PAGE_SIZE * 2 = 100, creating an asymmetry
+        // between the initial fetch and the in-memory buffer. (I16)
+        entries.value = [row, ...entries.value].slice(0, PAGE_SIZE)
       })
       .subscribe()
   }

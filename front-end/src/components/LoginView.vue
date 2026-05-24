@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { isConfigured } from '../lib/supabase';
+import { validateRedirect } from '@/utils/safeRedirect';
 import TangoButton from './TangoButton.vue';
 
 const router = useRouter();
@@ -42,7 +43,9 @@ function startCooldownTimer() {
 }
 
 const inviteCode = computed(() => String(route.query.invite ?? ''));
-const redirectTo  = computed(() => String(route.query.redirect ?? ''));
+// validateRedirect ensures the ?redirect= param can never point outside this
+// origin (open-redirect / phishing protection).
+const redirectTo = computed(() => validateRedirect(route.query.redirect, ''));
 
 const forgotPassword = async () => {
     if (!email.value.trim()) {

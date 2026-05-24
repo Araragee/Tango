@@ -137,25 +137,26 @@ onMounted(() => {
   <div class="max-w-2xl mx-auto py-12 pt-16 min-h-screen flex flex-col justify-center">
     <TangoCard padding="xl" shadow="default" class="text-center">
 
+      <!-- Icon blocks: 96px on mobile, 128px on sm+ — prevents overflow on 320px screens -->
       <div v-if="step === 1" class="space-y-6">
-        <div class="w-32 h-32 bg-primary-container mx-auto pixel-border-sm flex items-center justify-center">
-          <span class="material-symbols-outlined text-6xl text-on-primary-container" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+        <div class="w-24 h-24 sm:w-32 sm:h-32 bg-primary-container mx-auto pixel-border-sm flex items-center justify-center">
+          <span class="material-symbols-outlined text-5xl sm:text-6xl text-on-primary-container" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
         </div>
         <h2 class="text-headline-lg">Track Together</h2>
         <p class="text-body-lg text-on-surface-variant">Manage your joint finances with ease. Sync accounts and track spending as a duo.</p>
       </div>
 
       <div v-if="step === 2" class="space-y-6">
-        <div class="w-32 h-32 bg-secondary-container mx-auto pixel-border-sm flex items-center justify-center">
-          <span class="material-symbols-outlined text-6xl text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+        <div class="w-24 h-24 sm:w-32 sm:h-32 bg-secondary-container mx-auto pixel-border-sm flex items-center justify-center">
+          <span class="material-symbols-outlined text-5xl sm:text-6xl text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
         </div>
         <h2 class="text-headline-lg">Plan Your Life</h2>
         <p class="text-body-lg text-on-surface-variant">A shared calendar for your shared life. Dates, bills, and errands all in one place.</p>
       </div>
 
       <div v-if="step === 3" class="space-y-6">
-        <div class="w-32 h-32 bg-tertiary-container mx-auto pixel-border-sm flex items-center justify-center">
-          <span class="material-symbols-outlined text-6xl text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">flag</span>
+        <div class="w-24 h-24 sm:w-32 sm:h-32 bg-tertiary-container mx-auto pixel-border-sm flex items-center justify-center">
+          <span class="material-symbols-outlined text-5xl sm:text-6xl text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">flag</span>
         </div>
         <h2 class="text-headline-lg">Achieve Goals</h2>
         <p class="text-body-lg text-on-surface-variant">Set joint savings goals and watch your progress grow together.</p>

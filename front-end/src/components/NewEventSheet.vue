@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, inject, onMounted, onUnmounted } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
@@ -16,6 +16,7 @@ const emit = defineEmits(['close']);
 const store = useAppStore();
 const household = useHouseholdStore();
 const prefs = usePreferencesStore();
+const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 const newCategory = ref('');
 
 const title = ref('');
@@ -33,10 +34,17 @@ const dayEvents = computed(() => {
     return store.calendar.events.filter((e: CalendarEvent) => e.date === date.value);
 });
 
-const todayStr = new Date().toISOString().split('T')[0];
+// todayStr must stay reactive — if the app is left open past midnight the
+// static const becomes stale and isPastDateEvent stops firing for events that
+// just became "past", hiding the date-night review UI. Refresh on
+// visibilitychange so it corrects the moment the user returns on a new day. (B98)
+const todayStr = ref(new Date().toISOString().split('T')[0]);
+const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = new Date().toISOString().split('T')[0]; };
+onMounted(() => document.addEventListener('visibilitychange', _refreshToday));
+onUnmounted(() => document.removeEventListener('visibilitychange', _refreshToday));
 
 const isPastDateEvent = computed(() =>
-    editingEventId.value && category.value === 'date' && date.value && date.value < todayStr
+    editingEventId.value && category.value === 'date' && date.value && date.value < todayStr.value
 );
 
 watch(() => props.show, (isShown) => {
@@ -72,10 +80,19 @@ const setEditEvent = (event: CalendarEvent) => {
     reviewNote.value = event.review_note ?? '';
 };
 
-const deleteEvent = () => {
-    if (editingEventId.value && confirm('Delete this event?')) {
-        store.deleteEvent(editingEventId.value);
+const saveBusy = ref(false);
+
+const deleteEvent = async () => {
+    if (!editingEventId.value) return;
+    if (!confirm('Delete this event?')) return;
+    saveBusy.value = true;
+    try {
+        await store.deleteEvent(editingEventId.value);
         emit('close');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to delete event.', 'error');
+    } finally {
+        saveBusy.value = false;
     }
 };
 
@@ -91,7 +108,7 @@ const cancelEdit = () => {
     errors.value = { title: '', date: '' };
 };
 
-const saveEvent = () => {
+const saveEvent = async () => {
     errors.value = { title: '', date: '' };
     let hasError = false;
 
@@ -117,11 +134,19 @@ const saveEvent = () => {
         review_note: reviewNote.value.trim() || null,
     };
 
-    if (editingEventId.value) {
-        store.editEvent(editingEventId.value, eventData);
-    } else {
-        store.addEvent(eventData);
+    saveBusy.value = true;
+    try {
+        if (editingEventId.value) {
+            await store.editEvent(editingEventId.value, eventData);
+        } else {
+            await store.addEvent(eventData);
+        }
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to save event.', 'error');
+        saveBusy.value = false;
+        return;
     }
+    saveBusy.value = false;
 
     title.value = '';
     date.value = '';
@@ -202,9 +227,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
           </div>
           <div class="flex gap-2 mt-1">
             <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
-              @keyup.enter="() => { prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
+              @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
             <TangoButton size="sm" variant="outline"
-              @click="() => { prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
+              @click="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
               aria-label="Add category">+</TangoButton>
           </div>
         </div>
@@ -235,10 +260,10 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
     </div>
 
     <template #footer>
-      <TangoButton v-if="editingEventId" @click="deleteEvent" variant="outline" class="text-error border-error mr-auto" size="sm">Delete</TangoButton>
+      <TangoButton v-if="editingEventId" @click="deleteEvent" :disabled="saveBusy" variant="outline" class="text-error border-error mr-auto" size="sm">Delete</TangoButton>
       <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="saveEvent" shadow="dark" size="sm">
-        {{ editingEventId ? 'SAVE CHANGES' : 'ADD EVENT' }}
+      <TangoButton @click="saveEvent" :disabled="saveBusy" shadow="dark" size="sm">
+        {{ saveBusy ? 'Saving…' : (editingEventId ? 'SAVE CHANGES' : 'ADD EVENT') }}
       </TangoButton>
     </template>
   </BaseModal>

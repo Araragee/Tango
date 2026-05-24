@@ -6,7 +6,19 @@ import TangoCard from './TangoCard.vue';
 const store = useAppStore();
 
 const completedGoals = computed(() => store.plans.goals.filter((g: Goal) => g.status === 'Completed'));
-const archivedTransactions = computed(() => store.budget.recentActivity.filter((tx: Transaction) => tx.type === 'expense').slice(0, 10));
+const archivedTransactions = computed(() =>
+  store.budget.recentActivity
+    .filter((tx: Transaction) => tx.type === 'expense')
+    .slice()
+    .sort((a: Transaction, b: Transaction) => b.date.localeCompare(a.date))
+    .slice(0, 10)
+);
+
+function formatReached(iso: string | null | undefined): string {
+  if (!iso) return '–';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
 </script>
 
 <template>
@@ -23,7 +35,7 @@ const archivedTransactions = computed(() => store.budget.recentActivity.filter((
           <div class="flex justify-between items-center">
             <div>
               <h4 class="text-headline-md">{{ goal.title }}</h4>
-              <p class="text-label-sm text-outline uppercase">Reached: –</p>
+              <p class="text-label-sm text-outline uppercase">Reached: {{ formatReached(goal.completed_at) }}</p>
             </div>
             <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
           </div>
@@ -36,7 +48,8 @@ const archivedTransactions = computed(() => store.budget.recentActivity.filter((
     </section>
 
     <section class="space-y-4">
-      <h3 class="text-headline-lg">Past Transactions</h3>
+      <!-- Section shows expenses only (filtered by type === 'expense') — label is explicit (I7) -->
+      <h3 class="text-headline-lg">Recent Expenses</h3>
       <div v-if="archivedTransactions.length > 0" class="space-y-2">
         <div v-for="tx in archivedTransactions" :key="tx.id" class="bg-surface pixel-border-sm p-4 flex justify-between items-center">
           <div>

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TransactionDetailsModal from './TransactionDetailsModal.vue';
 import AddTransactionModal from './AddTransactionModal.vue';
+import CsvImportModal from './CsvImportModal.vue';
+import CategoryIcon from './CategoryIcon.vue';
+import MonthlyReport from './MonthlyReport.vue';
 import TangoSprites from './TangoSprites.vue';
 import RecurringList from './RecurringList.vue';
 import VibeCheckCard from './VibeCheckCard.vue';
@@ -18,6 +21,8 @@ const prefs = usePreferencesStore();
 
 const showDetails = ref(false);
 const showAddModal = ref(false);
+const showCsvImport = ref(false);
+const showMonthlyReport = ref(false);
 const selectedTransaction = ref<Transaction | null>(null);
 const editingLimit = ref<string | null>(null);
 const editingLimitValue = ref(0);
@@ -29,7 +34,15 @@ const filteredActivity = computed(() =>
     : store.budget.recentActivity.filter((tx: Transaction) => tx.type === filter.value)
 );
 
+// Reactive tick so the "Updated Xm ago" label refreshes even when no other
+// dep changes — without a timer it could stay stale indefinitely. (I12)
+const _tick = ref(0);
+let _tickInterval: ReturnType<typeof setInterval> | null = null;
+onMounted(() => { _tickInterval = setInterval(() => { _tick.value++ }, 30_000); });
+onUnmounted(() => { if (_tickInterval) clearInterval(_tickInterval); });
+
 const lastUpdatedLabel = computed(() => {
+  void _tick.value; // subscribe to the 30s tick
   const d = store.budget.lastUpdated;
   if (!d) return 'No data yet';
   const diff = Math.floor((Date.now() - d.getTime()) / 1000);
@@ -44,9 +57,19 @@ const openDetails = (tx: Transaction) => {
   showDetails.value = true;
 };
 
-const startEditLimit = (cat: string) => {
+// Using a Map so we get the correct input element for whichever category is being edited,
+// even though the ref sits inside a v-for loop.
+const limitInputRefs = ref<Map<string, HTMLInputElement>>(new Map());
+const setLimitInputRef = (el: Element | null, cat: string) => {
+  if (el) limitInputRefs.value.set(cat, el as HTMLInputElement);
+  else limitInputRefs.value.delete(cat);
+};
+
+const startEditLimit = async (cat: string) => {
   editingLimit.value = cat;
   editingLimitValue.value = prefs.getBudgetLimit(cat);
+  await nextTick();
+  limitInputRefs.value.get(cat)?.select();
 };
 
 const saveLimit = () => {
@@ -56,7 +79,10 @@ const saveLimit = () => {
 };
 
 const getLimit = (cat: string) => prefs.getBudgetLimit(cat);
-const getBarPct = (spent: number, cat: string) => Math.min(100, (spent / getLimit(cat)) * 100);
+// Guard against a stored limit of 0 — dividing by zero yields Infinity which
+// Math.min caps to 100, making every category look maxed-out. Use Math.max(1,…)
+// so the bar stays meaningful even if the user explicitly sets a limit of $0. (B69)
+const getBarPct = (spent: number, cat: string) => Math.min(100, (spent / Math.max(1, getLimit(cat))) * 100);
 const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
 </script>
 
@@ -128,6 +154,7 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
                   >${{ getLimit(cat.category) }}</span>
                   <span v-else class="flex items-center gap-1">
                     <input
+                      :ref="(el) => setLimitInputRef(el as Element | null, cat.category)"
                       v-model.number="editingLimitValue"
                       type="number"
                       class="w-20 px-1 py-0.5 bg-surface-variant border border-on-surface text-label-sm"
@@ -162,10 +189,20 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
         <TangoCard padding="lg" shadow="default" class="flex-grow flex flex-col w-full">
           <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
             <h3 class="text-headline-lg text-on-surface">Recent</h3>
-            <TangoButton @click="showAddModal = true" shadow="dark" size="sm" aria-label="Add Transaction">
-              <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">add</span>
-              ADD
-            </TangoButton>
+            <div class="flex gap-2">
+              <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" aria-label="Monthly report">
+                <span class="material-symbols-outlined text-[16px]">summarize</span>
+                Report
+              </TangoButton>
+              <TangoButton @click="showCsvImport = true" variant="surface" size="sm" aria-label="Import CSV">
+                <span class="material-symbols-outlined text-[16px]">upload_file</span>
+                Import
+              </TangoButton>
+              <TangoButton @click="showAddModal = true" shadow="dark" size="sm" aria-label="Add Transaction">
+                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">add</span>
+                ADD
+              </TangoButton>
+            </div>
           </div>
 
           <!-- Filters -->
@@ -206,7 +243,13 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
             >
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 flex items-center justify-center pixel-border-sm bg-surface-variant">
-                  <span class="material-symbols-outlined text-on-surface">{{ tx.icon }}</span>
+                  <CategoryIcon
+                    :category="tx.category"
+                    :fallback-icon="tx.icon"
+                    :tx-type="tx.type"
+                    size="text-[22px]"
+                    class="text-on-surface"
+                  />
                 </div>
                 <div>
                   <div class="text-body-md font-bold">{{ tx.title }}</div>
@@ -224,5 +267,7 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
 
     <TransactionDetailsModal :show="showDetails" :transaction="selectedTransaction" @close="showDetails = false" />
     <AddTransactionModal :show="showAddModal" @close="showAddModal = false" />
+    <CsvImportModal :show="showCsvImport" @close="showCsvImport = false" />
+    <MonthlyReport :show="showMonthlyReport" @close="showMonthlyReport = false" />
   </div>
 </template>

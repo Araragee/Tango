@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useHouseholdStore } from '@/stores/useHouseholdStore'
 import { isConfigured } from '@/lib/supabase'
+import { sanitiseRedirectParam } from './middleware'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -75,6 +76,10 @@ const router = createRouter({
   ],
 })
 
+// ── Security middleware (runs first, before auth checks) ─────────────────────
+router.beforeEach(sanitiseRedirectParam)
+
+// ── Auth + household guard ────────────────────────────────────────────────────
 router.beforeEach(async (to) => {
   if (!isConfigured) return true
 

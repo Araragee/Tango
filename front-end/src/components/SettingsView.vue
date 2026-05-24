@@ -11,6 +11,7 @@ import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
 import QrCode from './QrCode.vue';
+import EmojiCategoryEditor from './EmojiCategoryEditor.vue';
 
 const router = useRouter();
 const store = useAppStore();
@@ -73,13 +74,18 @@ const onAvatarChosen = async (e: Event) => {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-        notify('Please choose an image file.', 'error');
+    // Match the allowlist in store.uploadAvatar so the user sees the right
+    // error message before the file ever reaches the store. Previously the
+    // broader startsWith('image/') check let SVG, TIFF, BMP etc. through,
+    // which then failed in the store with a less useful message. (B75)
+    const AVATAR_ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+    if (!AVATAR_ALLOWED.has(file.type)) {
+        notify('Please choose a JPEG, PNG, WebP, or GIF image.', 'error');
         input.value = '';
         return;
     }
-    if (file.size > 4 * 1024 * 1024) {
-        notify('Image too large (max 4 MB).', 'error');
+    if (file.size > 5 * 1024 * 1024) {
+        notify('Image too large (max 5 MB).', 'error');
         input.value = '';
         return;
     }
@@ -106,9 +112,14 @@ const removeAvatar = async () => {
 };
 
 const changeEmail = async () => {
-    if (!newEmail.value.trim()) return;
+    const trimmed = newEmail.value.trim();
+    if (!trimmed) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+        notify('Please enter a valid email address.', 'error');
+        return;
+    }
     try {
-        await auth.updateEmail(newEmail.value.trim());
+        await auth.updateEmail(trimmed);
         notify('Confirmation sent to your new email.', 'success');
         newEmail.value = '';
     } catch (e: any) {
@@ -152,18 +163,27 @@ const revokeInvites = async () => {
     }
 };
 
-const copyCode = () => {
+// Clipboard API throws on non-HTTPS origins and when the permission is denied.
+// Wrap both callers in try/catch with a notify() fallback so the rejection is
+// surfaced as an in-app toast rather than an uncaught promise rejection. (B77)
+const copyCode = async () => {
     const code = household.activeInvite?.code ?? household.inviteCode;
-    if (code) {
-        navigator.clipboard.writeText(code);
+    if (!code) return;
+    try {
+        await navigator.clipboard.writeText(code);
         notify('Invite code copied!', 'success');
+    } catch {
+        notify('Could not copy — please copy the code manually.', 'error');
     }
 };
 
-const copyLink = () => {
-    if (inviteLink.value) {
-        navigator.clipboard.writeText(inviteLink.value);
+const copyLink = async () => {
+    if (!inviteLink.value) return;
+    try {
+        await navigator.clipboard.writeText(inviteLink.value);
         notify('Invite link copied!', 'success');
+    } catch {
+        notify('Could not copy — please copy the link manually.', 'error');
     }
 };
 
@@ -192,7 +212,11 @@ const leaveHousehold = async () => {
 
 const deleteAccount = async () => {
     if (!confirm('Permanently delete your account? All your data will be removed. This cannot be undone.')) return;
-    if (!confirm('Are you absolutely sure? Type Y to proceed.')) return;
+    const typed = window.prompt('Type DELETE to confirm account deletion:');
+    if ((typed ?? '').trim().toUpperCase() !== 'DELETE') {
+        if (typed !== null) notify('Confirmation text did not match. Account not deleted.', 'info');
+        return;
+    }
     try {
         await household.deleteAccount();
         notify('Account deleted.', 'success');
@@ -212,9 +236,13 @@ const resetPreferences = () => {
 };
 
 const signOut = async () => {
-    await auth.logout();
-    household.reset();
-    router.push('/');
+    try {
+        await auth.logout();
+        household.reset();
+        router.push('/');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to sign out.', 'error');
+    }
 };
 
 const loggingOutAll = ref(false);
@@ -304,7 +332,23 @@ onMounted(() => {
       <TangoCard padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Appearance</h3>
         <div class="space-y-6">
+          <!-- Follow system preference (F15) -->
           <div class="flex items-center justify-between">
+            <div>
+              <span class="text-body-md font-bold uppercase">Follow System Theme</span>
+              <p class="text-label-sm text-on-surface-variant">Auto dark/light based on OS setting</p>
+            </div>
+            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+                 :class="themeStore.followSystem ? 'bg-primary' : 'bg-surface-variant'"
+                 @click="themeStore.setFollowSystem(!themeStore.followSystem)"
+                 role="switch" :aria-checked="themeStore.followSystem">
+              <div class="absolute top-1 w-4 h-4 transition-all"
+                   :class="themeStore.followSystem ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
+            </div>
+          </div>
+
+          <!-- Manual dark mode toggle — hidden when following system -->
+          <div v-if="!themeStore.followSystem" class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">Dark Mode</span>
             <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
                  :class="themeStore.isDark ? 'bg-primary' : 'bg-surface-variant'"
@@ -330,6 +374,8 @@ onMounted(() => {
                 </button>
             </div>
           </div>
+
+          <EmojiCategoryEditor />
 
           <div class="flex items-center justify-between border-t border-on-surface pt-4">
             <span class="text-body-md font-bold uppercase">In-App Notifications</span>

@@ -36,8 +36,12 @@ const togglePause = async (r: RecurringTransaction) => {
 
 const runDue = async () => {
     if (!household.householdId) return;
-    const count = await recurring.spawnDueAndAdvance(household.householdId);
-    if (count > 0) notify(`${count} bill${count === 1 ? '' : 's'} posted.`, 'success');
+    try {
+        const count = await recurring.spawnDueAndAdvance(household.householdId);
+        if (count > 0) notify(`${count} bill${count === 1 ? '' : 's'} posted.`, 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to post recurring bills.', 'error');
+    }
 };
 
 const fmtNext = (iso: string) => {
@@ -54,7 +58,11 @@ const cadenceLabel = (c: string) => c.charAt(0).toUpperCase() + c.slice(1);
 
 onMounted(async () => {
     if (household.householdId) {
-        await recurring.spawnDueAndAdvance(household.householdId);
+        try {
+            await recurring.spawnDueAndAdvance(household.householdId);
+        } catch (e: any) {
+            notify(e.message ?? 'Failed to check recurring bills.', 'error');
+        }
     }
 });
 </script>
@@ -64,9 +72,9 @@ onMounted(async () => {
     <div class="flex justify-between items-center mb-4 border-b-2 border-on-background pb-2">
       <h3 class="text-headline-lg text-on-surface">Recurring & Bills</h3>
       <div class="flex gap-2">
-        <TangoButton v-if="upcoming.length > 0" @click="runDue" variant="surface" size="sm" aria-label="Run due now">
+        <TangoButton v-if="upcoming.length > 0" @click="runDue" :disabled="recurring.spawning" variant="surface" size="sm" aria-label="Run due now">
           <span class="material-symbols-outlined text-[16px]">play_arrow</span>
-          Run due
+          {{ recurring.spawning ? 'Running…' : 'Run due' }}
         </TangoButton>
         <TangoButton @click="openNew" shadow="dark" size="sm" aria-label="New recurring">
           <span class="material-symbols-outlined text-[16px]">add</span>

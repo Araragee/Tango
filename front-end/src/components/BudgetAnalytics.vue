@@ -27,11 +27,15 @@ const monthlyTrend = computed(() => {
 });
 
 // ── SVG bar chart helpers ───────────────────────────────────────────────────
-const CHART_H = 100;
+// CHART_H drives the inline :style height calculations.
+const CHART_H = 100;   // matches h-[100px] container class
 const maxMonthly = computed(() =>
   Math.max(...monthlyTrend.value.flatMap(m => [m.income, m.expense]), 1)
 );
-const barH = (v: number) => Math.max(2, (v / maxMonthly.value) * CHART_H);
+// barH returns a percentage (0–100) that is translated to px by the wrapper.
+// We keep returning px so existing callers don't change; the container heights
+// are now responsive via Tailwind breakpoint classes.
+const barH = (v: number, chartH = CHART_H) => Math.max(2, (v / maxMonthly.value) * chartH);
 
 // ── Category donut helpers ──────────────────────────────────────────────────
 const RADIUS = 52;
@@ -151,13 +155,14 @@ const savingsRate = computed(() => {
       <!-- Mini bar chart (last 6 months) -->
       <div>
         <p class="text-label-sm uppercase text-on-surface-variant mb-3">6-Month Overview</p>
-        <div class="flex items-end gap-3 h-28">
+        <!-- Responsive height: 80px on mobile, 100px on sm+ -->
+        <div class="flex items-end gap-3 h-24 sm:h-28">
           <div
             v-for="m in monthlyTrend"
             :key="m.key"
             class="flex-1 flex flex-col items-center gap-1"
           >
-            <div class="w-full flex items-end justify-center gap-0.5 h-[100px]">
+            <div class="w-full flex items-end justify-center gap-0.5 h-[80px] sm:h-[100px]">
               <!-- Income bar -->
               <div
                 class="flex-1 bg-primary pixel-border-sm"
@@ -207,17 +212,17 @@ const savingsRate = computed(() => {
         No transaction data yet.
       </div>
       <div v-else>
-        <!-- Y-axis labels + bars -->
-        <div class="flex gap-4 items-end">
+        <!-- Y-axis labels + bars — responsive heights: 96px mobile / 128px sm+ -->
+        <div class="flex gap-2 sm:gap-4 items-end">
           <!-- Y labels -->
-          <div class="flex flex-col justify-between text-right pr-2 shrink-0 h-[128px]">
+          <div class="flex flex-col justify-between text-right pr-1 sm:pr-2 shrink-0 h-24 sm:h-[128px]">
             <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly).toLocaleString() }}</span>
             <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly / 2).toLocaleString() }}</span>
             <span class="text-[10px] text-on-surface-variant">$0</span>
           </div>
 
           <!-- Bars + grid -->
-          <div class="relative flex-1 flex items-end gap-2 h-[128px]">
+          <div class="relative flex-1 flex items-end gap-1 sm:gap-2 h-24 sm:h-[128px]">
             <!-- Grid lines -->
             <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
               <div class="border-t border-on-surface/10 w-full"></div>
@@ -230,15 +235,16 @@ const savingsRate = computed(() => {
               :key="m.key"
               class="flex-1 flex flex-col items-center gap-1 z-10"
             >
-              <div class="w-full flex items-end justify-center gap-1 h-[112px]">
+              <!-- Inner bar container matches outer minus label row (~16px) -->
+              <div class="w-full flex items-end justify-center gap-0.5 sm:gap-1 h-[80px] sm:h-[112px]">
                 <div
                   class="flex-1 bg-primary pixel-border-sm transition-all duration-500"
-                  :style="{ height: barH(m.income) + 'px' }"
+                  :style="{ height: barH(m.income, 80) + 'px' }"
                   :title="`${m.label} Income: $${m.income.toFixed(2)}`"
                 ></div>
                 <div
                   class="flex-1 bg-error pixel-border-sm transition-all duration-500"
-                  :style="{ height: barH(m.expense) + 'px' }"
+                  :style="{ height: barH(m.expense, 80) + 'px' }"
                   :title="`${m.label} Expense: $${m.expense.toFixed(2)}`"
                 ></div>
               </div>

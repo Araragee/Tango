@@ -4,6 +4,14 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase, isConfigured } from '@/lib/supabase'
 import { useAuthStore } from './useAuthStore'
 import { useAppStore } from './useStore'
+import { useOfflineQueue } from './useOfflineQueue'
+
+function isNetworkError(e: any): boolean {
+  if (!e) return false
+  if (!navigator.onLine) return true
+  const msg = String(e.message ?? e).toLowerCase()
+  return msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network request failed')
+}
 
 export type Cadence = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly'
 
@@ -123,7 +131,7 @@ export const useRecurringStore = defineStore('recurring', () => {
 
     if (!isConfigured) return optimistic
 
-    const { error } = await supabase.from('recurring_transactions').insert({
+    const insertPayload = {
       id,
       household_id: householdId,
       created_by: auth.user.id,
@@ -137,9 +145,18 @@ export const useRecurringStore = defineStore('recurring', () => {
       end_date: payload.end_date ?? null,
       next_run_at: payload.start_date,
       notes: payload.notes ?? null,
-    })
+    }
+
+    const { error } = await supabase.from('recurring_transactions').insert(insertPayload)
 
     if (error) {
+      // Enqueue for retry when the network comes back, consistent with all other
+      // write paths (addTransaction, addGoal, addContribution). Without this,
+      // adding a recurring template while offline silently drops the item. (B94)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('recurring_transactions', 'insert', insertPayload, id)
+        return optimistic
+      }
       items.value = items.value.filter(r => r.id !== id)
       throw error
     }
@@ -188,39 +205,69 @@ export const useRecurringStore = defineStore('recurring', () => {
    * Uses the existing addTransaction flow to keep optimistic + realtime + audit log behaviour.
    * Calls advance_recurring_next RPC to bump the schedule afterwards.
    * Returns count of spawned transactions.
+   *
+   * Guard against concurrent invocations (onMounted auto-run + manual "Run due" button). (I9)
    */
+  const spawning = ref(false)
+
   async function spawnDueAndAdvance(householdId: string): Promise<number> {
     if (!isConfigured || !householdId) return 0
-    const today = todayISO()
-    const due = items.value.filter(r => r.active && r.next_run_at <= today)
-    if (due.length === 0) return 0
+    // Prevent double-spawn when onMounted auto-run and the "Run due" button race. (I9)
+    if (spawning.value) return 0
+    spawning.value = true
 
-    const store = useAppStore()
+    try {
+      const today = todayISO()
+      const due = items.value.filter(r => r.active && r.next_run_at <= today)
+      if (due.length === 0) return 0
 
-    let spawned = 0
-    for (const r of due) {
-      try {
-        await store.addTransaction({
-          title: r.title,
-          amount: r.type === 'expense' ? -Math.abs(r.amount) : Math.abs(r.amount),
-          date: r.next_run_at,
-          type: r.type,
-          icon: r.icon,
-          category: r.category,
-        })
-        const { error } = await supabase.rpc('advance_recurring_next', { r_id: r.id })
-        if (error) {
-          console.error('[recurring.advance]', error)
-        } else {
-          spawned += 1
+      const store = useAppStore()
+
+      let spawned = 0
+      for (const r of due) {
+        try {
+          // Skip advancing the schedule when offline: addTransaction silently
+          // enqueues to the offline queue without throwing, so calling
+          // advance_recurring_next here would bump next_run_at before the
+          // transaction is actually persisted, causing a lost transaction if the
+          // queue replay fails. (B72)
+          if (!navigator.onLine) {
+            await store.addTransaction({
+              title: r.title,
+              amount: r.type === 'expense' ? -Math.abs(r.amount) : Math.abs(r.amount),
+              date: r.next_run_at,
+              type: r.type,
+              icon: r.icon,
+              category: r.category,
+            })
+            console.warn('[recurring] offline — transaction queued, schedule not advanced for', r.id)
+            continue
+          }
+
+          await store.addTransaction({
+            title: r.title,
+            amount: r.type === 'expense' ? -Math.abs(r.amount) : Math.abs(r.amount),
+            date: r.next_run_at,
+            type: r.type,
+            icon: r.icon,
+            category: r.category,
+          })
+          const { error } = await supabase.rpc('advance_recurring_next', { r_id: r.id })
+          if (error) {
+            console.error('[recurring.advance]', error)
+          } else {
+            spawned += 1
+          }
+        } catch (e) {
+          console.error('[recurring.spawn]', e)
         }
-      } catch (e) {
-        console.error('[recurring.spawn]', e)
       }
+      // Refresh local view of recurring rows
+      await fetch(householdId)
+      return spawned
+    } finally {
+      spawning.value = false
     }
-    // Refresh local view of recurring rows
-    await fetch(householdId)
-    return spawned
   }
 
   function subscribe(householdId: string) {
@@ -253,6 +300,7 @@ export const useRecurringStore = defineStore('recurring', () => {
     active,
     upcoming,
     loading,
+    spawning,
     fetch,
     add,
     update,

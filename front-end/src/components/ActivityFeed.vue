@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useActivityStore, type AuditEntry } from '../stores/useActivityStore';
 import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -68,7 +68,14 @@ const describe = (e: AuditEntry) => {
     return '';
 };
 
+// Reactive tick so relative timestamps (e.g. "5m ago") stay fresh without
+// requiring a full re-render from some other reactive dep. Fires every minute,
+// cleared on unmount to avoid memory leaks. (I15)
+const _tick = ref(0);
+let _tickInterval: ReturnType<typeof setInterval> | null = null;
+
 const relativeTime = (iso: string) => {
+    void _tick.value; // subscribe so the computed re-evaluates every minute
     const ms = Date.now() - new Date(iso).getTime();
     const min = Math.floor(ms / 60_000);
     if (min < 1) return 'just now';
@@ -83,6 +90,11 @@ const visible = computed(() => activity.entries);
 
 onMounted(() => {
     if (household.householdId) activity.fetch(household.householdId);
+    _tickInterval = setInterval(() => { _tick.value++ }, 60_000);
+});
+
+onUnmounted(() => {
+    if (_tickInterval) clearInterval(_tickInterval);
 });
 </script>
 

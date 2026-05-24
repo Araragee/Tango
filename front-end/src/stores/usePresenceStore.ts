@@ -20,14 +20,19 @@ export const usePresenceStore = defineStore('presence', () => {
     isOnline.value = navigator.onLine
   }
 
+  let _watchActive = false
+
   function startNetworkWatch() {
+    if (_watchActive) return
     window.addEventListener('online', handleNetworkChange)
     window.addEventListener('offline', handleNetworkChange)
+    _watchActive = true
   }
 
   function stopNetworkWatch() {
     window.removeEventListener('online', handleNetworkChange)
     window.removeEventListener('offline', handleNetworkChange)
+    _watchActive = false
   }
 
   async function subscribe(householdId: string) {

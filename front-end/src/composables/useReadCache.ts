@@ -19,7 +19,9 @@ function db() {
 export async function saveReadCache(key: string, data: unknown[]): Promise<void> {
   try {
     const d = await db()
-    await d.put(STORE, JSON.parse(JSON.stringify(data)), key)
+    // IDB uses the structured clone algorithm internally, so no manual
+    // JSON round-trip is needed — pass the data directly.
+    await d.put(STORE, data, key)
   } catch (e) {
     console.warn('[readCache] save failed', e)
   }
