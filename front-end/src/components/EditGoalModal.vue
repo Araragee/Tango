@@ -101,22 +101,37 @@ const saveGoal = async () => {
                 description: description.value,
                 target: target.value,
                 icon: icon.value,
-                deadline: deadline.value || undefined,
+                // Pass null (not undefined) when the field is cleared so Supabase
+                // receives an explicit NULL and clears the column. JSON serialisation
+                // strips `undefined`, leaving the old deadline on the server — same
+                // root cause as B66 (receipt_url) and B76 (note). (B94)
+                deadline: deadline.value || null,
             });
         } else {
-            await store.addGoal({
+            // addGoal returns the new goal's ID — use it directly instead of
+            // accessing goals[goals.length - 1] which could be wrong if a
+            // realtime event fires and reorders the array before we read it. (B68)
+            const newGoalId = await store.addGoal({
                 title: title.value,
                 description: description.value,
                 saved: 0,
                 target: target.value,
                 icon: icon.value,
-                deadline: deadline.value || undefined,
+                // Pass null (not undefined) so the server receives an explicit NULL
+                // when no deadline is set. undefined is stripped by JSON serialisation —
+                // same root cause as B66/B76/B94. Only affects the new-goal path;
+                // the edit path was already fixed in B94. (B100)
+                deadline: deadline.value || null,
             });
             // If user typed a starting amount, post it as a first contribution
-            const newest = store.plans.goals[store.plans.goals.length - 1];
-            if (newest && initialSaved.value > 0) {
+            // AND sync goal.saved immediately via updateGoalProgress.
+            // addContribution only writes to the contributions store — it does not
+            // update goal.saved, so without the updateGoalProgress call the
+            // progress bar stays at 0% until a realtime refetch arrives. (B79)
+            if (newGoalId && initialSaved.value > 0) {
                 try {
-                    await contributions.addContribution(newest.id, Number(initialSaved.value), 'Initial contribution');
+                    await contributions.addContribution(newGoalId, Number(initialSaved.value), 'Initial contribution');
+                    await store.updateGoalProgress(newGoalId, Number(initialSaved.value));
                 } catch { /* swallow; goal still saved */ }
             }
         }
@@ -133,9 +148,16 @@ const addContribution = async () => {
         notify('Enter a positive amount.', 'error');
         return;
     }
+    const goal = currentGoal.value;
+    if (!goal) return;
     contribBusy.value = true;
     try {
         await contributions.addContribution(props.goalId, amt, newContribNote.value.trim() || undefined);
+        // Immediately update goal.saved / progress / status so the progress bar
+        // reflects the new contribution without waiting for a realtime refetch.
+        // addContribution only writes to the contributions table — goal.saved is
+        // not automatically kept in sync client-side. (B81)
+        await store.updateGoalProgress(props.goalId, goal.saved + amt);
         newContribAmount.value = '';
         newContribNote.value = '';
         notify('Contribution added!', 'success');
@@ -148,8 +170,15 @@ const addContribution = async () => {
 
 const removeContribution = async (id: string) => {
     if (!confirm('Remove this contribution? Goal progress will be recalculated.')) return;
+    const contrib = contributions.items.find(c => c.id === id);
+    const goal = currentGoal.value;
     try {
         await contributions.removeContribution(id);
+        // Sync goal.saved downward immediately so the progress bar updates
+        // without waiting for realtime — same pattern as addContribution. (B81)
+        if (contrib && goal && props.goalId) {
+            await store.updateGoalProgress(props.goalId, Math.max(0, goal.saved - contrib.amount));
+        }
     } catch (e: any) {
         notify('Failed to remove: ' + (e.message ?? 'Unknown error'), 'error');
     }

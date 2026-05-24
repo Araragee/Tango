@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
+import { useRecurringStore } from '../stores/useRecurringStore';
 
 const props = defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
+const recurring = useRecurringStore();
 const router = useRouter();
 
 const query = ref('');
+const debouncedQuery = ref('');
 const selectedIndex = ref(0);
 const inputRef = ref<HTMLInputElement | null>(null);
+
+let _debounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(query, (val) => {
+  if (_debounceTimer) clearTimeout(_debounceTimer);
+  _debounceTimer = setTimeout(() => { debouncedQuery.value = val; }, 120);
+});
+// Clear any pending debounce on unmount to avoid state updates after teardown. (I8)
+onUnmounted(() => { if (_debounceTimer) clearTimeout(_debounceTimer); });
 
 watch(() => props.show, async (open) => {
   if (open) {
@@ -31,7 +42,7 @@ interface SearchResult {
 }
 
 const results = computed<SearchResult[]>(() => {
-  const q = query.value.toLowerCase().trim();
+  const q = debouncedQuery.value.toLowerCase().trim();
   if (q.length < 2) return [];
 
   const todos = store.todos.items
@@ -57,7 +68,7 @@ const results = computed<SearchResult[]>(() => {
     }));
 
   const transactions = store.budget.recentActivity
-    .filter(t => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q))
+    .filter(t => t.title.toLowerCase().includes(q) || t.category.toLowerCase().includes(q) || (t.note ?? '').toLowerCase().includes(q))
     .slice(0, 4)
     .map(t => ({
       type: 'Transaction', id: t.id,
@@ -78,7 +89,20 @@ const results = computed<SearchResult[]>(() => {
       route: '/app/plans',
     }));
 
-  return [...todos, ...events, ...transactions, ...goals];
+  // I17: include recurring bill templates so users can find "Rent" or
+  // "Netflix" without opening the Budget tab and scrolling to Recurring.
+  const recurringResults = recurring.items
+    .filter(r => r.title.toLowerCase().includes(q) || r.category.toLowerCase().includes(q))
+    .slice(0, 4)
+    .map(r => ({
+      type: 'Recurring', id: r.id,
+      title: r.title,
+      subtitle: `${r.cadence} · ${r.type === 'expense' ? '-' : '+'}$${Math.abs(r.amount).toFixed(0)}${r.active ? '' : ' (paused)'}`,
+      icon: r.icon,
+      route: '/app/budget',
+    }));
+
+  return [...todos, ...events, ...transactions, ...goals, ...recurringResults];
 });
 
 watch(results, () => { selectedIndex.value = 0; });
@@ -106,6 +130,7 @@ const typeColors: Record<string, string> = {
   Event: 'bg-secondary-container text-on-secondary-container',
   Transaction: 'bg-tertiary-container text-on-tertiary-container',
   Goal: 'bg-surface-variant text-on-surface-variant',
+  Recurring: 'bg-error-container text-on-error-container',
 };
 </script>
 
@@ -134,11 +159,11 @@ const typeColors: Record<string, string> = {
 
         <!-- Results -->
         <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
-          <div v-if="query.length < 2" class="px-4 py-8 text-center text-on-surface-variant text-body-md">
+          <div v-if="debouncedQuery.length < 2" class="px-4 py-8 text-center text-on-surface-variant text-body-md">
             Type at least 2 characters to search
           </div>
           <div v-else-if="results.length === 0" class="px-4 py-8 text-center text-on-surface-variant text-body-md">
-            No results for "{{ query }}"
+            No results for "{{ debouncedQuery }}"
           </div>
           <button
             v-for="(result, i) in results"

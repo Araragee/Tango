@@ -1,15 +1,25 @@
 // Supabase Edge Function — dispatch_push
-// Triggered by pg_net webhook or called directly via Supabase SDK.
+// Triggered by pg_net webhook (migration 015) or called directly via Supabase SDK.
 //
 // Env vars required (set in Supabase dashboard → Project → Edge Functions → Secrets):
-//   VAPID_PUBLIC_KEY   — base64url-encoded VAPID public key
-//   VAPID_PRIVATE_KEY  — base64url-encoded VAPID private key
-//   VAPID_CONTACT      — mailto: or https: contact URI  e.g. mailto:you@example.com
-//   SUPABASE_URL       — auto-injected by Supabase runtime
+//   VAPID_PUBLIC_KEY        — base64url-encoded VAPID public key
+//   VAPID_PRIVATE_KEY       — base64url-encoded VAPID private key
+//   VAPID_CONTACT           — mailto: or https: contact URI  e.g. mailto:you@example.com
+//   DISPATCH_PUSH_SECRET    — shared secret checked on every inbound request
+//                             (set the same value in app.dispatch_push_secret GUC in
+//                              Supabase Settings → Database → Configuration)
+//   SUPABASE_URL            — auto-injected by Supabase runtime
 //   SUPABASE_SERVICE_ROLE_KEY — auto-injected by Supabase runtime
+//
+// Security model:
+//   This function is deployed with --no-verify-jwt so it can be called by the
+//   pg_net trigger (which has no JWT).  Instead we use a shared secret sent in
+//   the x-tango-secret header.  Without this header the function returns 401.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3'
+
+const DISPATCH_SECRET = Deno.env.get('DISPATCH_PUSH_SECRET') ?? ''
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -39,6 +49,28 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
+
+  // ── Shared-secret authentication ──────────────────────────────────────────
+  // Every caller (pg_net trigger, edge-to-edge calls, tests) must include the
+  // x-tango-secret header.  A missing or wrong secret gets a generic 401 so
+  // we don't leak whether the secret is wrong vs. missing.
+  if (!DISPATCH_SECRET) {
+    // Refuse to operate if the secret hasn't been configured — fail closed.
+    console.error('[dispatch_push] DISPATCH_PUSH_SECRET env var is not set')
+    return new Response('Service misconfigured', { status: 503 })
+  }
+  const incomingSecret = req.headers.get('x-tango-secret') ?? ''
+  // Constant-time comparison to prevent timing attacks
+  const encoder = new TextEncoder()
+  const a = encoder.encode(incomingSecret)
+  const b = encoder.encode(DISPATCH_SECRET)
+  let mismatch = a.length !== b.length ? 1 : 0
+  const len = Math.min(a.length, b.length)
+  for (let i = 0; i < len; i++) mismatch |= a[i] ^ b[i]
+  if (mismatch !== 0) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+  // ── End auth ──────────────────────────────────────────────────────────────
 
   let payload: DispatchPayload
   try {

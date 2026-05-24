@@ -79,7 +79,11 @@ const saveTask = async () => {
       assigned: assigneeLabelFor(assigneeKey.value),
       assignee_id: assigneeIdFor(assigneeKey.value),
       priority: priority.value,
-      due_date: dueDate.value || undefined,
+      // Pass null (not undefined) when the field is cleared so Supabase
+      // receives an explicit NULL and clears the column on task edits.
+      // JSON serialisation strips `undefined`, leaving the old due date
+      // on the server — same root cause as B66/B76/B94. (B95)
+      due_date: dueDate.value || null,
     };
 
     if (props.task) {
@@ -173,9 +177,9 @@ const saveTask = async () => {
         </div>
         <div class="flex gap-2 mt-1">
           <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
-            @keyup.enter="() => { prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
+            @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
           <TangoButton size="sm" variant="outline"
-            @click="() => { prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
+            @click="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
             aria-label="Add category">+</TangoButton>
         </div>
       </div>

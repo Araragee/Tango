@@ -6,6 +6,7 @@ import TangoInput from './TangoInput.vue';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { useRecurringStore, type Cadence, type RecurringTransaction } from '../stores/useRecurringStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { iconForCategory } from '../utils/categoryIcons';
 
 const props = defineProps<{
     show: boolean;
@@ -82,7 +83,10 @@ const save = async () => {
             amount: Math.abs(amount.value),
             type: type.value,
             category: category.value,
-            icon: type.value === 'expense' ? 'event_repeat' : 'account_balance',
+            // Derive the icon from category so spawned transactions display the
+            // same icon as equivalent one-off transactions. Previously hardcoded
+            // to 'event_repeat' / 'account_balance' regardless of category. (B97)
+            icon: iconForCategory(category.value, type.value),
             cadence: cadence.value,
             start_date: startDate.value,
             end_date: endDate.value || null,

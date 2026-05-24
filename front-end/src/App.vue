@@ -44,7 +44,7 @@ const recurring = useRecurringStore();
 const achievements = useAchievementsStore();
 const store = useAppStore();
 
-const headerAvatar = computed(() => store.partnerAvatarUrl ?? store.avatarUrl ?? null);
+const headerAvatar = computed(() => store.avatarUrl ?? null);
 
 const showNav = computed(() => route.path.startsWith('/app'));
 
@@ -85,6 +85,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onGlobalKey);
+  offline.stopAutoFlush();
   presence.stopNetworkWatch();
 });
 
@@ -242,7 +243,7 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
         >
           <img
             v-if="headerAvatar"
-            :alt="(household.partner ? store.partnerName : store.userName) + ' avatar'"
+            :alt="store.userName + ' avatar'"
             class="w-full h-full object-cover"
             :src="headerAvatar"
           />

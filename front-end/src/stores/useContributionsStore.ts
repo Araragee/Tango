@@ -4,6 +4,15 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase, isConfigured } from '@/lib/supabase'
 import { useAuthStore } from './useAuthStore'
 import { useHouseholdStore } from './useHouseholdStore'
+import { useAppStore } from './useStore'
+import { useOfflineQueue } from './useOfflineQueue'
+
+function isNetworkError(e: any): boolean {
+  if (!e) return false
+  if (!navigator.onLine) return true
+  const msg = String(e.message ?? e).toLowerCase()
+  return msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network request failed')
+}
 
 export interface Contribution {
   id: string
@@ -93,15 +102,22 @@ export const useContributionsStore = defineStore('contributions', () => {
 
     if (!isConfigured) return optimistic
 
-    const { error } = await supabase.from('goal_contributions').insert({
+    const insertPayload = {
       id,
       goal_id: goalId,
       user_id: auth.user.id,
       amount,
       note: note ?? null,
-    })
+    }
+
+    const { error } = await supabase.from('goal_contributions').insert(insertPayload)
 
     if (error) {
+      // Enqueue offline rather than dropping the contribution silently. (B74)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goal_contributions', 'insert', insertPayload, id)
+        return optimistic
+      }
       items.value = items.value.filter(c => c.id !== id)
       throw error
     }
@@ -115,6 +131,11 @@ export const useContributionsStore = defineStore('contributions', () => {
     if (!isConfigured) return
     const { error } = await supabase.from('goal_contributions').delete().eq('id', id)
     if (error) {
+      // Enqueue offline delete rather than silently dropping the operation. (B74)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goal_contributions', 'delete', {}, id)
+        return
+      }
       items.value = [removed, ...items.value]
       throw error
     }
@@ -127,13 +148,34 @@ export const useContributionsStore = defineStore('contributions', () => {
     if (_channel) supabase.removeChannel(_channel)
     _householdId = householdId
 
+    // Note: Supabase realtime does not support IN-clause filters on non-FK columns,
+    // so we can't filter goal_contributions directly by household. Instead we scope
+    // by re-fetching through the household-scoped fetchForHousehold query, which only
+    // returns contributions for goals that belong to this household.
     _channel = supabase
       .channel(`contributions:${householdId}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'goal_contributions',
-      }, async () => {
+      }, async (payload) => {
+        // Only process if the changed goal belongs to this household.
         const household = useHouseholdStore()
-        if (household.householdId) await fetchForHousehold(household.householdId)
+        if (!household.householdId) return
+
+        const affectedGoalId = (payload.new as any)?.goal_id ?? (payload.old as any)?.goal_id
+
+        // For UPDATE/DELETE: check our local contribution cache (fast, no network).
+        // For INSERT: the contribution is new so it won't be in items yet — fall
+        // back to the app store's goal list which is always scoped to this household.
+        // This closes the residual cross-household leak where another household's
+        // first contribution would unconditionally trigger a refetch here. (B71)
+        const appStore = useAppStore()
+        const isOurs = !affectedGoalId
+          || items.value.some(c => c.goal_id === affectedGoalId)
+          || appStore.plans.goals.some((g: any) => g.id === affectedGoalId)
+
+        if (isOurs) {
+          await fetchForHousehold(household.householdId)
+        }
       })
       .subscribe()
   }

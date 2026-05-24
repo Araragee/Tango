@@ -12,6 +12,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const budgetLimits = ref<Record<string, number>>({})
   const notificationsEnabled = ref<boolean>(true)
 
+  // F10: per-category emoji overrides. Keyed by lowercased category name so
+  // "Food", "food", and "FOOD" share the same emoji. When unset, the renderer
+  // falls back to the Material Symbols icon from CATEGORY_ICON_MAP.
+  const categoryEmojis = ref<Record<string, string>>({})
+
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
   }
@@ -45,18 +50,40 @@ export const usePreferencesStore = defineStore('preferences', () => {
     budgetLimits.value[category] = Math.max(0, limit)
   }
 
+  function getCategoryEmoji(category: string): string | null {
+    return categoryEmojis.value[category.toLowerCase()] ?? null
+  }
+
+  function setCategoryEmoji(category: string, emoji: string) {
+    const key = category.toLowerCase()
+    const trimmed = emoji.trim()
+    if (!trimmed) {
+      delete categoryEmojis.value[key]
+      return
+    }
+    categoryEmojis.value[key] = trimmed
+  }
+
+  function clearCategoryEmoji(category: string) {
+    delete categoryEmojis.value[category.toLowerCase()]
+  }
+
   return {
     todoCategories,
     transactionCategories,
     eventCategories,
     budgetLimits,
     notificationsEnabled,
+    categoryEmojis,
     addTodoCategory,
     addTransactionCategory,
     addEventCategory,
     getBudgetLimit,
     setBudgetLimit,
     setNotificationsEnabled,
+    getCategoryEmoji,
+    setCategoryEmoji,
+    clearCategoryEmoji,
   }
 }, {
   persist: {

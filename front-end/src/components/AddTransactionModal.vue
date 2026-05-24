@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { useAppStore } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { iconForCategory } from '../utils/categoryIcons';
 
 defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
 const prefs = usePreferencesStore();
+const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const title = ref('');
 const amount = ref(0);
 const category = ref('Food');
 const type = ref<'expense' | 'income'>('expense');
 const date = ref(new Date().toISOString().split('T')[0]);
+const note = ref('');
 const errors = ref({ title: '', amount: '' });
 const newCategory = ref('');
 
@@ -39,17 +42,22 @@ const saveTransaction = async () => {
       amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
       date: date.value,
       type: type.value,
-      icon: type.value === 'expense' ? 'shopping_cart' : 'account_balance',
+      icon: iconForCategory(category.value, type.value),
       category: category.value,
+      // Pass null (not undefined) when the note is empty so the field is
+      // included in the JSON payload. undefined is stripped by serialisation,
+      // inconsistent with the rest of the codebase (B66/B76/B94/B95). (B99)
+      note: note.value.trim() || null,
     });
     title.value = '';
     amount.value = 0;
     category.value = 'Food';
     type.value = 'expense';
     date.value = new Date().toISOString().split('T')[0];
+    note.value = '';
     emit('close');
   } catch (e: any) {
-    alert('Failed to add transaction: ' + (e.message || 'Unknown error'));
+    notify(e.message ?? 'Failed to add transaction.', 'error');
   }
 };
 </script>
@@ -87,6 +95,16 @@ const saveTransaction = async () => {
           <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1" @keyup.enter="addCategory" />
           <TangoButton size="sm" variant="outline" @click="addCategory" aria-label="Add category">+</TangoButton>
         </div>
+      </div>
+      <!-- Optional note -->
+      <div class="flex flex-col gap-1">
+        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Note (optional)</label>
+        <textarea
+          v-model="note"
+          rows="2"
+          placeholder="e.g. Split with partner, receipt in wallet…"
+          class="sunken-input px-4 py-2 text-body-md focus:outline-none focus:ring-1 focus:ring-primary pixel-border-sm w-full resize-none"
+        ></textarea>
       </div>
     </div>
 

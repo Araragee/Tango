@@ -8,17 +8,17 @@ const router = useRouter();
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen text-center px-4 pt-16">
     <div class="w-full lg:max-w-6xl max-w-[90%] mx-auto flex flex-col items-center py-20">
-    <!-- Hero Image Area -->
-    <div class="relative w-64 h-64 mb-12">
+    <!-- Hero Image Area — responsive: 180px on mobile, 256px on sm+ -->
+    <div class="relative w-44 h-44 sm:w-64 sm:h-64 mb-12">
       <div class="absolute inset-0 bg-primary-container pixel-border hard-shadow transform rotate-3"></div>
       <div class="absolute inset-0 bg-surface pixel-border hard-shadow -rotate-3 flex items-center justify-center overflow-hidden">
         <div class="w-full h-full bg-primary-container flex items-center justify-center">
-          <span class="material-symbols-outlined text-on-primary-container" style="font-size: 80px; font-variation-settings: 'FILL' 1;">favorite</span>
+          <span class="material-symbols-outlined text-on-primary-container text-[48px] sm:text-[80px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
         </div>
       </div>
       <!-- Floating Pixel Hearts -->
-      <span class="absolute -top-4 -right-4 material-symbols-outlined text-primary text-4xl animate-bounce">favorite</span>
-      <span class="absolute -bottom-2 -left-6 material-symbols-outlined text-secondary text-3xl animate-pulse" style="animation-delay: 1s;">favorite</span>
+      <span class="absolute -top-4 -right-4 material-symbols-outlined text-primary text-3xl sm:text-4xl animate-bounce">favorite</span>
+      <span class="absolute -bottom-2 -left-6 material-symbols-outlined text-secondary text-2xl sm:text-3xl animate-pulse" style="animation-delay: 1s;">favorite</span>
     </div>
 
     <!-- Content -->

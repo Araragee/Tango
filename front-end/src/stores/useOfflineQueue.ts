@@ -3,6 +3,13 @@ import { ref } from 'vue'
 import { openDB, type IDBPDatabase } from 'idb'
 import { supabase, isConfigured } from '@/lib/supabase'
 
+function isNetworkError(e: any): boolean {
+  if (!e) return false
+  if (!navigator.onLine) return true
+  const msg = String(e.message ?? e).toLowerCase()
+  return msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('network request failed')
+}
+
 export type QueueOp = 'insert' | 'update' | 'delete'
 
 export interface QueuedMutation {
@@ -110,12 +117,23 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
           await replay(entry)
           await clearEntry(entry.id)
         } catch (e: any) {
+          const networkErr = isNetworkError(e)
           await bumpFailure(entry.id, e.message ?? String(e))
-          if (entry.attempts >= 5) {
+          // bumpFailure writes a new object into pending.value but `entry` is
+          // still the pre-bumpFailure copy from the spread at the top of flush().
+          // Using `entry.attempts` here would read the stale pre-increment value,
+          // causing entries to be dropped after the 6th failure instead of the
+          // intended 5th. Add 1 to account for the increment done inside
+          // bumpFailure. (B93)
+          if (entry.attempts + 1 >= 5) {
             console.warn('[offline] dropping mutation after 5 attempts', entry)
             await clearEntry(entry.id)
           }
-          break
+          // Only pause the queue for network errors — the device is offline so
+          // all subsequent replays would fail too.  For permanent server errors
+          // (4xx / 5xx) the entry stays queued for a later retry and we continue
+          // flushing remaining mutations rather than blocking everything. (B80)
+          if (networkErr) break
         }
       }
     } finally {
@@ -123,9 +141,26 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     }
   }
 
+  // Stable listener reference so we can remove the exact same function later
+  // and avoid accumulating duplicate 'online' listeners across hot-reloads or
+  // Pinia store re-initialisation.
+  let _onlineHandler: (() => void) | null = null
+
   function startAutoFlush() {
-    window.addEventListener('online', () => { flush() })
+    // Remove any stale listener from a previous startAutoFlush call
+    if (_onlineHandler) {
+      window.removeEventListener('online', _onlineHandler)
+    }
+    _onlineHandler = () => { flush() }
+    window.addEventListener('online', _onlineHandler)
     if (navigator.onLine) flush()
+  }
+
+  function stopAutoFlush() {
+    if (_onlineHandler) {
+      window.removeEventListener('online', _onlineHandler)
+      _onlineHandler = null
+    }
   }
 
   return {
@@ -137,5 +172,6 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     clearAll,
     flush,
     startAutoFlush,
+    stopAutoFlush,
   }
 })

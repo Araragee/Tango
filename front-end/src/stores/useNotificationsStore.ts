@@ -49,6 +49,10 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   async function markRead(ids?: string[]) {
     if (!isConfigured) return
+    // An explicit empty array means "mark nothing" — treat the same as a no-op.
+    // Previously, ids?.length evaluated to 0 (falsy) for [], falling through to
+    // the mark-all else branch and marking every notification as read. (B96)
+    if (Array.isArray(ids) && ids.length === 0) return
     const { error } = await supabase.rpc('mark_notifications_read', { ids: ids ?? null })
     if (error) { console.error('[markRead]', error); return }
     const now = new Date().toISOString()

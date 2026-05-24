@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, computed } from 'vue';
+import { ref, inject, computed, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Todo } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
@@ -20,7 +20,14 @@ const showAddModal = ref(false);
 const editingTask = ref<Todo | null>(null);
 const filter = ref<'all' | 'active' | 'done'>('all');
 
-const todayStr = new Date().toISOString().split('T')[0];
+// todayStr must stay reactive — if the app is left open past midnight the
+// static string becomes stale and overdue badges stop updating correctly.
+// Refresh on visibilitychange so it corrects the moment the user returns to
+// the tab on a new day. (I15)
+const todayStr = ref(new Date().toISOString().split('T')[0]);
+const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = new Date().toISOString().split('T')[0]; };
+onMounted(() => document.addEventListener('visibilitychange', _refreshToday));
+onUnmounted(() => document.removeEventListener('visibilitychange', _refreshToday));
 
 const priorityOrder: Record<string, number> = { ASAP: 0, Normal: 1, Chill: 2 };
 
@@ -38,7 +45,7 @@ const filteredTodos = computed(() => {
 });
 
 const isOverdue = (todo: Todo) =>
-  !todo.completed && !!todo.due_date && todo.due_date < todayStr;
+  !todo.completed && !!todo.due_date && todo.due_date < todayStr.value;
 
 const formatDueDate = (date: string) => {
   const d = new Date(date + 'T00:00:00');
@@ -76,6 +83,16 @@ const quickAdd = async () => {
 
 const doneCount = computed(() => store.todos.items.filter(t => t.completed).length);
 
+// toggleTodo is async — wrap it so version-conflict and network errors surface
+// as toast notifications rather than being silently swallowed. (I6)
+const toggleTodo = async (id: string) => {
+  try {
+    await store.toggleTodo(id);
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to update task.', 'error');
+  }
+};
+
 const handoff = async (todo: Todo) => {
   const me = auth.user?.id ?? null;
   const partnerId = household.partner?.user_id ?? null;
@@ -101,6 +118,16 @@ const handoff = async (todo: Todo) => {
   }
 };
 
+const confirmDelete = async (todo: Todo) => {
+  if (!confirm(`Delete "${todo.text}"? This cannot be undone.`)) return;
+  try {
+    await store.deleteTask(todo.id);
+    notify('Task deleted.', 'success');
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to delete task.', 'error');
+  }
+};
+
 const assigneeLabel = (todo: Todo): string => {
   if (todo.assignee_id) {
     if (todo.assignee_id === auth.user?.id) return store.userName;
@@ -108,6 +135,34 @@ const assigneeLabel = (todo: Todo): string => {
   }
   return todo.assigned ?? 'Both';
 };
+
+// Rotate through a fixed set of phrases keyed by the calendar day, so both
+// partners see the same phrase each day without any server round-trip. (I13)
+const DAILY_PHRASES = [
+  'Grow together, one pixel at a time.',
+  'Small steps every day keep the goals in play.',
+  'The best teams check in, not just check off.',
+  'Progress is a team sport.',
+  'A shared goal is already half complete.',
+  'Two minds, one mission, zero excuses.',
+  'Kindness is the best productivity hack.',
+  'Check it off — then celebrate the small wins.',
+  'You don\'t have to do everything, just your part.',
+  'Good partnerships run on honesty and to-do lists.',
+  'Today\'s tasks are tomorrow\'s peace of mind.',
+  'Done is better than perfect — especially together.',
+  'Great things happen when you show up for each other.',
+  'Be the teammate you\'d want to have.',
+  'Every pixel matters. So does every effort.',
+];
+
+const phraseOfTheDay = computed(() => {
+  // Use a deterministic seed derived from today's date so both partners
+  // land on the same phrase on the same day.
+  const d = new Date();
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return DAILY_PHRASES[seed % DAILY_PHRASES.length];
+});
 </script>
 
 <template>
@@ -119,7 +174,7 @@ const assigneeLabel = (todo: Todo): string => {
         <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">local_florist</span>
         <h2 class="text-label-sm text-secondary uppercase tracking-widest">Phrase of the Day</h2>
       </div>
-      <p class="text-headline-md text-on-surface relative z-10">"Grow together, one pixel at a time."</p>
+      <p class="text-headline-md text-on-surface relative z-10">"{{ phraseOfTheDay }}"</p>
     </TangoCard>
 
     <!-- Task List -->
@@ -174,7 +229,7 @@ const assigneeLabel = (todo: Todo): string => {
         <button
           class="w-6 h-6 sunken-input flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors"
           :class="{ 'bg-primary text-on-primary': todo.completed }"
-          @click="store.toggleTodo(todo.id)"
+          @click="toggleTodo(todo.id)"
           :aria-label="todo.completed ? 'Mark incomplete' : 'Mark complete'"
         >
           <span v-if="todo.completed" class="material-symbols-outlined text-[16px] font-bold">check</span>
@@ -233,7 +288,7 @@ const assigneeLabel = (todo: Todo): string => {
             edit
           </button>
           <button
-            @click.stop="store.deleteTask(todo.id)"
+            @click.stop="confirmDelete(todo)"
             class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-error transition-all text-[18px]"
             aria-label="Delete task"
           >

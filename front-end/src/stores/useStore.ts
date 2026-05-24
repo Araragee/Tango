@@ -6,6 +6,7 @@ import { useHouseholdStore } from './useHouseholdStore'
 import { useAuthStore } from './useAuthStore'
 import { useOfflineQueue } from './useOfflineQueue'
 import { saveReadCache, loadReadCache } from '@/composables/useReadCache'
+import { categoryIcon } from '@/utils/categoryIcons'
 
 export class VersionConflictError extends Error {
   constructor(public table: string, public id: string) {
@@ -31,8 +32,8 @@ export interface Transaction {
   type: 'expense' | 'income'
   icon: string
   category: string
-  note?: string
-  receipt_url?: string
+  note?: string | null
+  receipt_url?: string | null
   version?: number
 }
 
@@ -45,7 +46,7 @@ export interface Goal {
   status: string
   icon: string
   progress: number
-  deadline?: string
+  deadline?: string | null
   completed_at?: string | null
   version?: number
 }
@@ -60,7 +61,9 @@ export interface Todo {
   assigned?: string
   assignee_id?: string | null
   priority?: 'Chill' | 'Normal' | 'ASAP'
-  due_date?: string
+  due_date?: string | null
+  created_at?: string | null
+  completed_at?: string | null
   version?: number
 }
 
@@ -89,8 +92,13 @@ function mapTransaction(r: any): Transaction {
     type: r.type,
     icon: r.icon,
     category: r.category,
-    note: r.note ?? undefined,
-    receipt_url: r.receipt_url ?? undefined,
+    // Use null (not undefined) to preserve the database value faithfully.
+    // `null ?? undefined` evaluates to `undefined`, which is a type mismatch
+    // with the Transaction interface (string | null) and can cause subtle
+    // JSON-serialisation edge-cases when the value is later spread into
+    // Supabase update payloads. (B86)
+    note: r.note ?? null,
+    receipt_url: r.receipt_url ?? null,
     version: r.version,
   }
 }
@@ -123,6 +131,8 @@ function mapTodo(r: any): Todo {
     assignee_id: r.assignee_id ?? null,
     priority: r.priority,
     due_date: r.due_date,
+    created_at: r.created_at ?? null,
+    completed_at: r.completed_at ?? null,
     version: r.version,
   }
 }
@@ -143,8 +153,13 @@ function mapEvent(r: any): CalendarEvent {
   }
 }
 
+// categoryIcon is imported from @/utils/categoryIcons — see top of file.
+
 function calcProgress(saved: number, target: number) {
-  return Math.round((saved / target) * 100)
+  // Guard against target=0: saved/0 = Infinity (or NaN when saved=0 too),
+  // which causes calcStatus to mis-classify the goal as 'Completed'.
+  // Use Math.max(1, target) as a floor — matches the B69 fix pattern. (B83)
+  return Math.round((saved / Math.max(1, target)) * 100)
 }
 
 function calcStatus(progress: number) {
@@ -172,6 +187,10 @@ export const useAppStore = defineStore('app', () => {
 
   // Internal
   let _channel: RealtimeChannel | null = null
+  let _subscribedHouseholdId: string | null = null
+  // Exponential-backoff reconnect on CHANNEL_ERROR. (B101)
+  let _reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let _reconnectDelay = 2_000 // ms; doubles on each retry, capped at 30s
   const loading = ref(false)
 
   // ── Profiles ──────────────────────────────────────────────────────────────
@@ -235,11 +254,25 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
+  // Allowed MIME types for avatar uploads — reject anything else client-side
+  // before it ever hits Supabase storage.  The storage bucket should also have
+  // a server-side MIME restriction, but this is a fast first line of defence.
+  const AVATAR_ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
   async function uploadAvatar(file: File): Promise<string> {
     const auth = useAuthStore()
     if (!auth.user) throw new Error('Not authenticated')
     if (!isConfigured) throw new Error('Supabase not configured')
     if (!navigator.onLine) throw new Error('Cannot upload avatar while offline.')
+
+    // Validate MIME type against an allowlist (extension spoofing protection)
+    if (!AVATAR_ALLOWED_TYPES.has(file.type)) {
+      throw new Error('Invalid file type. Please upload a JPEG, PNG, WebP, or GIF image.')
+    }
+    // Cap file size at 5 MB client-side
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Image is too large. Maximum size is 5 MB.')
+    }
 
     const ext = (file.name.split('.').pop() ?? 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png'
     const path = `${auth.user.id}/${crypto.randomUUID()}.${ext}`
@@ -377,13 +410,24 @@ export const useAppStore = defineStore('app', () => {
   function subscribeRealtime(householdId: string) {
     if (!isConfigured) return
 
-    // Tear down any existing channel first
+    // Idempotency guard — fetchAll() calls this after every initial load.
+    // Re-creating the channel for the same household causes a brief subscription
+    // gap; skip if we're already subscribed to this exact household. (I10)
+    if (_channel && _subscribedHouseholdId === householdId) return
+
+    // Tear down any existing channel first (different household or reconnect)
     if (_channel) {
       supabase.removeChannel(_channel)
       _channel = null
+      _subscribedHouseholdId = null
     }
 
-    _channel = supabase
+    // Build the profiles filter only when we have member IDs.  An empty IN-list
+    // `id=in.()` is invalid SQL and causes a CHANNEL_ERROR; a solo user or a race
+    // where members haven't loaded yet would trigger this. (B70)
+    const memberIds = useHouseholdStore().members.map(m => m.user_id)
+
+    let channel = supabase
       .channel(`tango:${householdId}`)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'transactions',
@@ -402,25 +446,64 @@ export const useAppStore = defineStore('app', () => {
         filter: `household_id=eq.${householdId}`,
       }, () => fetchCalendar())
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'profiles',
-      }, () => fetchProfiles())
-      .on('postgres_changes', {
         event: '*', schema: 'public', table: 'household_members',
         filter: `household_id=eq.${householdId}`,
       }, () => {
         const household = useHouseholdStore()
-        household.loadMembers().then(() => fetchProfiles())
+        // After loading the updated member list, rebuild the realtime channel so
+        // the profiles subscription filter includes the new partner's user_id.
+        // Without the rebuild the profiles listener keeps the snapshotted
+        // memberIds from channel creation time and future profile edits by the
+        // new partner are never received. (B78)
+        household.loadMembers().then(() => {
+          fetchProfiles()
+          // Force a channel rebuild by clearing the idempotency guard, then
+          // resubscribing with the now-updated member list.
+          unsubscribeRealtime()
+          subscribeRealtime(householdId)
+        })
       })
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIBED') console.log('[Realtime] Subscribed to household:', householdId)
-        if (status === 'CHANNEL_ERROR') console.error('[Realtime] Channel error')
-      })
+
+    if (memberIds.length > 0) {
+      channel = channel.on('postgres_changes', {
+        event: '*', schema: 'public', table: 'profiles',
+        filter: `id=in.(${memberIds.join(',')})`,
+      }, () => fetchProfiles())
+    }
+
+    _channel = channel.subscribe((status: string) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('[Realtime] Subscribed to household:', householdId)
+        // Reset reconnect delay on a clean connection. (B101)
+        _reconnectDelay = 2_000
+        if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
+      }
+      if (status === 'CHANNEL_ERROR') {
+        // Instead of silently losing realtime, schedule a reconnect with
+        // exponential backoff (2s → 4s → 8s … capped at 30s). Tear down
+        // the broken channel so subscribeRealtime's idempotency guard
+        // doesn't block the retry. (B101)
+        console.error('[Realtime] Channel error — reconnecting in', _reconnectDelay, 'ms')
+        if (_reconnectTimer) clearTimeout(_reconnectTimer)
+        const delay = _reconnectDelay
+        _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000)
+        _reconnectTimer = setTimeout(() => {
+          _reconnectTimer = null
+          // Clear idempotency guard so the retry actually rebuilds the channel.
+          if (_channel) { supabase.removeChannel(_channel); _channel = null; _subscribedHouseholdId = null }
+          subscribeRealtime(householdId)
+        }, delay)
+      }
+    })
+    _subscribedHouseholdId = householdId
   }
 
   function unsubscribeRealtime() {
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
     if (_channel) {
       supabase.removeChannel(_channel)
       _channel = null
+      _subscribedHouseholdId = null
     }
   }
 
@@ -432,7 +515,11 @@ export const useAppStore = defineStore('app', () => {
 
     if (!isConfigured || !household.householdId) {
       recentActivity.value.unshift({ ...transaction, id: crypto.randomUUID() })
-      balance.value += transaction.amount
+      // Use recalculateBudget so savedThisMonth, budgetLastUpdated, and
+      // monthlySpending (the category breakdown) all update in demo mode.
+      // Previously only balance was incremented directly, leaving the Spending
+      // Breakdown and Vibe Check stale. (B73)
+      recalculateBudget()
       return
     }
 
@@ -480,12 +567,17 @@ export const useAppStore = defineStore('app', () => {
         categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount)
       })
 
-    monthlySpending.value = Object.entries(categories).map(([name, spent], i) => ({
-      id: String(i),
-      category: name,
-      spent,
-      icon: 'category'
-    }))
+    // Sort by spent descending so the most impactful category is always first
+    // in the breakdown, regardless of the insertion order of transactions in
+    // recentActivity (which changes as new transactions arrive). (I14)
+    monthlySpending.value = Object.entries(categories)
+      .sort(([, a], [, b]) => b - a)
+      .map(([name, spent]) => ({
+        id: name,
+        category: name,
+        spent,
+        icon: categoryIcon(name),
+      }))
   }
 
   async function updateTransaction(id: string, updates: Partial<Transaction>) {
@@ -540,15 +632,16 @@ export const useAppStore = defineStore('app', () => {
 
   // ── Goals ────────────────────────────────────────────────────────────────
 
-  async function addGoal(goal: Omit<Goal, 'id' | 'progress' | 'status'>) {
+  async function addGoal(goal: Omit<Goal, 'id' | 'progress' | 'status'>): Promise<string> {
     const household = useHouseholdStore()
     const auth = useAuthStore()
     const progress = calcProgress(goal.saved, goal.target)
     const status = calcStatus(progress)
 
     if (!isConfigured || !household.householdId) {
-      goals.value.push({ ...goal, id: crypto.randomUUID(), progress, status })
-      return
+      const id = crypto.randomUUID()
+      goals.value.push({ ...goal, id, progress, status })
+      return id
     }
 
     const id = crypto.randomUUID()
@@ -569,11 +662,15 @@ export const useAppStore = defineStore('app', () => {
     if (error) {
       if (isNetworkError(error)) {
         await useOfflineQueue().enqueue('goals', 'insert', payload, id)
-        return
+        return id
       }
       goals.value = goals.value.filter(g => g.id !== id)
       throw error
     }
+    // Return the new goal's ID so callers (e.g. EditGoalModal initial-contribution
+    // flow) can reliably reference the correct goal without fragile array-index
+    // lookups. (B68)
+    return id
   }
 
   async function editGoal(id: string, updates: Partial<Goal>) {
@@ -612,37 +709,66 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function deleteGoal(id: string) {
-    if (!isConfigured) {
-      goals.value = goals.value.filter(g => g.id !== id)
-      return
-    }
+    // Optimistic removal — mirrors deleteTransaction pattern so we can roll back
+    // if the server call fails (previously there was no rollback here).
+    const idx = goals.value.findIndex(g => g.id === id)
+    if (idx === -1) return
+    const removed = goals.value[idx]
+    goals.value.splice(idx, 1)
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('goals').delete().eq('id', id)
-    if (error) throw error
+    if (error) {
+      // Restore the goal at its original position on failure
+      goals.value.splice(idx, 0, removed)
+      throw error
+    }
   }
 
   async function completeGoal(id: string) {
-    if (!isConfigured) {
-      const goal = goals.value.find(g => g.id === id)
-      if (goal) goal.status = 'Completed'
-      return
+    const goal = goals.value.find(g => g.id === id)
+    if (!goal) return
+    const oldStatus = goal.status
+    // Optimistic update — works in both demo and configured modes
+    goal.status = 'Completed'
+    goal.completed_at = goal.completed_at ?? new Date().toISOString()
+
+    if (!isConfigured) return
+
+    const { error } = await supabase
+      .from('goals')
+      .update({ status: 'Completed', completed_at: goal.completed_at })
+      .eq('id', id)
+    if (error) {
+      goal.status = oldStatus
+      goal.completed_at = null
+      throw error
     }
-    const { error } = await supabase.from('goals').update({ status: 'Completed' }).eq('id', id)
-    if (error) throw error
   }
 
   async function updateGoalProgress(id: string, saved: number) {
     const goal = goals.value.find(g => g.id === id)
-    const target = goal?.target ?? 1
+    if (!goal) return
+
+    const target = goal.target ?? 1
     const progress = calcProgress(saved, target)
     const status = calcStatus(progress)
 
-    if (!isConfigured) {
-      if (goal) Object.assign(goal, { saved, progress, status })
-      return
-    }
+    // Optimistic update — works in demo mode and gives instant UI feedback
+    const oldSaved = goal.saved
+    const oldProgress = goal.progress
+    const oldStatus = goal.status
+    Object.assign(goal, { saved, progress, status })
+
+    if (!isConfigured) return
 
     const { error } = await supabase.from('goals').update({ saved, progress, status }).eq('id', id)
-    if (error) throw error
+    if (error) {
+      // Roll back on server error
+      Object.assign(goal, { saved: oldSaved, progress: oldProgress, status: oldStatus })
+      throw error
+    }
   }
 
   // ── Todos ────────────────────────────────────────────────────────────────
@@ -683,12 +809,19 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function deleteTask(id: string) {
-    if (!isConfigured) {
-      todos.value = todos.value.filter(t => t.id !== id)
-      return
-    }
+    const idx = todos.value.findIndex(t => t.id === id)
+    if (idx === -1) return
+    const removed = todos.value[idx]
+    todos.value.splice(idx, 1)
+
+    if (!isConfigured) return
+
     const { error } = await supabase.from('todos').delete().eq('id', id)
-    if (error) throw error
+    if (error) {
+      // Roll back the optimistic removal on server error
+      todos.value.splice(idx, 0, removed)
+      throw error
+    }
   }
 
   async function toggleTodo(id: string) {
@@ -697,13 +830,19 @@ export const useAppStore = defineStore('app', () => {
 
     const auth = useAuthStore()
     const oldStatus = todo.completed
+    const oldCompletedAt = todo.completed_at
     const expectedVersion = todo.version
     todo.completed = !todo.completed
+    // Stamp completed_at on flip so the Monthly Report (F7) can attribute
+    // completions to the correct calendar month. Cleared when un-completing
+    // so a re-completion in a later month is counted in that later month.
+    todo.completed_at = todo.completed ? new Date().toISOString() : null
 
     if (!isConfigured) return
 
     let q = supabase.from('todos').update({
       completed: todo.completed,
+      completed_at: todo.completed_at,
       updated_at: new Date().toISOString(),
       updated_by: auth.user?.id,
     }).eq('id', id)
@@ -712,10 +851,12 @@ export const useAppStore = defineStore('app', () => {
 
     if (error) {
       todo.completed = oldStatus
+      todo.completed_at = oldCompletedAt
       throw error
     }
     if (!data || data.length === 0) {
       todo.completed = oldStatus
+      todo.completed_at = oldCompletedAt
       throw new VersionConflictError('todos', id)
     }
     todo.version = data[0].version

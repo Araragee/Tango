@@ -11,10 +11,34 @@ export const useAuthStore = defineStore('auth', () => {
   const sessionExpired = ref(false)
 
   let _loggingOut = false
+  // Tracks an in-flight init() call so concurrent invocations (main.ts + router
+  // guard) share one Promise and never register duplicate onAuthStateChange listeners.
+  let _initPromise: Promise<void> | null = null
+  // Stores the subscription returned by onAuthStateChange so it can be removed
+  // on logout. Without this, each login/logout cycle registers a fresh listener
+  // on top of the old one, causing stale callbacks to accumulate. (B85)
+  let _authSub: { unsubscribe: () => void } | null = null
 
   const email = computed(() => user.value?.email ?? null)
 
   async function init() {
+    // Guard 1: already done — return immediately.
+    if (initialized.value) return
+
+    // Guard 2: already in-flight — share the same Promise so a second caller
+    // (e.g. the router beforeEach while main.ts await is still pending) waits
+    // on the same work instead of registering a second listener.
+    if (_initPromise) return _initPromise
+
+    _initPromise = _doInit()
+    try {
+      await _initPromise
+    } finally {
+      _initPromise = null
+    }
+  }
+
+  async function _doInit() {
     if (!isConfigured) {
       user.value = { id: 'demo', email: 'demo@tango.app' } as User
       initialized.value = true
@@ -24,7 +48,11 @@ export const useAuthStore = defineStore('auth', () => {
     const { data: { session } } = await supabase.auth.getSession()
     user.value = session?.user ?? null
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    // Remove any stale listener from a prior init/logout cycle before registering
+    // a new one.  Without this, each login+logout+login cycle accumulates an extra
+    // onAuthStateChange callback that fires (redundantly) for every future event. (B85)
+    _authSub?.unsubscribe()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       user.value = session?.user ?? null
       if (event === 'PASSWORD_RECOVERY') {
         isPasswordRecovery.value = true
@@ -34,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
         await useHouseholdStore().reset()
       }
     })
+    _authSub = subscription
 
     initialized.value = true
   }
@@ -92,6 +121,10 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     _loggingOut = true
     if (isConfigured) await supabase.auth.signOut()
+    // Tear down the listener before resetting initialized so the next init()
+    // call doesn't stack a second listener on top of this one. (B85)
+    _authSub?.unsubscribe()
+    _authSub = null
     user.value = null
     initialized.value = false
     _loggingOut = false
@@ -100,6 +133,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function logoutAllDevices() {
     _loggingOut = true
     if (isConfigured) await supabase.auth.signOut({ scope: 'global' })
+    _authSub?.unsubscribe()
+    _authSub = null
     user.value = null
     initialized.value = false
     _loggingOut = false

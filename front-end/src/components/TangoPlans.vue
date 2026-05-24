@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, inject } from 'vue';
 import { useAppStore } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
@@ -10,6 +10,7 @@ import SkeletonBlock from './SkeletonBlock.vue';
 import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
+const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const showEditModal = ref(false);
 const selectedGoalId = ref<string | null>(null);
@@ -28,8 +29,9 @@ const confirmDelete = async (id: string, title: string) => {
     if (!confirm(`Delete goal "${title}"? This cannot be undone.`)) return;
     try {
         await store.deleteGoal(id);
+        notify('Goal deleted.', 'success');
     } catch (e: any) {
-        alert('Failed to delete goal: ' + (e.message ?? 'Unknown error'));
+        notify(e.message ?? 'Failed to delete goal.', 'error');
     }
 };
 </script>

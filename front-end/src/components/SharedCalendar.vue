@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type CalendarEvent } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
@@ -19,7 +19,7 @@ const calendarView = ref<'month' | 'week' | 'day'>('month');
 
 const pendingDateReviews = computed(() => {
   return store.calendar.events.filter((e: CalendarEvent) =>
-    e.category === 'date' && e.date < todayStr && (e.mood === null || e.mood === undefined)
+    e.category === 'date' && e.date < todayStr.value && (e.mood === null || e.mood === undefined)
   );
 });
 
@@ -34,18 +34,32 @@ const reviewOldestPending = () => {
 };
 
 const currentDate = ref(new Date());
-const todayDate = new Date();
-const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+
+// todayStr must stay current — if the app is left open past midnight the
+// static string becomes stale and "today" highlighting, pending-review filters,
+// and upcoming-events cutoffs all point at the wrong day.
+// Refresh by listening to visibilitychange so the value updates the moment the
+// user returns to the tab on a new calendar day. (I15)
+const _makeTodayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const todayStr = ref(_makeTodayStr());
+const _onVisible = () => {
+  if (document.visibilityState === 'visible') todayStr.value = _makeTodayStr();
+};
+onMounted(() => document.addEventListener('visibilitychange', _onVisible));
+onUnmounted(() => document.removeEventListener('visibilitychange', _onVisible));
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const dateStr = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+// Derive live from todayStr.value so the highlight is always correct even if
+// the app is left open past midnight (todayStr updates on visibilitychange). (I15)
 const isDateToday = (d: Date) =>
-  d.getFullYear() === todayDate.getFullYear() &&
-  d.getMonth() === todayDate.getMonth() &&
-  d.getDate() === todayDate.getDate();
+  dateStr(d) === todayStr.value;
 
 const isToday = (day: number) =>
   isDateToday(new Date(currentDate.value.getFullYear(), currentDate.value.getMonth(), day));
@@ -171,7 +185,7 @@ const openNewEventForDate = (ds: string) => {
 
 const upcomingEvents = computed(() =>
   store.calendar.events
-    .filter((e: CalendarEvent) => e.date >= todayStr)
+    .filter((e: CalendarEvent) => e.date >= todayStr.value)
     .sort((a: CalendarEvent, b: CalendarEvent) => a.date.localeCompare(b.date))
     .slice(0, 3)
 );
