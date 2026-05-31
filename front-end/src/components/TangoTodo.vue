@@ -72,7 +72,7 @@ const quickAdd = async () => {
     await store.addTask({
       text,
       category: 'Quick Add',
-      assigned: 'Both',
+      assigned: 'both',
       assignee_id: null,
       priority: 'Normal',
     });
@@ -101,12 +101,12 @@ const handoff = async (todo: Todo) => {
   const cur = todo.assignee_id ?? null;
 
   let nextId: string | null;
-  let nextLabel: string;
-  if (cur === me)              { nextId = partnerId; nextLabel = store.partnerName; }
-  else if (cur === partnerId)  { nextId = null;       nextLabel = 'Both';            }
-  else                         { nextId = me;         nextLabel = store.userName;    }
+  let nextLabel: 'me' | 'partner' | 'both';
+  if (cur === me)              { nextId = partnerId; nextLabel = 'partner'; }
+  else if (cur === partnerId)  { nextId = null;       nextLabel = 'both';    }
+  else                         { nextId = me;         nextLabel = 'me';      }
 
-  if (nextId === null && nextLabel !== 'Both') return;
+  if (nextId === null && nextLabel !== 'both') return;
   if (!partnerId && !me) return;
 
   try {
@@ -114,7 +114,8 @@ const handoff = async (todo: Todo) => {
       assignee_id: nextId,
       assigned: nextLabel,
     });
-    notify(nextLabel === 'Both' ? 'Handed off to both.' : `Handed off to ${nextLabel}.`, 'success');
+    const displayName = nextLabel === 'both' ? 'Both' : (nextLabel === 'me' ? store.userName : store.partnerName);
+    notify(nextLabel === 'both' ? 'Handed off to both.' : `Handed off to ${displayName}.`, 'success');
   } catch (e: any) {
     notify(e.message ?? 'Failed to hand off.', 'error');
   }
@@ -135,7 +136,10 @@ const assigneeLabel = (todo: Todo): string => {
     if (todo.assignee_id === auth.user?.id) return store.userName;
     if (todo.assignee_id === household.partner?.user_id) return store.partnerName;
   }
-  return todo.assigned ?? 'Both';
+  if (todo.assigned === 'me') return store.userName;
+  if (todo.assigned === 'partner') return store.partnerName;
+  const a = todo.assigned ?? 'Both';
+  return a.charAt(0).toUpperCase() + a.slice(1);
 };
 
 // Rotate through a fixed set of phrases keyed by the calendar day, so both

@@ -31,6 +31,8 @@ const resolveKey = (todo: Todo | null | undefined): AssigneeKey => {
     if (!todo) return 'both';
     if (todo.assignee_id === auth.user?.id) return 'me';
     if (todo.assignee_id === household.partner?.user_id) return 'partner';
+    if (todo.assigned === 'me') return 'me';
+    if (todo.assigned === 'partner') return 'partner';
     if (todo.assigned === store.userName) return 'me';
     if (todo.assigned === store.partnerName) return 'partner';
     return 'both';
@@ -76,7 +78,7 @@ const saveTask = async () => {
     const payload = {
       text: taskName.value,
       category: category.value,
-      assigned: assigneeLabelFor(assigneeKey.value),
+      assigned: assigneeKey.value,
       assignee_id: assigneeIdFor(assigneeKey.value),
       priority: priority.value,
       // Pass null (not undefined) when the field is cleared so Supabase
