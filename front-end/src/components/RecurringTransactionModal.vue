@@ -7,6 +7,7 @@ import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { useRecurringStore, type Cadence, type RecurringTransaction } from '../stores/useRecurringStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { iconForCategory } from '../utils/categoryIcons';
+import { localDateISO } from '../utils/dateUtils';
 
 const props = defineProps<{
     show: boolean;
@@ -24,7 +25,7 @@ const amount = ref(0);
 const type = ref<'expense' | 'income'>('expense');
 const category = ref('Bills');
 const cadence = ref<Cadence>('monthly');
-const startDate = ref(new Date().toISOString().split('T')[0]);
+const startDate = ref(localDateISO()); // localDateISO avoids UTC offset date drift (B-UTC)
 const endDate = ref('');
 const notes = ref('');
 const errors = ref({ title: '', amount: '' });
@@ -44,7 +45,7 @@ const reset = () => {
     type.value = 'expense';
     category.value = 'Bills';
     cadence.value = 'monthly';
-    startDate.value = new Date().toISOString().split('T')[0];
+    startDate.value = localDateISO();
     endDate.value = '';
     notes.value = '';
     errors.value = { title: '', amount: '' };

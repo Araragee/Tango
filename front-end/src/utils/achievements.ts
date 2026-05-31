@@ -23,6 +23,16 @@ function distinctDates(txns: Transaction[]) {
   return new Set(txns.map(t => t.date))
 }
 
+// Format a Date as a LOCAL YYYY-MM-DD string. Transaction dates come from
+// <input type="date"> (local calendar dates) and the rest of the app
+// (recalculateBudget) also keys off local dates, so streak/no-spend logic must
+// use the same local convention. Using toISOString() (UTC) shifted the date by
+// one day for users in positive-UTC-offset timezones, breaking streak
+// detection and the no-spend reward. (B102)
+function localDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function dailyStreak(txns: Transaction[]): number {
   if (txns.length === 0) return 0
   const set = distinctDates(txns)
@@ -30,7 +40,7 @@ function dailyStreak(txns: Transaction[]): number {
   let cursor = new Date()
   cursor.setHours(0, 0, 0, 0)
   while (true) {
-    const ds = cursor.toISOString().split('T')[0]
+    const ds = localDate(cursor)
     if (set.has(ds)) {
       streak += 1
       cursor.setDate(cursor.getDate() - 1)
@@ -123,9 +133,9 @@ export const ACHIEVEMENTS: AchievementDefinition[] = [
     description: 'A whole day logged with no expenses',
     icon: 'eco',
     predicate: s => {
-      const today = new Date().toISOString().split('T')[0]
+      const today = localDate(new Date())
       const yesterday = (() => {
-        const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]
+        const d = new Date(); d.setDate(d.getDate() - 1); return localDate(d)
       })()
       // Reward if both yesterday + today have any income but zero expense
       const hasNoExpenseFor = (date: string) =>

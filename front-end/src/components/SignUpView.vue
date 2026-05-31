@@ -80,15 +80,6 @@ const resend = async () => {
     }
 };
 
-const oauth = async (provider: 'google') => {
-    error.value = '';
-    try {
-        await auth.loginWithOAuth(provider, inviteCode.value || undefined);
-    } catch (e: any) {
-        error.value = e.message ?? 'OAuth sign-in failed.';
-    }
-};
-
 onMounted(() => {
     if (inviteCode.value) {
         notify(`Sign up to join household ${inviteCode.value}.`, 'info');

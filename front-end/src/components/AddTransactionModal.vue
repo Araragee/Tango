@@ -6,6 +6,7 @@ import TangoInput from './TangoInput.vue';
 import { useAppStore } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { iconForCategory } from '../utils/categoryIcons';
+import { localDateISO } from '../utils/dateUtils';
 
 defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
@@ -17,7 +18,7 @@ const title = ref('');
 const amount = ref(0);
 const category = ref('Food');
 const type = ref<'expense' | 'income'>('expense');
-const date = ref(new Date().toISOString().split('T')[0]);
+const date = ref(localDateISO()); // localDateISO avoids UTC offset date drift (B-UTC)
 const note = ref('');
 const errors = ref({ title: '', amount: '' });
 const newCategory = ref('');
@@ -53,7 +54,7 @@ const saveTransaction = async () => {
     amount.value = 0;
     category.value = 'Food';
     type.value = 'expense';
-    date.value = new Date().toISOString().split('T')[0];
+    date.value = localDateISO();
     note.value = '';
     emit('close');
   } catch (e: any) {

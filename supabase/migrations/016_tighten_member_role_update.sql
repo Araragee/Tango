@@ -1,0 +1,26 @@
+-- Migration 016: Remove overly-broad household_members UPDATE policy.
+-- Run in: Supabase Dashboard > SQL Editor (review before applying).
+--
+-- Why:
+--   Migration 010 added:
+--     create policy "members_update_role" on public.household_members for update
+--       using (public.is_household_member(household_id))
+--       with check (public.is_household_member(household_id));
+--   That lets ANY household member directly UPDATE ANY membership row in their
+--   household via the REST API — including the `role` column. A non-creator
+--   partner could therefore promote themselves to 'creator' (privilege
+--   escalation) by calling PostgREST directly, bypassing the intended
+--   `transfer_creator()` RPC.
+--
+--   The client never performs a direct UPDATE on household_members: role
+--   changes go through the SECURITY DEFINER RPCs `transfer_creator()` and
+--   `leave_household()` (migration 010), which run with elevated rights and are
+--   NOT governed by this policy. So the broad UPDATE policy is pure attack
+--   surface and can be removed without affecting any app functionality.
+--
+-- Effect:
+--   After this migration there is no row-level UPDATE grant on
+--   household_members for normal authenticated callers. The role-transfer and
+--   leave flows continue to work because they run as SECURITY DEFINER.
+
+drop policy if exists "members_update_role" on public.household_members;

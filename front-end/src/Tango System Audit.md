@@ -4,11 +4,17 @@ Vue 3 + TS + Vite + Tailwind v4 + Pinia + Supabase + PWA. Couples app: budget, g
 
 ---
 
-## COMPLETED — All Phase 1–18 work is done.
+## COMPLETED — All Phase 1–19 work is done.
 
 ### Bugs resolved
 
-All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7 and Phase 8 audits:
+All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phase 8, and Phase 19 audits:
+
+**Phase 19 bugs — resolved**
+
+- **B-UTC**: UTC date drift across 8 files. `new Date().toISOString().split('T')[0]` returns a UTC date; for UTC+ timezone users this is "tomorrow" during evening hours, causing: overdue todo badges appearing a day early (`TangoTodo.vue`), achievement streak display undercounting (`AchievementsCard.vue`), new transactions/events/recurring templates defaulting to tomorrow's date (`AddTransactionModal.vue`, `NewEventSheet.vue`, `RecurringTransactionModal.vue`, `DateNightPlanner.vue`), "days until" counts in recurring list being off by one (`RecurringList.vue`), and CSV import falling back to tomorrow's date (`CsvImportModal.vue`). Fix: created `@/utils/dateUtils.ts` with `localDateISO(d?)` using local year/month/day fields, and replaced all affected call sites.
+
+All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phase 8, and Phase 19 audits:
 
 **Original B1–B30** — see prior entries (all resolved).
 
@@ -241,6 +247,64 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7 and P
 - F12 receipts bucket is now configurable via `VITE_RECEIPTS_BUCKET` (default `avatars`). When a dedicated `receipts` bucket is provisioned in Supabase, set the env var and the upload path automatically switches from `receipts/<user>/…` (collision-prefix inside avatars) to `<user>/…` at the bucket root. New `AVATARS_BUCKET` / `RECEIPTS_BUCKET` constants exported from `lib/supabase.ts`.
 
 ---
+
+**Phase 22 bugs — resolved**
+
+- **B102**: `utils/achievements.ts` — `dailyStreak()` and the `thrifty_no_spend_day` predicate derived date strings with `new Date().toISOString().split('T')[0]`, which is **UTC**, while transaction dates come from `<input type="date">` (local calendar dates) and the rest of the app (`recalculateBudget`'s `thisMonth`) keys off **local** dates. For users in positive-UTC-offset timezones (e.g. UTC+2, UTC+10) local midnight maps to the *previous* UTC day, so `cursor.toISOString()` produced yesterday's date — the streak comparison missed a transaction logged "today" and broke the streak, and the no-spend reward checked the wrong day. Fixed: added a `localDate(d)` helper (same `YYYY-MM-DD` local formatting used in `recalculateBudget`) and used it in both `dailyStreak` and the no-spend predicate. UTC-based unit tests are unaffected (local == UTC under UTC).
+
+**Phase 22 improvements**
+
+- **I18**: `CsvImportModal.vue` `runImport()` — `note: row.note || undefined` was passed to `addTransaction`. Harmless on insert (server defaults to NULL) but inconsistent with the established `|| null` convention applied everywhere else (B66/B76/B94/B95/B99/B100). Fixed: changed to `|| null`. (Note: `EditGoalModal.vue`'s `addContribution(..., note || undefined)` was reviewed and left as-is — that store action's signature is `note?: string`, so `undefined` is the type-correct value there.)
+
+**Phase 22 audit notes**
+
+- A fresh read-based pass was run over the stores (`useOfflineQueue`, `useThemeStore`, `useContributionsStore`, `useStore`), composables (`useIdleTimeout`), router middleware, `safeRedirect`, and the notification/event listener lifecycles. No further regressions found — listener cleanup, optimistic-update rollbacks, offline-queue retry semantics, and redirect sanitisation all hold up.
+- Environment limitation: this audit run executed in a sandbox whose shell was unavailable (disk full), so `npm run test`, `vue-tsc`, and `git` could not be run. The two changes above are read-verified and type-safe but were **not** executed against the Vitest suite. Recommend running `npm run test` and `npm run build` before release to confirm.
+
+---
+
+**Phase 23 bugs — resolved**
+
+- **B103**: `useStore.ts` — `deleteGoal()`, `deleteTask()`, and `deleteEvent()` rolled back the optimistic removal and threw on *any* server error, including network errors. By contrast `deleteTransaction()` already detects `isNetworkError` and enqueues the delete to the offline queue for replay on reconnect. The result: deleting a goal, todo, or calendar event while offline failed and snapped the item back into the list, breaking the app's offline-first contract that holds for transactions and all insert paths. Fixed: added the same `if (isNetworkError(error)) { enqueue(table, 'delete', {}, id); return }` fallback to all three delete actions, so offline deletions persist locally and sync when the connection returns. (The offline-queue `replay()` already handles the `delete` op via `row_id`.)
+
+**Phase 23 improvements**
+
+- **I19**: `useStore.ts` `mapGoal()` — `deadline` was mapped as bare `r.deadline` while every other nullable column in the mappers uses `?? null` (the convention established in B86 to preserve the DB value faithfully and avoid `undefined` leaking into update payloads). Changed to `deadline: r.deadline ?? null` for consistency.
+
+**Phase 23 audit notes**
+
+- Read-based pass over `useStore`, `useOfflineQueue`, `useReadCache`, `router/middleware`, and `utils/achievements`. Offline-queue retry/drop semantics (B80/B93), realtime reconnect backoff (B101), optimistic-update rollbacks, and the local-date streak logic (B102) all still hold. The delete-path gap above was the one genuine offline-first regression found.
+- Environment limitation (recurring): this run executed in a sandbox whose shell was unavailable (`No space left on device`), so `npm run test`, `vue-tsc`, and `git` could not be run. The B103/I19 changes are read-verified and type-safe (they reuse the existing `isNetworkError` helper and `useOfflineQueue().enqueue` signature already used by `deleteTransaction`) but were **not** executed against the Vitest suite. Recommend running `npm run test` and `npm run build`, and committing on `main`, before release.
+
+---
+
+---
+
+**Phase 24 bugs — resolved**
+
+- **B104**: `useStore.ts` `completeGoal()` — the error rollback unconditionally set `goal.completed_at = null`, which would silently clear a pre-existing `completed_at` value if `completeGoal` ever failed on a goal that already had one. Fixed: saved `const oldCompletedAt = goal.completed_at` before the optimistic mutation and restored it in the rollback (`goal.completed_at = oldCompletedAt`), the same save-then-restore pattern used by `toggleTodo` and `updateGoalProgress`.
+
+- **B105**: `ArchiveView.vue` `formatReached()` — `new Date(malformedButTruthyString)` produces an invalid `Date` whose `toLocaleDateString()` renders the literal string `"Invalid Date"` in the UI. Added `if (isNaN(d.getTime())) return '–'` after the `Date` construction, matching the guard that CodeRabbit identified for the similar `formatDate` function in PR #4 and the pattern used throughout the rest of the app's date formatting helpers.
+
+**Phase 24 audit notes**
+
+- Read-based pass over `useStore.ts` (completeGoal, editGoal, updateGoalProgress, delete paths), `ArchiveView.vue`, `useOfflineQueue.ts`, and `useRecurringStore.ts`. No further regressions found beyond B104/B105.
+- Environment limitation: shell unavailable (disk full) — changes are read-verified and type-safe but `npm run test`, `vue-tsc`, and `git` could not be run. Recommend running `npm run test` and `npm run build` before committing to main.
+
+---
+
+**Phase 25 bugs — resolved**
+
+- **B106**: `useRecurringStore.ts` `remove()` — optimistic removal had no `isNetworkError` check or offline-queue fallback. Deleting a recurring template while offline rolled the item back into the list instead of queuing the delete for replay — breaking the offline-first contract that holds for all other delete paths (transactions, goals, todos, events — see B103). Fixed: added `if (isNetworkError(error)) { enqueue('recurring_transactions', 'delete', {}, id); return }` matching the pattern.
+
+- **B107**: `useRecurringStore.ts` `todayISO()` — used `new Date().toISOString().split('T')[0]` (UTC) to determine today's date. `spawnDueAndAdvance` then compared `r.next_run_at <= today`. For users in positive-UTC-offset timezones (e.g. UTC+10), local evening hours already fall on the next UTC day, so bills would spawn a day early from the user's perspective — the same root cause as B102 in `achievements.ts`. Fixed: replaced with a local-date formatter matching the `localDate()` helper convention.
+
+- **B108**: `useRecurringStore.ts` `update()` — optimistic patch had no `isNetworkError` check. Offline edits (e.g. pausing/resuming a recurring bill, or any `togglePaused` call) silently rolled back instead of queuing for replay. Fixed: added offline queue enqueue for network errors, matching other write paths.
+
+**Phase 25 audit notes**
+
+- Read-based pass over `useRecurringStore`, `useContributionsStore`, `useOfflineQueue`, `useStore`, and `achievements.ts`. The three bugs above are all in `useRecurringStore` — they share the theme of the recurring store lagging behind the offline-first patterns established in the main store. All other offline-queue, realtime, and optimistic-update patterns audited hold up.
+- Environment limitation: shell unavailable (disk full) — changes are read-verified and type-safe but `npm run test`, `vue-tsc`, and `git` could not be run. Recommend running `npm run test` and `npm run build` before committing to main.
 
 ## OPEN ITEMS
 

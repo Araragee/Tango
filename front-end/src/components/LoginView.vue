@@ -131,15 +131,6 @@ const sendMagicLink = async () => {
     }
 };
 
-const oauth = async (provider: 'google') => {
-    error.value = '';
-    try {
-        await auth.loginWithOAuth(provider, inviteCode.value || undefined);
-    } catch (e: any) {
-        error.value = e.message ?? 'OAuth sign-in failed.';
-    }
-};
-
 const resendConfirmation = async () => {
     if (!email.value.trim()) return;
     try {

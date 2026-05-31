@@ -9,6 +9,7 @@ import TangoInput from './TangoInput.vue';
 import AddNewTaskModal from './AddNewTaskModal.vue';
 import SkeletonBlock from './SkeletonBlock.vue';
 import EmptyState from './EmptyState.vue';
+import { localDateISO } from '../utils/dateUtils';
 
 const store = useAppStore();
 const auth = useAuthStore();
@@ -24,8 +25,9 @@ const filter = ref<'all' | 'active' | 'done'>('all');
 // static string becomes stale and overdue badges stop updating correctly.
 // Refresh on visibilitychange so it corrects the moment the user returns to
 // the tab on a new day. (I15)
-const todayStr = ref(new Date().toISOString().split('T')[0]);
-const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = new Date().toISOString().split('T')[0]; };
+// Use localDateISO (local calendar date) not toISOString (UTC) — see dateUtils.ts. (B-UTC)
+const todayStr = ref(localDateISO());
+const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = localDateISO(); };
 onMounted(() => document.addEventListener('visibilitychange', _refreshToday));
 onUnmounted(() => document.removeEventListener('visibilitychange', _refreshToday));
 

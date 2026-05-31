@@ -5,6 +5,7 @@ import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import RecurringTransactionModal from './RecurringTransactionModal.vue';
+import { localDateISO } from '../utils/dateUtils';
 
 const recurring = useRecurringStore();
 const household = useHouseholdStore();
@@ -45,7 +46,8 @@ const runDue = async () => {
 };
 
 const fmtNext = (iso: string) => {
-    const ms = new Date(iso + 'T00:00:00').getTime() - new Date(new Date().toISOString().split('T')[0] + 'T00:00:00').getTime();
+    // Use localDateISO so "today" is the local calendar date, not UTC. (B-UTC)
+    const ms = new Date(iso + 'T00:00:00').getTime() - new Date(localDateISO() + 'T00:00:00').getTime();
     const days = Math.round(ms / 86_400_000);
     if (days < 0) return `${-days}d overdue`;
     if (days === 0) return 'today';

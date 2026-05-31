@@ -6,6 +6,7 @@ import TangoInput from './TangoInput.vue';
 import { DATE_NIGHT_IDEAS, randomDateNightIdea, type DateNightIdea } from '../utils/dateNightIdeas';
 import { useAppStore } from '../stores/useStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { localDateISO } from '../utils/dateUtils';
 
 defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
@@ -18,7 +19,7 @@ const filterCategory = ref<'all' | DateNightIdea['category']>('all');
 const filterCost = ref<'all' | DateNightIdea['cost']>('all');
 const surprise = ref<DateNightIdea | null>(null);
 
-const date = ref(new Date().toISOString().split('T')[0]);
+const date = ref(localDateISO()); // localDateISO avoids UTC offset date drift (B-UTC)
 const time = ref('19:00');
 const customTitle = ref('');
 

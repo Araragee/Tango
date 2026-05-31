@@ -17,6 +17,10 @@ const archivedTransactions = computed(() =>
 function formatReached(iso: string | null | undefined): string {
   if (!iso) return '–';
   const d = new Date(iso);
+  // Guard against malformed-but-truthy strings: new Date('bad') produces an
+  // invalid Date whose toLocaleDateString() renders as "Invalid Date" in the UI.
+  // Return the same fallback as the missing-value branch. (B104)
+  if (isNaN(d.getTime())) return '–';
   return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 </script>

@@ -6,6 +6,7 @@ import TangoInput from './TangoInput.vue';
 import { useAppStore, type CalendarEvent } from '../stores/useStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { localDateISO } from '../utils/dateUtils';
 
 const props = defineProps<{
     show: boolean;
@@ -38,8 +39,9 @@ const dayEvents = computed(() => {
 // static const becomes stale and isPastDateEvent stops firing for events that
 // just became "past", hiding the date-night review UI. Refresh on
 // visibilitychange so it corrects the moment the user returns on a new day. (B98)
-const todayStr = ref(new Date().toISOString().split('T')[0]);
-const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = new Date().toISOString().split('T')[0]; };
+// Use localDateISO (local calendar date) not toISOString (UTC) — see dateUtils.ts. (B-UTC)
+const todayStr = ref(localDateISO());
+const _refreshToday = () => { if (document.visibilityState === 'visible') todayStr.value = localDateISO(); };
 onMounted(() => document.addEventListener('visibilitychange', _refreshToday));
 onUnmounted(() => document.removeEventListener('visibilitychange', _refreshToday));
 

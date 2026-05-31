@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useAchievementsStore } from '../stores/useAchievementsStore';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import TangoCard from './TangoCard.vue';
+import { localDateISO } from '../utils/dateUtils';
 
 const achievements = useAchievementsStore();
 const store = useAppStore();
@@ -16,7 +17,10 @@ function dailyStreak(txns: Transaction[]): number {
     let cursor = new Date();
     cursor.setHours(0, 0, 0, 0);
     while (true) {
-        const ds = cursor.toISOString().split('T')[0];
+        // Use localDateISO so the date matches the local calendar day, not UTC.
+        // cursor.toISOString() would return yesterday for UTC+ users at midnight,
+        // causing today's transactions to not count toward the streak. (B-UTC)
+        const ds = localDateISO(cursor);
         if (set.has(ds)) {
             streak += 1;
             cursor.setDate(cursor.getDate() - 1);

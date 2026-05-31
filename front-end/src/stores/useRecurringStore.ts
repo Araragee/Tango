@@ -57,8 +57,13 @@ function mapRecurring(r: any): RecurringTransaction {
   }
 }
 
+// Use local date (not UTC) so spawnDueAndAdvance compares using the same
+// calendar day the user is in. toISOString() returns UTC, which for
+// positive-UTC-offset timezones (e.g. UTC+10) would return tomorrow's date
+// at local evening hours, causing bills to spawn a day early. (B107)
 function todayISO() {
-  return new Date().toISOString().split('T')[0]
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export const useRecurringStore = defineStore('recurring', () => {
@@ -171,11 +176,18 @@ export const useRecurringStore = defineStore('recurring', () => {
 
     if (!isConfigured) return
 
+    const updatePayload = { ...patch, updated_at: new Date().toISOString() }
     const { error } = await supabase
       .from('recurring_transactions')
-      .update({ ...patch, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq('id', id)
     if (error) {
+      // Offline: queue the update for replay on reconnect instead of rolling
+      // back, matching the offline-first behaviour of other write paths. (B108)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('recurring_transactions', 'update', updatePayload, id)
+        return
+      }
       Object.assign(target, old)
       throw error
     }
@@ -189,6 +201,12 @@ export const useRecurringStore = defineStore('recurring', () => {
     if (!isConfigured) return
     const { error } = await supabase.from('recurring_transactions').delete().eq('id', id)
     if (error) {
+      // Offline: queue the delete for replay on reconnect instead of rolling
+      // back, matching deleteGoal/deleteTask/deleteEvent offline-first behaviour. (B106)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('recurring_transactions', 'delete', {}, id)
+        return
+      }
       items.value.splice(idx, 0, removed)
       throw error
     }

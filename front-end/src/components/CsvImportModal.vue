@@ -11,6 +11,7 @@ import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import { useAppStore } from '../stores/useStore';
 import { iconForCategory } from '../utils/categoryIcons';
+import { localDateISO } from '../utils/dateUtils';
 
 defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
@@ -81,7 +82,8 @@ interface ParsedRow {
   error?: string;
 }
 
-const todayISO = new Date().toISOString().split('T')[0];
+// Use localDateISO so the fallback date is the local calendar day, not UTC. (B-UTC)
+const todayISO = localDateISO();
 
 function parseAmount(raw: string): number | null {
   // Strip currency symbols, spaces; handle parentheses as negative
@@ -186,7 +188,7 @@ async function runImport() {
           type: row.type,
           category: row.category,
           icon: iconForCategory(row.category, row.type),
-          note: row.note || undefined,
+          note: row.note || null,
         });
         importedCount.value++;
       } catch {

@@ -113,7 +113,7 @@ function mapGoal(r: any): Goal {
     status: r.status,
     icon: r.icon,
     progress: r.progress,
-    deadline: r.deadline,
+    deadline: r.deadline ?? null,
     completed_at: r.completed_at ?? null,
     version: r.version,
   }
@@ -720,6 +720,12 @@ export const useAppStore = defineStore('app', () => {
 
     const { error } = await supabase.from('goals').delete().eq('id', id)
     if (error) {
+      // Offline: queue the delete for replay on reconnect instead of rolling
+      // back, matching deleteTransaction's offline-first behaviour. (B103)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goals', 'delete', {}, id)
+        return
+      }
       // Restore the goal at its original position on failure
       goals.value.splice(idx, 0, removed)
       throw error
@@ -730,6 +736,11 @@ export const useAppStore = defineStore('app', () => {
     const goal = goals.value.find(g => g.id === id)
     if (!goal) return
     const oldStatus = goal.status
+    // Save the prior completed_at so we can restore it exactly on rollback.
+    // Previously the rollback always set completed_at = null, which would
+    // incorrectly clear a pre-existing value if completeGoal ever errored on
+    // an already-completed goal. (B102)
+    const oldCompletedAt = goal.completed_at
     // Optimistic update — works in both demo and configured modes
     goal.status = 'Completed'
     goal.completed_at = goal.completed_at ?? new Date().toISOString()
@@ -742,7 +753,7 @@ export const useAppStore = defineStore('app', () => {
       .eq('id', id)
     if (error) {
       goal.status = oldStatus
-      goal.completed_at = null
+      goal.completed_at = oldCompletedAt  // restore prior value, not always null
       throw error
     }
   }
@@ -818,6 +829,12 @@ export const useAppStore = defineStore('app', () => {
 
     const { error } = await supabase.from('todos').delete().eq('id', id)
     if (error) {
+      // Offline: queue the delete for replay on reconnect instead of rolling
+      // back, matching deleteTransaction's offline-first behaviour. (B103)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('todos', 'delete', {}, id)
+        return
+      }
       // Roll back the optimistic removal on server error
       todos.value.splice(idx, 0, removed)
       throw error
@@ -963,6 +980,12 @@ export const useAppStore = defineStore('app', () => {
 
     const { error } = await supabase.from('calendar_events').delete().eq('id', id)
     if (error) {
+      // Offline: queue the delete for replay on reconnect instead of rolling
+      // back, matching deleteTransaction's offline-first behaviour. (B103)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('calendar_events', 'delete', {}, id)
+        return
+      }
       events.value.splice(idx, 0, removed)
       throw error
     }
