@@ -18,6 +18,7 @@ type Mode = 'password' | 'magic';
 const mode = ref<Mode>('password');
 const email = ref('');
 const password = ref('');
+const keepLoggedIn = ref(true);
 const error = ref('');
 const loading = ref(false);
 const magicSent = ref(false);
@@ -97,7 +98,7 @@ const login = async () => {
     showResendConfirm.value = false;
     loading.value = true;
     try {
-        await auth.login(email.value.trim(), password.value);
+        await auth.login(email.value.trim(), password.value, keepLoggedIn.value);
         await goAfterLogin();
     } catch (e: any) {
         const msg: string = e.message ?? '';
@@ -207,6 +208,23 @@ onMounted(() => {
             </button>
           </div>
         </div>
+
+        <label class="flex items-center gap-sm cursor-pointer select-none">
+          <div
+            class="relative w-10 h-6 flex-shrink-0"
+            @click="keepLoggedIn = !keepLoggedIn"
+          >
+            <div
+              class="absolute inset-0 rounded-full transition-colors duration-200"
+              :class="keepLoggedIn ? 'bg-primary' : 'bg-surface-variant border border-outline'"
+            ></div>
+            <div
+              class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200"
+              :class="keepLoggedIn ? 'translate-x-[18px]' : 'translate-x-0.5'"
+            ></div>
+          </div>
+          <span class="text-label-sm text-on-surface-variant uppercase">Keep me logged in</span>
+        </label>
 
         <p v-if="error" class="text-error text-label-sm">{{ error }}</p>
 

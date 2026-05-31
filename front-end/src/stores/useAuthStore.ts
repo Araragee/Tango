@@ -45,6 +45,15 @@ export const useAuthStore = defineStore('auth', () => {
       return
     }
 
+    // "Keep me logged in" = unchecked: tango:no-persist is set in localStorage.
+    // If the sessionStorage sentinel is absent, the browser was restarted (or a
+    // new tab opened) — clear the persisted session so the user starts logged out.
+    if (localStorage.getItem('tango:no-persist') && !sessionStorage.getItem('tango:session-alive')) {
+      localStorage.removeItem('tango:no-persist')
+      const sbKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+      if (sbKey) localStorage.removeItem(sbKey)
+    }
+
     const { data: { session } } = await supabase.auth.getSession()
     user.value = session?.user ?? null
 
@@ -67,9 +76,16 @@ export const useAuthStore = defineStore('auth', () => {
     initialized.value = true
   }
 
-  async function login(emailAddr: string, password: string) {
+  async function login(emailAddr: string, password: string, keepLoggedIn = true) {
     const { data, error } = await supabase.auth.signInWithPassword({ email: emailAddr, password })
     if (error) throw error
+    if (!keepLoggedIn) {
+      localStorage.setItem('tango:no-persist', '1')
+      sessionStorage.setItem('tango:session-alive', '1')
+    } else {
+      localStorage.removeItem('tango:no-persist')
+      sessionStorage.removeItem('tango:session-alive')
+    }
     user.value = data.user
     return data.user
   }
@@ -128,6 +144,8 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     initialized.value = false
     _loggingOut = false
+    localStorage.removeItem('tango:no-persist')
+    sessionStorage.removeItem('tango:session-alive')
   }
 
   async function logoutAllDevices() {
@@ -138,6 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     initialized.value = false
     _loggingOut = false
+    localStorage.removeItem('tango:no-persist')
+    sessionStorage.removeItem('tango:session-alive')
   }
 
   async function resetPassword(emailAddr: string) {
