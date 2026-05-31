@@ -102,6 +102,14 @@ watch(
       notifications.unsubscribe();
       achievements.unsubscribe();
       offline.clearAll();
+      
+      if (route.meta.requiresAuth) {
+        router.push({
+          path: '/login',
+          query: { redirect: route.fullPath }
+        });
+      }
+
       if (auth.sessionExpired) {
         notificationRef.value?.add('Session expired. Please sign in again.', 'error');
         auth.sessionExpired = false;
