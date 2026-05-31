@@ -9,7 +9,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  maxWidth: 'max-w-[90vw]'
+  maxWidth: 'max-w-lg'
 });
 const emit = defineEmits(['close']);
 </script>
