@@ -22,7 +22,7 @@ const emit = defineEmits(['close']);
 
       <!-- Modal Container -->
       <div
-        :class="['relative z-20 w-[90vw] min-w-[280px] bg-surface pixel-border hard-shadow flex flex-col', maxWidth]"
+        class="relative z-20 w-[90vw] min-w-[280px] lg:w-[60vw] lg:min-h-[50vh] lg:max-h-[90vh] bg-surface pixel-border hard-shadow flex flex-col"
       >
         <!-- Modal Header -->
         <div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">
@@ -33,7 +33,7 @@ const emit = defineEmits(['close']);
         </div>
 
         <!-- Modal Body -->
-        <div class="p-6 overflow-y-auto max-h-[70vh]">
+        <div class="p-6 overflow-y-auto flex-1 max-h-[70vh] lg:max-h-none">
           <slot />
         </div>
 

@@ -40,7 +40,7 @@ async function onEnable() {
 
 watch(
   () => auth.user?.id ?? null,
-  (uid, prevUid) => {
+  (uid: string | null, prevUid: string | null) => {
     if (uid && uid !== prevUid) push.refresh()
   },
 )
@@ -50,7 +50,7 @@ watch(
   <Transition name="slide-fade">
     <div
       v-if="visible"
-      class="fixed left-1/2 -translate-x-1/2 top-20 z-50 w-[calc(100%-2rem)] max-w-md p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
+      class="fixed left-1/2 -translate-x-1/2 top-20 z-50 w-[80vw] p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
       role="region"
       aria-label="Enable notifications"
     >
