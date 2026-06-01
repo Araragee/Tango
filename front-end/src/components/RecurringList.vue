@@ -73,7 +73,7 @@ onMounted(async () => {
   <TangoCard padding="lg" shadow="default" class="w-full">
     <div class="flex justify-between items-center mb-4 border-b-2 border-on-background pb-2">
       <h3 class="text-headline-lg text-on-surface">Recurring & Bills</h3>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <TangoButton v-if="upcoming.length > 0" @click="runDue" :disabled="recurring.spawning" variant="surface" size="sm" aria-label="Run due now">
           <span class="material-symbols-outlined text-[16px]">play_arrow</span>
           {{ recurring.spawning ? 'Running…' : 'Run due' }}

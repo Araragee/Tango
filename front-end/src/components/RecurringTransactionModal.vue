@@ -150,7 +150,7 @@ const deleteRecurring = async () => {
 
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap flex-wrap">
           <button
             v-for="cat in prefs.transactionCategories" :key="cat"
             @click="category = cat"

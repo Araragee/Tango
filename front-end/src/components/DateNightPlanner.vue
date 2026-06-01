@@ -151,7 +151,7 @@ const scheduleCustom = async () => {
       <!-- Custom -->
       <div class="border-t-2 border-on-surface pt-4 space-y-2">
         <label class="text-label-sm uppercase text-on-surface-variant font-bold">Or write your own</label>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <TangoInput v-model="customTitle" placeholder="e.g. Anniversary dinner at Luigi's" class="flex-1" />
           <TangoButton @click="scheduleCustom" shadow="dark" size="sm">Add</TangoButton>
         </div>

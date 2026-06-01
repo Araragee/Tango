@@ -284,7 +284,7 @@ const exportCSV = () => {
         <TangoCard padding="lg" shadow="default" class="flex-grow flex flex-col w-full">
           <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
             <h3 class="text-headline-lg text-on-surface">Recent</h3>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
               <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" aria-label="Monthly report">
                 <span class="material-symbols-outlined text-[16px]">summarize</span>
                 Report
@@ -305,7 +305,7 @@ const exportCSV = () => {
           </div>
 
           <!-- Filters -->
-          <div class="flex gap-2 mb-4">
+          <div class="flex gap-2 flex-wrap mb-4">
             <button v-for="f in ['all', 'expense', 'income']" :key="f"
               @click="filter = f as any"
               class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"

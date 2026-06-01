@@ -69,7 +69,7 @@ watch(
           class="text-xs text-error mt-1"
         >{{ push.lastError.value }}</p>
 
-        <div class="flex gap-2 mt-2">
+        <div class="flex gap-2 flex-wrap mt-2">
           <button
             type="button"
             :disabled="push.busy.value"

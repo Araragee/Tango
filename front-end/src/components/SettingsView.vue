@@ -564,7 +564,7 @@ onMounted(() => {
 
               <div class="flex flex-col items-center gap-2">
                 <QrCode :value="inviteLink" :size="160" />
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
                   <button @click="copyLink" class="text-label-sm uppercase text-primary hover:underline">Copy link</button>
                   <button @click="revokeInvites" class="text-label-sm uppercase text-error hover:underline">Revoke</button>
                 </div>
@@ -671,7 +671,7 @@ onMounted(() => {
           <div class="flex flex-col gap-2">
             <span class="text-body-md font-bold uppercase">Default Task Assignee</span>
             <p class="text-label-sm text-on-surface-variant">Who new to-dos are assigned to by default.</p>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
               <button
                 v-for="opt in [['me', store.userName], ['partner', store.partnerName], ['both', 'Both']] as const"
                 :key="opt[0]"

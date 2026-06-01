@@ -250,7 +250,7 @@ const upcomingGoalDeadlines = computed(() => {
         <h2 class="text-headline-lg text-primary">{{ periodLabel }}</h2>
         <p class="text-body-md text-on-surface-variant">Syncing with {{ store.partnerName }}</p>
       </div>
-      <div class="flex gap-2 flex-wrap items-center">
+      <div class="flex gap-2 flex-wrap flex-wrap items-center">
         <!-- View switcher -->
         <div class="flex pixel-border-sm overflow-hidden">
           <button v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"

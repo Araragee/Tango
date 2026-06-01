@@ -213,7 +213,7 @@ const savingsRate = computed(() => {
       </div>
       <div v-else>
         <!-- Y-axis labels + bars — responsive heights: 96px mobile / 128px sm+ -->
-        <div class="flex gap-2 sm:gap-4 items-end">
+        <div class="flex gap-2 flex-wrap sm:gap-4 items-end">
           <!-- Y labels -->
           <div class="flex flex-col justify-between text-right pr-1 sm:pr-2 shrink-0 h-24 sm:h-[128px]">
             <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly).toLocaleString() }}</span>

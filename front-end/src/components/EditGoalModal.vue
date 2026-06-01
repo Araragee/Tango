@@ -226,7 +226,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
         <!-- Category picker -->
         <div class="flex flex-col gap-2">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-            <div class="flex gap-2 flex-wrap">
+            <div class="flex gap-2 flex-wrap flex-wrap">
                 <button
                     v-for="cat in GOAL_CATEGORIES"
                     :key="cat"
@@ -241,7 +241,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
         <!-- Priority picker -->
         <div class="flex flex-col gap-2">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Priority</label>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
                 <button
                     v-for="p in GOAL_PRIORITIES"
                     :key="p"

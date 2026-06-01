@@ -187,7 +187,7 @@ const saveTask = async () => {
 
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap flex-wrap">
           <button
             v-for="cat in prefs.todoCategories" :key="cat"
             @click="category = cat"
@@ -195,7 +195,7 @@ const saveTask = async () => {
             :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
           >{{ cat }}</button>
         </div>
-        <div class="flex gap-2 mt-1">
+        <div class="flex gap-2 flex-wrap mt-1">
           <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
             @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
           <TangoButton size="sm" variant="outline"
@@ -208,7 +208,7 @@ const saveTask = async () => {
 
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Repeats</label>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap flex-wrap">
           <button
             v-for="r in (['none', 'daily', 'weekly', 'biweekly', 'monthly'] as const)"
             :key="r"
@@ -240,7 +240,7 @@ const saveTask = async () => {
             >close</button>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
           <TangoInput
             v-model="newChecklistText"
             placeholder="Add checklist item..."

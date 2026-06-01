@@ -245,7 +245,7 @@ const phraseOfTheDay = computed(() => {
     </TangoCard>
 
     <!-- View Mode Tabs -->
-    <div class="flex gap-2 border-b-2 border-on-background pb-2">
+    <div class="flex gap-2 flex-wrap border-b-2 border-on-background pb-2">
       <button
         @click="viewMode = 'tasks'"
         class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors flex items-center gap-2"
@@ -275,7 +275,7 @@ const phraseOfTheDay = computed(() => {
         <span class="text-label-sm text-on-surface-variant uppercase">{{ shoppingItems.filter(i => !i.completed).length }} left</span>
       </div>
 
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <TangoInput v-model="newShoppingItem" placeholder="Add item..." class="flex-1" @keyup.enter="quickAddShopping" />
         <TangoButton @click="quickAddShopping" shadow="dark" size="sm">Add</TangoButton>
       </div>
@@ -318,7 +318,7 @@ const phraseOfTheDay = computed(() => {
       </div>
 
       <!-- Filter tabs -->
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <button
           v-for="f in [['all', 'All'], ['active', 'Active'], ['done', 'Done']] as const"
           :key="f[0]"
@@ -374,7 +374,7 @@ const phraseOfTheDay = computed(() => {
           >
             {{ todo.text }}
           </span>
-          <div class="flex gap-2 items-center mt-1 flex-wrap">
+          <div class="flex gap-2 flex-wrap items-center mt-1 flex-wrap">
             <span class="text-label-sm text-outline uppercase">{{ assigneeLabel(todo) }}</span>
             <span v-if="todo.category && todo.category !== 'Quick Add'" class="text-label-sm text-outline uppercase">• {{ todo.category }}</span>
             <span

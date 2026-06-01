@@ -172,7 +172,7 @@ onMounted(() => {
         <div class="space-y-4">
           <TangoInput v-model="displayName" label="Your Name" placeholder="Alex" />
 
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-wrap">
             <button
               @click="householdMode = 'create'; error = ''"
               class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
@@ -195,7 +195,7 @@ onMounted(() => {
                 <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.activeInvite?.code ?? household.inviteCode }}</span>
                 <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
               </div>
-              <div class="flex gap-2">
+              <div class="flex gap-2 flex-wrap">
                 <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
                 <button @click="regenerateInvite" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate">refresh</button>
               </div>
@@ -207,7 +207,7 @@ onMounted(() => {
             </div>
 
             <p class="text-label-sm text-on-surface-variant text-center uppercase tracking-wider">Share code, link, or QR with your partner</p>
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
               <TangoInput v-model="emailInvite" placeholder="partner@email.com" class="flex-1" />
               <TangoButton @click="sendEmailInvite" variant="surface" size="sm">Email</TangoButton>
             </div>

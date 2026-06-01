@@ -112,7 +112,7 @@ const confirmDelete = async (id: string, title: string) => {
     <!-- Goals Grid -->
     <section class="space-y-lg mt-xl w-full">
       <!-- Category filter tabs -->
-      <div v-if="!store.loading && availableCategories.length > 2" class="flex gap-2 flex-wrap">
+      <div v-if="!store.loading && availableCategories.length > 2" class="flex gap-2 flex-wrap flex-wrap">
         <button
           v-for="cat in availableCategories"
           :key="cat"
