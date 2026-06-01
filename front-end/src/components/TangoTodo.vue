@@ -480,7 +480,6 @@ const phraseOfTheDay = computed(() => {
         </div>
       </div>
     </div>
-    </div><!-- end v-else tasks -->
 
     <!-- Add Task Area — tasks mode only -->
     <TangoCard v-if="viewMode === 'tasks'" padding="lg" shadow="default" class="w-full">
