@@ -5,6 +5,8 @@ import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { useAppStore } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { iconForCategory } from '../utils/categoryIcons';
 import { localDateISO } from '../utils/dateUtils';
 
@@ -12,6 +14,8 @@ defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
 const prefs = usePreferencesStore();
+const auth = useAuthStore();
+const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const title = ref('');
@@ -22,6 +26,9 @@ const date = ref(localDateISO()); // localDateISO avoids UTC offset date drift (
 const note = ref('');
 const errors = ref({ title: '', amount: '' });
 const newCategory = ref('');
+// true = current user paid; false = partner paid. null = untracked.
+// Only relevant when a partner exists in the household.
+const paidByMe = ref<boolean | null>(null);
 
 const addCategory = () => {
   if (!newCategory.value.trim()) return;
@@ -38,6 +45,12 @@ const saveTransaction = async () => {
   if (hasError) return;
 
   try {
+    const paid_by = paidByMe.value === true
+      ? (auth.user?.id ?? null)
+      : paidByMe.value === false
+        ? (household.partner?.user_id ?? null)
+        : null;
+
     await store.addTransaction({
       title: title.value,
       amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
@@ -45,10 +58,8 @@ const saveTransaction = async () => {
       type: type.value,
       icon: iconForCategory(category.value, type.value),
       category: category.value,
-      // Pass null (not undefined) when the note is empty so the field is
-      // included in the JSON payload. undefined is stripped by serialisation,
-      // inconsistent with the rest of the codebase (B66/B76/B94/B95). (B99)
       note: note.value.trim() || null,
+      paid_by,
     });
     title.value = '';
     amount.value = 0;
@@ -56,6 +67,7 @@ const saveTransaction = async () => {
     type.value = 'expense';
     date.value = localDateISO();
     note.value = '';
+    paidByMe.value = null;
     emit('close');
   } catch (e: any) {
     notify(e.message ?? 'Failed to add transaction.', 'error');
@@ -106,6 +118,24 @@ const saveTransaction = async () => {
           placeholder="e.g. Split with partner, receipt in wallet…"
           class="sunken-input px-4 py-2 text-body-md focus:outline-none focus:ring-1 focus:ring-primary pixel-border-sm w-full resize-none"
         ></textarea>
+      </div>
+
+      <!-- Paid by — only when a partner is paired -->
+      <div v-if="household.partner" class="flex flex-col gap-2">
+        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Paid by</label>
+        <div class="flex gap-2">
+          <button
+            @click="paidByMe = paidByMe === true ? null : true"
+            class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
+            :class="paidByMe === true ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+          >Me</button>
+          <button
+            @click="paidByMe = paidByMe === false ? null : false"
+            class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
+            :class="paidByMe === false ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'"
+          >{{ store.partnerName }}</button>
+        </div>
+        <p v-if="paidByMe === null" class="text-[10px] uppercase text-on-surface-variant">Optional — tracks who fronted the money</p>
       </div>
     </div>
 

@@ -17,6 +17,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
   // falls back to the Material Symbols icon from CATEGORY_ICON_MAP.
   const categoryEmojis = ref<Record<string, string>>({})
 
+  // Notification category muting. Each entry is a prefix string that matches
+  // notification.type — e.g. 'transaction' mutes transaction.added etc.
+  // Empty array = nothing muted.
+  const mutedNotifCategories = ref<string[]>([])
+
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
   }
@@ -68,6 +73,16 @@ export const usePreferencesStore = defineStore('preferences', () => {
     delete categoryEmojis.value[category.toLowerCase()]
   }
 
+  function isNotifCategoryMuted(notifType: string): boolean {
+    return mutedNotifCategories.value.some(cat => notifType.startsWith(cat))
+  }
+
+  function toggleNotifCategory(cat: string) {
+    const idx = mutedNotifCategories.value.indexOf(cat)
+    if (idx === -1) mutedNotifCategories.value.push(cat)
+    else mutedNotifCategories.value.splice(idx, 1)
+  }
+
   return {
     todoCategories,
     transactionCategories,
@@ -75,6 +90,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     budgetLimits,
     notificationsEnabled,
     categoryEmojis,
+    mutedNotifCategories,
     addTodoCategory,
     addTransactionCategory,
     addEventCategory,
@@ -84,6 +100,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     getCategoryEmoji,
     setCategoryEmoji,
     clearCategoryEmoji,
+    isNotifCategoryMuted,
+    toggleNotifCategory,
   }
 }, {
   persist: {

@@ -173,6 +173,16 @@ export const useHouseholdStore = defineStore('household', () => {
     await _afterLoad()
   }
 
+  async function removeMember(userId: string) {
+    if (!isConfigured) {
+      members.value = members.value.filter(m => m.user_id !== userId)
+      return
+    }
+    const { error } = await supabase.rpc('remove_member', { target_user_id: userId })
+    if (error) throw error
+    await loadMembers()
+  }
+
   async function leaveHousehold() {
     if (!isConfigured) {
       await reset()
@@ -240,6 +250,7 @@ export const useHouseholdStore = defineStore('household', () => {
     revokeInvites,
     joinHousehold,
     leaveHousehold,
+    removeMember,
     transferCreator,
     deleteAccount,
     sendEmailInvite,

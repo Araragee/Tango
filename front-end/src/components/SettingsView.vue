@@ -199,6 +199,22 @@ const transferCreator = async () => {
     }
 };
 
+const removingPartner = ref(false);
+const removePartner = async () => {
+    const target = household.partner;
+    if (!target) return;
+    if (!confirm(`Remove ${store.partnerName} from your household? They will lose access to all shared data.`)) return;
+    removingPartner.value = true;
+    try {
+        await household.removeMember(target.user_id);
+        notify(`${store.partnerName} removed from household.`, 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to remove partner.', 'error');
+    } finally {
+        removingPartner.value = false;
+    }
+};
+
 const leaveHousehold = async () => {
     if (!confirm('Leave this household? You will lose access to shared data. This cannot be undone.')) return;
     try {
@@ -388,6 +404,30 @@ onMounted(() => {
             </div>
           </div>
 
+          <!-- Notification category muting — only relevant when notifications are on -->
+          <div v-if="prefs.notificationsEnabled" class="space-y-2 pl-2 border-l-2 border-on-surface/20">
+            <p class="text-label-sm uppercase text-on-surface-variant font-bold">Mute by category</p>
+            <div v-for="cat in [
+              { key: 'transaction', label: 'Budget / Transactions', icon: 'receipt_long' },
+              { key: 'goal',        label: 'Goals',                 icon: 'flag' },
+              { key: 'todo',        label: 'Todos',                 icon: 'task_alt' },
+              { key: 'event',       label: 'Calendar Events',       icon: 'event' },
+              { key: 'partner',     label: 'Partner activity',      icon: 'favorite' },
+            ]" :key="cat.key" class="flex items-center justify-between py-1">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant">{{ cat.icon }}</span>
+                <span class="text-label-sm uppercase">{{ cat.label }}</span>
+              </div>
+              <div class="w-10 h-5 pixel-border-sm cursor-pointer relative transition-colors"
+                   :class="prefs.isNotifCategoryMuted(cat.key) ? 'bg-surface-variant' : 'bg-primary'"
+                   @click="prefs.toggleNotifCategory(cat.key)"
+                   role="switch" :aria-checked="!prefs.isNotifCategoryMuted(cat.key)">
+                <div class="absolute top-0.5 w-3.5 h-3.5 transition-all"
+                     :class="prefs.isNotifCategoryMuted(cat.key) ? 'left-0.5 bg-outline' : 'right-0.5 bg-on-primary'"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="flex items-center justify-between border-t border-on-surface pt-4">
             <div>
               <span class="text-body-md font-bold uppercase">Push Notifications</span>
@@ -417,14 +457,21 @@ onMounted(() => {
       <TangoCard padding="lg" class="md:col-span-2">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Household</h3>
         <div class="space-y-6">
-          <div v-if="household.partner" class="flex items-center justify-between">
-            <div>
-              <p class="text-body-md font-bold">Paired with {{ store.partnerName }}</p>
-              <p class="text-label-sm text-on-surface-variant uppercase">Role: {{ household.isCreator ? 'Creator' : 'Partner' }}</p>
+          <div v-if="household.partner" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-body-md font-bold">Paired with {{ store.partnerName }}</p>
+                <p class="text-label-sm text-on-surface-variant uppercase">Role: {{ household.isCreator ? 'Creator' : 'Partner' }}</p>
+              </div>
+              <TangoButton v-if="household.isCreator" @click="transferCreator" variant="surface" size="sm">
+                Transfer Creator
+              </TangoButton>
             </div>
-            <TangoButton v-if="household.isCreator" @click="transferCreator" variant="surface" size="sm">
-              Transfer Creator
-            </TangoButton>
+            <div v-if="household.isCreator" class="border-t border-on-surface/20 pt-3">
+              <TangoButton @click="removePartner" :disabled="removingPartner" variant="outline" size="sm" class="text-error border-error border-2 hover:bg-error-container">
+                {{ removingPartner ? 'Removing…' : `Remove ${store.partnerName}` }}
+              </TangoButton>
+            </div>
           </div>
 
           <div v-else class="space-y-4">

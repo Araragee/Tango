@@ -34,6 +34,7 @@ export interface Transaction {
   category: string
   note?: string | null
   receipt_url?: string | null
+  paid_by?: string | null
   version?: number
 }
 
@@ -99,6 +100,7 @@ function mapTransaction(r: any): Transaction {
     // Supabase update payloads. (B86)
     note: r.note ?? null,
     receipt_url: r.receipt_url ?? null,
+    paid_by: r.paid_by ?? null,
     version: r.version,
   }
 }

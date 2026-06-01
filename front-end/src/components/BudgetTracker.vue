@@ -2,6 +2,8 @@
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
+import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TransactionDetailsModal from './TransactionDetailsModal.vue';
@@ -18,6 +20,8 @@ import EmptyState from './EmptyState.vue';
 
 const store = useAppStore();
 const prefs = usePreferencesStore();
+const auth = useAuthStore();
+const household = useHouseholdStore();
 
 const showDetails = ref(false);
 const showAddModal = ref(false);
@@ -84,6 +88,71 @@ const getLimit = (cat: string) => prefs.getBudgetLimit(cat);
 // so the bar stays meaningful even if the user explicitly sets a limit of $0. (B69)
 const getBarPct = (spent: number, cat: string) => Math.min(100, (spent / Math.max(1, getLimit(cat))) * 100);
 const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
+
+// ── Settle-up ────────────────────────────────────────────────────────────────
+// Only meaningful when a partner exists and at least one tx has paid_by set.
+const settleUp = computed(() => {
+  const myId = auth.user?.id;
+  const partnerId = household.partner?.user_id;
+  if (!myId || !partnerId) return null;
+
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  let myPaid = 0;
+  let partnerPaid = 0;
+  let tracked = 0;
+
+  for (const tx of store.budget.recentActivity) {
+    if (tx.type !== 'expense') continue;
+    if (!tx.date.startsWith(thisMonth)) continue;
+    if (!tx.paid_by) continue;
+    const abs = Math.abs(tx.amount);
+    if (tx.paid_by === myId) { myPaid += abs; tracked++ }
+    else if (tx.paid_by === partnerId) { partnerPaid += abs; tracked++ }
+  }
+
+  if (tracked === 0) return null;
+
+  const total = myPaid + partnerPaid;
+  const fairShare = total / 2;
+  // Positive: partner owes me. Negative: I owe partner.
+  const balance = myPaid - fairShare;
+
+  return {
+    myPaid,
+    partnerPaid,
+    balance: Math.abs(balance),
+    owedBy: balance > 0.005 ? 'partner' : balance < -0.005 ? 'me' : 'settled',
+  };
+});
+
+// ── CSV Export ───────────────────────────────────────────────────────────────
+const exportCSV = () => {
+  const rows = store.budget.recentActivity;
+  const headers = ['Date', 'Title', 'Amount', 'Type', 'Category', 'Note'];
+  const escape = (s: string) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+  const lines = [
+    headers.join(','),
+    ...rows.map(tx => [
+      tx.date,
+      escape(tx.title),
+      tx.amount,
+      tx.type,
+      escape(tx.category),
+      tx.note ? escape(tx.note) : '',
+    ].join(',')),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tango-transactions-${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 </script>
 
 <template>
@@ -117,6 +186,32 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
         </div>
 
         <VibeCheckCard />
+
+        <!-- Settle Up — only when paired and at least one tracked tx exists -->
+        <TangoCard v-if="settleUp" padding="lg" shadow="default" class="w-full">
+          <div class="flex justify-between items-center mb-4 border-b-2 border-on-background pb-2">
+            <h3 class="text-headline-lg text-on-surface">Settle Up</h3>
+            <span class="text-label-sm text-on-surface-variant uppercase">This month</span>
+          </div>
+          <div class="flex gap-4 mb-4">
+            <div class="flex-1 text-center p-3 pixel-border-sm bg-surface-variant">
+              <p class="text-label-sm uppercase text-on-surface-variant mb-1">You paid</p>
+              <p class="text-headline-md font-black">${{ settleUp.myPaid.toFixed(2) }}</p>
+            </div>
+            <div class="flex-1 text-center p-3 pixel-border-sm bg-surface-variant">
+              <p class="text-label-sm uppercase text-on-surface-variant mb-1">{{ store.partnerName }} paid</p>
+              <p class="text-headline-md font-black">${{ settleUp.partnerPaid.toFixed(2) }}</p>
+            </div>
+          </div>
+          <div class="px-4 py-3 pixel-border-sm text-center"
+               :class="settleUp.owedBy === 'settled' ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary-container text-on-primary-container'">
+            <p class="text-label-sm uppercase font-bold">
+              <span v-if="settleUp.owedBy === 'settled'">All settled!</span>
+              <span v-else-if="settleUp.owedBy === 'partner'">{{ store.partnerName }} owes you ${{ settleUp.balance.toFixed(2) }}</span>
+              <span v-else>You owe {{ store.partnerName }} ${{ settleUp.balance.toFixed(2) }}</span>
+            </p>
+          </div>
+        </TangoCard>
 
         <!-- Category Breakdown -->
         <TangoCard padding="lg" shadow="dark" class="w-full">
@@ -193,6 +288,10 @@ const isOverBudget = (spent: number, cat: string) => spent > getLimit(cat);
               <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" aria-label="Monthly report">
                 <span class="material-symbols-outlined text-[16px]">summarize</span>
                 Report
+              </TangoButton>
+              <TangoButton @click="exportCSV" variant="surface" size="sm" aria-label="Export CSV">
+                <span class="material-symbols-outlined text-[16px]">download</span>
+                Export
               </TangoButton>
               <TangoButton @click="showCsvImport = true" variant="surface" size="sm" aria-label="Import CSV">
                 <span class="material-symbols-outlined text-[16px]">upload_file</span>

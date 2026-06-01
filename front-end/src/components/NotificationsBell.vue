@@ -2,14 +2,20 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useNotificationsStore, type AppNotification } from '../stores/useNotificationsStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 
 const router = useRouter();
 const notifications = useNotificationsStore();
+const prefs = usePreferencesStore();
 
 const open = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 
-const recent = computed(() => notifications.items.slice(0, 12));
+const visibleItems = computed(() =>
+  notifications.items.filter(n => !prefs.isNotifCategoryMuted(n.type))
+);
+const recent = computed(() => visibleItems.value.slice(0, 12));
+const unreadCount = computed(() => visibleItems.value.filter(n => !n.read_at).length);
 
 const toggle = () => {
     open.value = !open.value;
@@ -81,10 +87,10 @@ onBeforeUnmount(() => {
     >
       notifications
       <span
-        v-if="notifications.unreadCount > 0"
+        v-if="unreadCount > 0"
         class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 pixel-border-sm bg-error text-on-error text-[10px] font-black flex items-center justify-center"
       >
-        {{ notifications.unreadCount > 99 ? '99+' : notifications.unreadCount }}
+        {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
     </button>
 
