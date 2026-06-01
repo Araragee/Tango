@@ -588,7 +588,7 @@ export const useAppStore = defineStore('app', () => {
           const amount = Math.round((Math.abs(transaction.amount) * alloc.percent) / 100 * 100) / 100
           if (amount <= 0) continue
           try {
-            await contributions.addContribution(alloc.goalId, auth.user?.id ?? '', amount)
+            await contributions.addContribution(alloc.goalId, amount)
             await updateGoalProgress(alloc.goalId, goal.saved + amount)
           } catch {
             // Non-fatal — transaction already saved; contribution can be added manually
