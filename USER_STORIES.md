@@ -3,7 +3,7 @@
 > Caveman-ultra doc. Fragments OK. Story cores kept readable.
 > Status: ✅ done · 🟡 partial · ⬜ missing
 > Source: code + `front-end/src/Tango System Audit.md` (bug/feat changelog, NOT stories).
-> Last sync: 2026-06-01. P0 complete.
+> Last sync: 2026-06-01. P0 + P1 complete.
 
 ---
 
@@ -47,7 +47,7 @@ Gaps: ⬜ 2FA/MFA. ⬜ session list/revoke-per-device UI.
 | H5 | As household, capped at 2 members. | ✅ trigger |
 | H6 | As member, manage membership (remove/leave). | ✅ Leave + Remove Partner (creator) in Settings |
 
-Gaps: ⬜ rename household. ⬜ re-invite flow after partner removed UX polish.
+Gaps: ✅ rename household (Settings > Household Name). ✅ re-invite flow after partner removed (auto-generate invite + polished UI). ⬜ H7: member presence re-invite deep link (P2).
 
 ---
 
@@ -85,8 +85,10 @@ Gaps:
 | G3 | As duo, see progress bar + DuoBar (both partners). | ✅ |
 | G4 | As duo, complete goal → archive. | ✅ |
 | G5 | As duo, earn streaks/achievements as team. | ✅ |
+| G6 | As user, auto-allocate % of income to goal. | ✅ Settings > Income Auto-Allocate |
+| G7 | As user, see goal deadlines approaching in Plans view. | ✅ 7-day nudge banner + days-left badge |
 
-Gaps: ⬜ goal categories/priority. ⬜ auto-allocate income % to goals. ⬜ goal reminders/nudges.
+Gaps: ⬜ goal categories/priority. ⬜ goal push reminders (needs pg_cron).
 
 ---
 
@@ -99,8 +101,10 @@ Gaps: ⬜ goal categories/priority. ⬜ auto-allocate income % to goals. ⬜ goa
 | T3 | As duo, hand off todo to partner. | ✅ smart handoff |
 | T4 | As duo, overdue badge (local-date correct). | ✅ |
 | T5 | As duo, daily phrase-of-day (shared, deterministic). | ✅ |
+| T6 | As duo, shared shopping list (distinct tab, quick-add). | ✅ Shopping tab in To-Dos |
+| T7 | As duo, recurring todo auto-spawns next on complete. | ✅ recurrence field + completion-spawn |
 
-Gaps: ⬜ recurring todos. ⬜ subtasks/checklists. ⬜ separate shared **shopping list**. ⬜ assign-to-partner default.
+Gaps: ⬜ subtasks/checklists. ⬜ assign-to-partner default.
 
 ---
 
@@ -113,8 +117,10 @@ Gaps: ⬜ recurring todos. ⬜ subtasks/checklists. ⬜ separate shared **shoppi
 | C3 | As duo, plan date night from idea list. | ✅ planner |
 | C4 | As duo, review past date night → mood rating. | ✅ feeds monthly report |
 | C5 | As duo, "today" cell stays fresh past midnight. | ✅ |
+| C6 | As duo, export calendar to .ics (import to any calendar app). | ✅ ICS export button |
+| C7 | As user, see goal deadlines approaching on calendar page. | ✅ 7-day nudge banner |
 
-Gaps: ⬜ event reminders (push). ⬜ recurring events. ⬜ external cal sync (Google/ICS). ⬜ event RSVP/both-confirm.
+Gaps: ⬜ event reminders via push (needs pg_cron). ⬜ recurring events. ⬜ Google/ICS import. ⬜ event RSVP/both-confirm.
 
 ---
 
@@ -173,12 +179,12 @@ Prioritized. P0 = needed for "complete couples app". P1 = strong value. P2 = nic
 3. ~~**Notification preferences**~~ ✅ Per-category mute in Settings > Appearance.
 4. ~~**Membership mgmt UI**~~ ✅ Remove Partner button in Settings > Household.
 
-### P1 — depth + retention
-5. Event + goal reminders via existing push (E4/E6).
-6. Recurring todos + events (E5/E6).
-7. External calendar sync (Google/ICS) (E6).
-8. Shared shopping list distinct from todos (E5).
-9. Recurring goal contributions / auto-allocate income % (E3/E4).
+### P1 — depth + retention ✅ ALL DONE
+5. ~~Event + goal reminders~~ ✅ Deadline nudge banners in Plans + Calendar (push scheduling requires pg_cron — add later).
+6. ~~Recurring todos~~ ✅ `recurrence` field, completion-spawns next instance. Events recurrence → P2.
+7. ~~External calendar sync~~ ✅ ICS export button in Calendar. Import → P2.
+8. ~~Shared shopping list~~ ✅ Shopping tab in To-Dos (category-filtered, quick-add).
+9. ~~Recurring goal contributions / auto-allocate~~ ✅ Settings > Income Auto-Allocate (% of income → goal).
 
 ### P2 — scale + polish
 10. i18n / locale + multi-currency (E3/E8/E9).

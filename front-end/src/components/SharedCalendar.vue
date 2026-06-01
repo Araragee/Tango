@@ -196,6 +196,49 @@ const syncScore = computed(() => {
   const shared = store.calendar.events.filter((e: CalendarEvent) => e.partners.length > 1).length;
   return Math.round((shared / total) * 100);
 });
+
+// ── ICS Export ─────────────────────────────────────────────────────────────
+
+const exportICS = () => {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Tango//Shared Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+  ];
+  for (const ev of store.calendar.events) {
+    const dt = ev.date.replace(/-/g, '');
+    const tm = ev.time && ev.time !== 'All Day' ? ev.time.replace(/:/g, '') + '00' : null;
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${ev.id}@tango`);
+    lines.push(tm ? `DTSTART:${dt}T${tm}` : `DTSTART;VALUE=DATE:${dt}`);
+    lines.push(`SUMMARY:${ev.title.replace(/[,;\\]/g, (c) => '\\' + c)}`);
+    if (ev.notes) lines.push(`DESCRIPTION:${ev.notes.replace(/\n/g, '\\n').replace(/[,;\\]/g, (c) => '\\' + c)}`);
+    lines.push('END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tango-calendar.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// ── Upcoming deadline nudge (goals with deadline ≤ 7 days) ─────────────────
+const upcomingGoalDeadlines = computed(() => {
+  const now = todayStr.value;
+  const d7 = new Date();
+  d7.setDate(d7.getDate() + 7);
+  const week = dateStr(d7);
+  return store.plans.goals.filter((g: any) =>
+    g.deadline && g.deadline >= now && g.deadline <= week && g.status !== 'Completed'
+  ).sort((a: any, b: any) => (a.deadline ?? '').localeCompare(b.deadline ?? ''));
+});
 </script>
 
 <template>
@@ -225,6 +268,10 @@ const syncScore = computed(() => {
         <TangoButton @click="nextPeriod" variant="surface" size="md" class="w-10 h-10" aria-label="Next">
           <span class="material-symbols-outlined">chevron_right</span>
         </TangoButton>
+        <TangoButton @click="exportICS" variant="surface" size="md" aria-label="Export ICS">
+          <span class="material-symbols-outlined text-[16px]">download</span>
+          .ics
+        </TangoButton>
         <TangoButton @click="showDatePlanner = true" variant="surface" size="md" aria-label="Plan Date Night">
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
           Date Night
@@ -251,6 +298,22 @@ const syncScore = computed(() => {
         </div>
       </div>
       <TangoButton @click="reviewOldestPending" size="sm" shadow="dark">Review</TangoButton>
+    </div>
+
+    <!-- Goal deadline nudge banner -->
+    <div
+      v-if="upcomingGoalDeadlines.length > 0"
+      class="flex items-center justify-between gap-3 p-3 bg-tertiary-container pixel-border-sm"
+    >
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="material-symbols-outlined text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">flag</span>
+        <div class="min-w-0">
+          <p class="text-body-md font-bold text-on-tertiary-container truncate">
+            {{ upcomingGoalDeadlines.length }} goal{{ upcomingGoalDeadlines.length === 1 ? '' : 's' }} deadline within 7 days
+          </p>
+          <p class="text-label-sm text-on-tertiary-container truncate">{{ upcomingGoalDeadlines.map((g: any) => g.title).join(', ') }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- ── MONTH VIEW ─────────────────────────────────────────────────── -->

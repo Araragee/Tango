@@ -23,6 +23,7 @@ const newCategory = ref('');
 const assigneeKey = ref<AssigneeKey>('both');
 const priority = ref<'Chill' | 'Normal' | 'ASAP'>('Normal');
 const dueDate = ref('');
+const recurrence = ref<'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'>('none');
 const error = ref('');
 
 const isEditing = computed(() => !!props.task);
@@ -59,12 +60,14 @@ watch(() => props.show, (open) => {
     assigneeKey.value = resolveKey(props.task);
     priority.value = props.task.priority ?? 'Normal';
     dueDate.value = props.task.due_date ?? '';
+    recurrence.value = (props.task.recurrence as any) ?? 'none';
   } else {
     taskName.value = '';
     category.value = 'General';
     assigneeKey.value = 'both';
     priority.value = 'Normal';
     dueDate.value = '';
+    recurrence.value = 'none';
   }
 });
 
@@ -81,11 +84,9 @@ const saveTask = async () => {
       assigned: assigneeKey.value,
       assignee_id: assigneeIdFor(assigneeKey.value),
       priority: priority.value,
-      // Pass null (not undefined) when the field is cleared so Supabase
-      // receives an explicit NULL and clears the column on task edits.
-      // JSON serialisation strips `undefined`, leaving the old due date
-      // on the server — same root cause as B66/B76/B94. (B95)
       due_date: dueDate.value || null,
+      recurrence: recurrence.value === 'none' ? null : recurrence.value,
+      recurrence_next_at: null,
     };
 
     if (props.task) {
@@ -187,6 +188,22 @@ const saveTask = async () => {
       </div>
 
       <TangoInput v-model="dueDate" label="Due Date (Optional)" type="date" />
+
+      <div class="flex flex-col gap-2">
+        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Repeats</label>
+        <div class="flex gap-2 flex-wrap">
+          <button
+            v-for="r in (['none', 'daily', 'weekly', 'biweekly', 'monthly'] as const)"
+            :key="r"
+            @click="recurrence = r"
+            class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
+            :class="recurrence === r ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+          >{{ r === 'none' ? 'Never' : r }}</button>
+        </div>
+        <p v-if="recurrence !== 'none'" class="text-[10px] uppercase text-on-surface-variant">
+          New task auto-created when this one is completed
+        </p>
+      </div>
     </div>
 
     <template #footer>

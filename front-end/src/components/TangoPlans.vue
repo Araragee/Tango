@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, inject, computed } from 'vue';
+import { localDateISO } from '../utils/dateUtils';
 import { useAppStore } from '../stores/useStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
@@ -23,6 +24,21 @@ const openNewGoal = () => {
 const openEditGoal = (id: string) => {
     selectedGoalId.value = id;
     showEditModal.value = true;
+};
+
+const upcomingDeadlines = computed(() => {
+  const now = localDateISO();
+  const d7 = new Date();
+  d7.setDate(d7.getDate() + 7);
+  const week = `${d7.getFullYear()}-${String(d7.getMonth() + 1).padStart(2, '0')}-${String(d7.getDate()).padStart(2, '0')}`;
+  return store.plans.goals.filter(g =>
+    g.deadline && g.deadline >= now && g.deadline <= week && g.status !== 'Completed'
+  ).sort((a, b) => (a.deadline ?? '').localeCompare(b.deadline ?? ''));
+});
+
+const deadlineDaysLeft = (deadline: string) => {
+  const diff = Math.ceil((new Date(deadline + 'T00:00:00').getTime() - Date.now()) / 86_400_000);
+  return diff === 0 ? 'Today' : diff === 1 ? '1 day left' : `${diff} days left`;
 };
 
 const confirmDelete = async (id: string, title: string) => {
@@ -49,6 +65,21 @@ const confirmDelete = async (id: string, title: string) => {
         New Goal
       </TangoButton>
     </section>
+
+    <!-- Upcoming deadline nudge -->
+    <div
+      v-if="upcomingDeadlines.length > 0"
+      class="flex flex-col gap-2 p-4 bg-error-container pixel-border-sm"
+    >
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-on-error-container text-[18px]" style="font-variation-settings: 'FILL' 1;">alarm</span>
+        <span class="text-label-sm uppercase font-bold text-on-error-container">Deadlines coming up</span>
+      </div>
+      <div v-for="g in upcomingDeadlines" :key="g.id" class="flex items-center justify-between">
+        <span class="text-body-md text-on-error-container font-bold truncate">{{ g.title }}</span>
+        <span class="text-label-sm uppercase text-on-error-container shrink-0 ml-2">{{ deadlineDaysLeft(g.deadline!) }}</span>
+      </div>
+    </div>
 
     <!-- Goals Grid -->
     <section class="space-y-lg mt-xl w-full">
@@ -102,17 +133,25 @@ const confirmDelete = async (id: string, title: string) => {
             <DuoBar :goal-id="goal.id" :target="goal.target" :show-legend="true" />
           </div>
           <div class="flex justify-between text-label-sm text-outline mt-xs items-center">
-            <span>Progress</span>
             <div class="flex items-center gap-2">
-              <span>{{ goal.progress }}%</span>
-              <button
-                @click.stop="confirmDelete(goal.id, goal.title)"
-                class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
-                aria-label="Delete goal"
+              <span>Progress {{ goal.progress }}%</span>
+              <span
+                v-if="goal.deadline && goal.status !== 'Completed'"
+                class="px-1.5 py-0.5 pixel-border-sm uppercase"
+                :class="upcomingDeadlines.some(u => u.id === goal.id)
+                  ? 'bg-error-container text-on-error-container'
+                  : 'bg-surface-variant text-on-surface-variant'"
               >
-                delete
-              </button>
+                {{ deadlineDaysLeft(goal.deadline) }}
+              </span>
             </div>
+            <button
+              @click.stop="confirmDelete(goal.id, goal.title)"
+              class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
+              aria-label="Delete goal"
+            >
+              delete
+            </button>
           </div>
         </TangoCard>
       </div>

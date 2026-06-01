@@ -27,6 +27,12 @@ const newEmail = ref('');
 const newPassword = ref('');
 const inviteBusy = ref(false);
 const avatarBusy = ref(false);
+const householdNameInput = ref(household.householdName ?? '');
+const renameBusy = ref(false);
+
+watch(() => household.householdName, (val) => {
+    householdNameInput.value = val ?? '';
+});
 const fileInput = ref<HTMLInputElement | null>(null);
 
 watch(() => store.userName, (val) => {
@@ -141,6 +147,22 @@ const changePassword = async () => {
     }
 };
 
+const renameHousehold = async () => {
+    if (!householdNameInput.value.trim()) {
+        notify('Household name cannot be empty.', 'error');
+        return;
+    }
+    renameBusy.value = true;
+    try {
+        await household.renameHousehold(householdNameInput.value.trim());
+        notify('Household renamed.', 'success');
+    } catch (e: any) {
+        notify(e.message ?? 'Failed to rename household.', 'error');
+    } finally {
+        renameBusy.value = false;
+    }
+};
+
 const regenerateInvite = async () => {
     inviteBusy.value = true;
     try {
@@ -208,6 +230,10 @@ const removePartner = async () => {
     try {
         await household.removeMember(target.user_id);
         notify(`${store.partnerName} removed from household.`, 'success');
+        // Auto-generate a fresh invite so the reinvite flow is ready immediately.
+        if (!household.activeInvite) {
+            await household.createInvite();
+        }
     } catch (e: any) {
         notify(e.message ?? 'Failed to remove partner.', 'error');
     } finally {
@@ -457,7 +483,18 @@ onMounted(() => {
       <TangoCard padding="lg" class="md:col-span-2">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Household</h3>
         <div class="space-y-6">
-          <div v-if="household.partner" class="space-y-3">
+
+          <!-- Household name -->
+          <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+            <div class="flex-1">
+              <TangoInput label="Household Name" v-model="householdNameInput" placeholder="e.g. The Smiths" />
+            </div>
+            <TangoButton @click="renameHousehold" variant="surface" :disabled="renameBusy || !householdNameInput.trim()">
+              {{ renameBusy ? 'Saving…' : 'Save Name' }}
+            </TangoButton>
+          </div>
+
+          <div v-if="household.partner" class="space-y-3 border-t border-on-surface/20 pt-4">
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-body-md font-bold">Paired with {{ store.partnerName }}</p>
@@ -474,7 +511,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <div v-else class="space-y-4">
+          <div v-else class="space-y-4 border-t border-on-surface/20 pt-4">
             <p class="text-body-md text-on-surface-variant">Invite your partner to start sharing data.</p>
 
             <div v-if="household.activeInvite || household.inviteCode" class="space-y-3 flex flex-col items-center">
@@ -547,6 +584,46 @@ onMounted(() => {
               Delete Account
             </TangoButton>
           </div>
+        </div>
+      </TangoCard>
+
+      <TangoCard padding="lg" class="md:col-span-2">
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Income Auto-Allocate</h3>
+        <p class="text-body-md text-on-surface-variant mb-4">When income is added, automatically contribute a % to a goal.</p>
+        <div v-if="store.plans.goals.filter(g => g.status !== 'Completed').length === 0" class="text-body-md text-on-surface-variant">
+          No active goals. Create a goal first.
+        </div>
+        <div v-else class="space-y-4">
+          <div
+            v-for="goal in store.plans.goals.filter(g => g.status !== 'Completed')"
+            :key="goal.id"
+            class="flex items-center gap-3"
+          >
+            <div class="flex-1">
+              <p class="text-body-md font-bold truncate">{{ goal.title }}</p>
+              <p class="text-label-sm text-on-surface-variant uppercase">{{ goal.progress }}% saved</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                class="w-16 px-2 py-1 sunken-input text-body-md text-center"
+                :value="prefs.incomeAllocations.find(a => a.goalId === goal.id)?.percent ?? 0"
+                @change="(e) => prefs.setIncomeAllocation(goal.id, +(e.target as HTMLInputElement).value)"
+              />
+              <span class="text-body-md text-on-surface-variant">%</span>
+              <button
+                v-if="prefs.incomeAllocations.some(a => a.goalId === goal.id)"
+                @click="prefs.removeIncomeAllocation(goal.id)"
+                class="material-symbols-outlined text-outline hover:text-error text-[18px]"
+                aria-label="Remove allocation"
+              >close</button>
+            </div>
+          </div>
+          <p class="text-[10px] uppercase text-on-surface-variant">
+            Total allocated: {{ prefs.incomeAllocations.reduce((s, a) => s + a.percent, 0) }}%
+          </p>
         </div>
       </TangoCard>
 

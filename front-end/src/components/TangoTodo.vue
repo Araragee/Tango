@@ -17,9 +17,37 @@ const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: string) => void;
 
 const newTaskText = ref('');
+const newShoppingItem = ref('');
 const showAddModal = ref(false);
 const editingTask = ref<Todo | null>(null);
 const filter = ref<'all' | 'active' | 'done'>('all');
+const viewMode = ref<'tasks' | 'shopping'>('tasks');
+
+const SHOPPING_CATEGORIES = new Set(['Shopping', 'Grocery', 'Groceries']);
+
+const shoppingItems = computed(() =>
+  [...store.todos.items]
+    .filter(t => SHOPPING_CATEGORIES.has(t.category))
+    .sort((a, b) => Number(a.completed) - Number(b.completed))
+);
+
+const quickAddShopping = async () => {
+  if (!newShoppingItem.value.trim()) return;
+  const text = newShoppingItem.value;
+  newShoppingItem.value = '';
+  try {
+    await store.addTask({
+      text,
+      category: 'Shopping',
+      assigned: 'both',
+      assignee_id: null,
+      priority: 'Normal',
+    });
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to add item.', 'error');
+    newShoppingItem.value = text;
+  }
+};
 
 // todayStr must stay reactive — if the app is left open past midnight the
 // static string becomes stale and overdue badges stop updating correctly.
@@ -183,8 +211,72 @@ const phraseOfTheDay = computed(() => {
       <p class="text-headline-md text-on-surface relative z-10">"{{ phraseOfTheDay }}"</p>
     </TangoCard>
 
-    <!-- Task List -->
-    <div class="flex flex-col gap-4 w-full">
+    <!-- View Mode Tabs -->
+    <div class="flex gap-2 border-b-2 border-on-background pb-2">
+      <button
+        @click="viewMode = 'tasks'"
+        class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors flex items-center gap-2"
+        :class="viewMode === 'tasks' ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+      >
+        <span class="material-symbols-outlined text-[16px]">checklist_rtl</span>
+        To-Dos
+      </button>
+      <button
+        @click="viewMode = 'shopping'"
+        class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors flex items-center gap-2"
+        :class="viewMode === 'shopping' ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+      >
+        <span class="material-symbols-outlined text-[16px]">shopping_cart</span>
+        Shopping
+        <span v-if="shoppingItems.filter(i => !i.completed).length > 0"
+          class="text-[10px] px-1.5 py-0.5 pixel-border-sm"
+          :class="viewMode === 'shopping' ? 'bg-on-primary text-primary' : 'bg-primary text-on-primary'"
+        >{{ shoppingItems.filter(i => !i.completed).length }}</span>
+      </button>
+    </div>
+
+    <!-- ── SHOPPING LIST ── -->
+    <div v-if="viewMode === 'shopping'" class="flex flex-col gap-4 w-full">
+      <div class="flex justify-between items-center">
+        <h2 class="text-headline-lg text-on-surface">Shopping List</h2>
+        <span class="text-label-sm text-on-surface-variant uppercase">{{ shoppingItems.filter(i => !i.completed).length }} left</span>
+      </div>
+
+      <div class="flex gap-2">
+        <TangoInput v-model="newShoppingItem" placeholder="Add item..." class="flex-1" @keyup.enter="quickAddShopping" />
+        <TangoButton @click="quickAddShopping" shadow="dark" size="sm">Add</TangoButton>
+      </div>
+
+      <EmptyState
+        v-if="shoppingItems.length === 0"
+        icon="shopping_cart"
+        title="List is empty"
+        description="Add items above. Tasks with 'Shopping' or 'Grocery' category appear here."
+      />
+
+      <div
+        v-for="item in shoppingItems"
+        :key="item.id"
+        class="bg-surface pixel-border p-4 flex items-center gap-4 group"
+        :class="{ 'opacity-50': item.completed }"
+      >
+        <button
+          class="w-6 h-6 sunken-input flex items-center justify-center flex-shrink-0 cursor-pointer"
+          :class="{ 'bg-primary text-on-primary': item.completed }"
+          @click="toggleTodo(item.id)"
+        >
+          <span v-if="item.completed" class="material-symbols-outlined text-[16px]">check</span>
+        </button>
+        <span class="flex-grow text-body-lg" :class="{ 'line-through text-on-surface-variant': item.completed }">{{ item.text }}</span>
+        <button
+          @click.stop="confirmDelete(item)"
+          class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-error text-[18px] flex-shrink-0"
+        >delete</button>
+      </div>
+    </div>
+
+    <!-- ── TASK LIST ── -->
+    <div v-else class="flex flex-col gap-4 w-full">
       <div class="flex justify-between items-end mb-2 border-b-2 border-on-background pb-2 w-full">
         <h2 class="text-headline-lg text-on-surface">Shared To-Dos</h2>
         <span class="bg-primary-container text-on-primary-container pixel-border-sm text-label-sm px-3 py-1 uppercase whitespace-nowrap">
@@ -262,6 +354,13 @@ const phraseOfTheDay = computed(() => {
               <span v-if="isOverdue(todo)" class="material-symbols-outlined text-[10px] mr-0.5" style="font-variation-settings: 'FILL' 1;">warning</span>
               {{ isOverdue(todo) ? 'Overdue · ' : 'Due · ' }}{{ formatDueDate(todo.due_date) }}
             </span>
+            <span
+              v-if="todo.recurrence && todo.recurrence !== 'none'"
+              class="text-label-sm px-1.5 py-0.5 pixel-border-sm uppercase bg-tertiary-container text-on-tertiary-container flex items-center gap-0.5"
+            >
+              <span class="material-symbols-outlined text-[10px]">repeat</span>
+              {{ todo.recurrence }}
+            </span>
           </div>
         </div>
 
@@ -303,9 +402,10 @@ const phraseOfTheDay = computed(() => {
         </div>
       </div>
     </div>
+    </div><!-- end v-else tasks -->
 
-    <!-- Add Task Area -->
-    <TangoCard padding="lg" shadow="default" class="w-full">
+    <!-- Add Task Area — tasks mode only -->
+    <TangoCard v-if="viewMode === 'tasks'" padding="lg" shadow="default" class="w-full">
       <TangoInput v-model="newTaskText" label="Quick Add Task" placeholder="What needs doing?" class="w-full" @keyup.enter="quickAdd" />
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 gap-4">
         <TangoButton variant="outline" size="sm" class="uppercase" @click="openAddModal">

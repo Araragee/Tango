@@ -7,6 +7,7 @@ import { useAuthStore } from './useAuthStore'
 import { useOfflineQueue } from './useOfflineQueue'
 import { saveReadCache, loadReadCache } from '@/composables/useReadCache'
 import { categoryIcon } from '@/utils/categoryIcons'
+import { usePreferencesStore } from './usePreferencesStore'
 
 export class VersionConflictError extends Error {
   constructor(public table: string, public id: string) {
@@ -65,6 +66,8 @@ export interface Todo {
   due_date?: string | null
   created_at?: string | null
   completed_at?: string | null
+  recurrence?: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | null
+  recurrence_next_at?: string | null
   version?: number
 }
 
@@ -132,9 +135,11 @@ function mapTodo(r: any): Todo {
     assigned: r.assigned,
     assignee_id: r.assignee_id ?? null,
     priority: r.priority,
-    due_date: r.due_date,
+    due_date: r.due_date ?? null,
     created_at: r.created_at ?? null,
     completed_at: r.completed_at ?? null,
+    recurrence: r.recurrence ?? null,
+    recurrence_next_at: r.recurrence_next_at ?? null,
     version: r.version,
   }
 }
@@ -156,6 +161,15 @@ function mapEvent(r: any): CalendarEvent {
 }
 
 // categoryIcon is imported from @/utils/categoryIcons — see top of file.
+
+function nextDueFor(fromDate: string, recurrence: string): string {
+  const d = new Date(fromDate + 'T00:00:00')
+  if (recurrence === 'daily') d.setDate(d.getDate() + 1)
+  else if (recurrence === 'weekly') d.setDate(d.getDate() + 7)
+  else if (recurrence === 'biweekly') d.setDate(d.getDate() + 14)
+  else if (recurrence === 'monthly') d.setMonth(d.getMonth() + 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function calcProgress(saved: number, target: number) {
   // Guard against target=0: saved/0 = Infinity (or NaN when saved=0 too),
@@ -549,6 +563,27 @@ export const useAppStore = defineStore('app', () => {
       recalculateBudget()
       throw error
     }
+
+    // Auto-allocate income to goals when user has configured allocations.
+    if (transaction.type === 'income') {
+      const prefs = usePreferencesStore()
+      if (prefs.incomeAllocations.length > 0) {
+        const { useContributionsStore } = await import('./useContributionsStore')
+        const contributions = useContributionsStore()
+        for (const alloc of prefs.incomeAllocations) {
+          const goal = goals.value.find(g => g.id === alloc.goalId && g.status !== 'Completed')
+          if (!goal) continue
+          const amount = Math.round((Math.abs(transaction.amount) * alloc.percent) / 100 * 100) / 100
+          if (amount <= 0) continue
+          try {
+            await contributions.addContribution(alloc.goalId, auth.user?.id ?? '', amount)
+            await updateGoalProgress(alloc.goalId, goal.saved + amount)
+          } catch {
+            // Non-fatal — transaction already saved; contribution can be added manually
+          }
+        }
+      }
+    }
   }
 
   function recalculateBudget() {
@@ -806,6 +841,8 @@ export const useAppStore = defineStore('app', () => {
       completed: false,
       shared: true,
       updated_by: auth.user?.id,
+      recurrence: task.recurrence ?? null,
+      recurrence_next_at: task.recurrence_next_at ?? null,
       ...task,
     }
 
@@ -879,6 +916,23 @@ export const useAppStore = defineStore('app', () => {
       throw new VersionConflictError('todos', id)
     }
     todo.version = data[0].version
+
+    // When a recurring todo is completed, spawn the next instance with the
+    // next due date. The completed todo stays as history.
+    if (todo.completed && todo.recurrence && todo.recurrence !== 'none') {
+      const base = todo.due_date ?? todo.completed_at?.split('T')[0] ?? new Date().toISOString().split('T')[0]
+      const nextDue = nextDueFor(base, todo.recurrence)
+      await addTask({
+        text: todo.text,
+        category: todo.category,
+        assigned: todo.assigned,
+        assignee_id: todo.assignee_id ?? null,
+        priority: todo.priority,
+        due_date: nextDue,
+        recurrence: todo.recurrence,
+        recurrence_next_at: nextDue,
+      })
+    }
   }
 
   async function editTask(id: string, updates: Partial<Omit<Todo, 'id' | 'completed'>>) {

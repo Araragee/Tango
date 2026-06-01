@@ -18,6 +18,7 @@ export interface ActiveInvite {
 
 export const useHouseholdStore = defineStore('household', () => {
   const householdId = ref<string | null>(null)
+  const householdName = ref<string | null>(null)
   const inviteCode = ref<string | null>(null)
   const members = ref<HouseholdMember[]>([])
   const activeInvite = ref<ActiveInvite | null>(null)
@@ -44,13 +45,14 @@ export const useHouseholdStore = defineStore('household', () => {
 
     const { data } = await supabase
       .from('household_members')
-      .select('household_id, households(invite_code)')
+      .select('household_id, households(invite_code, name)')
       .eq('user_id', auth.user.id)
       .maybeSingle()
 
     if (data) {
       householdId.value = data.household_id
       inviteCode.value = (data.households as any)?.invite_code ?? null
+      householdName.value = (data.households as any)?.name ?? null
       await loadMembers()
       await loadActiveInvite()
       await _afterLoad()
@@ -181,6 +183,19 @@ export const useHouseholdStore = defineStore('household', () => {
     const { error } = await supabase.rpc('remove_member', { target_user_id: userId })
     if (error) throw error
     await loadMembers()
+    await loadActiveInvite()
+  }
+
+  async function renameHousehold(newName: string) {
+    const trimmed = newName.trim()
+    if (!trimmed) throw new Error('Household name cannot be empty')
+    if (!isConfigured) {
+      householdName.value = trimmed
+      return
+    }
+    const { error } = await supabase.rpc('rename_household', { new_name: trimmed })
+    if (error) throw error
+    householdName.value = trimmed
   }
 
   async function leaveHousehold() {
@@ -230,6 +245,7 @@ export const useHouseholdStore = defineStore('household', () => {
     useAppStore().unsubscribeRealtime()
 
     householdId.value = null
+    householdName.value = null
     inviteCode.value = null
     members.value = []
     activeInvite.value = null
@@ -237,6 +253,7 @@ export const useHouseholdStore = defineStore('household', () => {
 
   return {
     householdId,
+    householdName,
     inviteCode,
     members,
     partner,
@@ -251,6 +268,7 @@ export const useHouseholdStore = defineStore('household', () => {
     joinHousehold,
     leaveHousehold,
     removeMember,
+    renameHousehold,
     transferCreator,
     deleteAccount,
     sendEmailInvite,
@@ -259,6 +277,6 @@ export const useHouseholdStore = defineStore('household', () => {
 }, {
   persist: {
     key: 'tango:household',
-    pick: ['householdId', 'inviteCode', 'members'],
+    pick: ['householdId', 'householdName', 'inviteCode', 'members'],
   },
 })

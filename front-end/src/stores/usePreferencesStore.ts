@@ -22,6 +22,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
   // Empty array = nothing muted.
   const mutedNotifCategories = ref<string[]>([])
 
+  // Auto-allocate: when income is added, auto-contribute this % to the chosen goal.
+  // { goalId, percent } — percent 0-100. Empty = feature off.
+  const incomeAllocations = ref<{ goalId: string; percent: number }[]>([])
+
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
   }
@@ -73,6 +77,21 @@ export const usePreferencesStore = defineStore('preferences', () => {
     delete categoryEmojis.value[category.toLowerCase()]
   }
 
+  function setIncomeAllocation(goalId: string, percent: number) {
+    const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+    const idx = incomeAllocations.value.findIndex(a => a.goalId === goalId)
+    if (clamped === 0) {
+      if (idx !== -1) incomeAllocations.value.splice(idx, 1)
+      return
+    }
+    if (idx === -1) incomeAllocations.value.push({ goalId, percent: clamped })
+    else incomeAllocations.value[idx].percent = clamped
+  }
+
+  function removeIncomeAllocation(goalId: string) {
+    incomeAllocations.value = incomeAllocations.value.filter(a => a.goalId !== goalId)
+  }
+
   function isNotifCategoryMuted(notifType: string): boolean {
     return mutedNotifCategories.value.some(cat => notifType.startsWith(cat))
   }
@@ -91,6 +110,9 @@ export const usePreferencesStore = defineStore('preferences', () => {
     notificationsEnabled,
     categoryEmojis,
     mutedNotifCategories,
+    incomeAllocations,
+    setIncomeAllocation,
+    removeIncomeAllocation,
     addTodoCategory,
     addTransactionCategory,
     addEventCategory,
