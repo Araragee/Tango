@@ -55,6 +55,12 @@ export interface Goal {
   version?: number
 }
 
+export interface ChecklistItem {
+  id: string
+  text: string
+  completed: boolean
+}
+
 export interface Todo {
   id: string
   text: string
@@ -70,6 +76,7 @@ export interface Todo {
   completed_at?: string | null
   recurrence?: 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | null
   recurrence_next_at?: string | null
+  checklist?: ChecklistItem[]
   version?: number
 }
 
@@ -144,6 +151,7 @@ function mapTodo(r: any): Todo {
     completed_at: r.completed_at ?? null,
     recurrence: r.recurrence ?? null,
     recurrence_next_at: r.recurrence_next_at ?? null,
+    checklist: Array.isArray(r.checklist) ? r.checklist : [],
     version: r.version,
   }
 }

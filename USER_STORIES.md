@@ -104,7 +104,7 @@ Gaps: ✅ goal categories/priority (category picker + priority Low/Normal/High i
 | T6 | As duo, shared shopping list (distinct tab, quick-add). | ✅ Shopping tab in To-Dos |
 | T7 | As duo, recurring todo auto-spawns next on complete. | ✅ recurrence field + completion-spawn |
 
-Gaps: ⬜ subtasks/checklists. ⬜ assign-to-partner default.
+Gaps: ✅ subtasks/checklists (JSONB checklist on todos; inline toggle in task list; checklist editor in AddNewTaskModal). ✅ assign-to-partner default (defaultTodoAssignee pref in Settings > Local Preferences; AddNewTaskModal reads it on new task).
 
 ---
 

@@ -3,7 +3,7 @@ import { ref, watch, computed } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
-import { useAppStore, type Todo } from '../stores/useStore';
+import { useAppStore, type Todo, type ChecklistItem } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
@@ -24,6 +24,8 @@ const assigneeKey = ref<AssigneeKey>('both');
 const priority = ref<'Chill' | 'Normal' | 'ASAP'>('Normal');
 const dueDate = ref('');
 const recurrence = ref<'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly'>('none');
+const checklistItems = ref<ChecklistItem[]>([]);
+const newChecklistText = ref('');
 const error = ref('');
 
 const isEditing = computed(() => !!props.task);
@@ -54,6 +56,7 @@ const assigneeLabelFor = (key: AssigneeKey): string => {
 watch(() => props.show, (open) => {
   if (!open) return;
   error.value = '';
+  newChecklistText.value = '';
   if (props.task) {
     taskName.value = props.task.text;
     category.value = props.task.category;
@@ -61,15 +64,28 @@ watch(() => props.show, (open) => {
     priority.value = props.task.priority ?? 'Normal';
     dueDate.value = props.task.due_date ?? '';
     recurrence.value = (props.task.recurrence as any) ?? 'none';
+    checklistItems.value = (props.task.checklist ?? []).map(i => ({ ...i }));
   } else {
     taskName.value = '';
     category.value = 'General';
-    assigneeKey.value = 'both';
+    assigneeKey.value = prefs.defaultTodoAssignee;
     priority.value = 'Normal';
     dueDate.value = '';
     recurrence.value = 'none';
+    checklistItems.value = [];
   }
 });
+
+const addChecklistItem = () => {
+  const text = newChecklistText.value.trim();
+  if (!text) return;
+  checklistItems.value.push({ id: crypto.randomUUID(), text, completed: false });
+  newChecklistText.value = '';
+};
+
+const removeChecklistItem = (id: string) => {
+  checklistItems.value = checklistItems.value.filter(i => i.id !== id);
+};
 
 const saveTask = async () => {
   if (!taskName.value.trim()) {
@@ -87,6 +103,7 @@ const saveTask = async () => {
       due_date: dueDate.value || null,
       recurrence: recurrence.value === 'none' ? null : recurrence.value,
       recurrence_next_at: null,
+      checklist: checklistItems.value,
     };
 
     if (props.task) {
@@ -203,6 +220,35 @@ const saveTask = async () => {
         <p v-if="recurrence !== 'none'" class="text-[10px] uppercase text-on-surface-variant">
           New task auto-created when this one is completed
         </p>
+      </div>
+
+      <!-- Checklist / subtasks -->
+      <div class="flex flex-col gap-2">
+        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Checklist</label>
+        <div v-if="checklistItems.length > 0" class="flex flex-col gap-1 mb-1">
+          <div
+            v-for="item in checklistItems"
+            :key="item.id"
+            class="flex items-center gap-2 px-3 py-1.5 bg-surface-variant pixel-border-sm"
+          >
+            <span class="material-symbols-outlined text-outline text-[14px]">check_box_outline_blank</span>
+            <span class="flex-1 text-body-md">{{ item.text }}</span>
+            <button
+              @click="removeChecklistItem(item.id)"
+              class="material-symbols-outlined text-outline hover:text-error text-[14px]"
+              aria-label="Remove checklist item"
+            >close</button>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <TangoInput
+            v-model="newChecklistText"
+            placeholder="Add checklist item..."
+            class="flex-1"
+            @keyup.enter="addChecklistItem"
+          />
+          <TangoButton size="sm" variant="outline" @click="addChecklistItem" aria-label="Add item">+</TangoButton>
+        </div>
       </div>
     </div>
 

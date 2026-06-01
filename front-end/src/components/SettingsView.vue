@@ -629,9 +629,25 @@ onMounted(() => {
 
       <TangoCard padding="lg" class="md:col-span-2">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Local Preferences</h3>
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p class="text-body-md text-on-surface-variant">Reset categories, budget limits, and theme to defaults. Household data on the server is not affected.</p>
-          <TangoButton @click="resetPreferences" variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap">Reset Preferences</TangoButton>
+        <div class="space-y-6">
+          <div class="flex flex-col gap-2">
+            <span class="text-body-md font-bold uppercase">Default Task Assignee</span>
+            <p class="text-label-sm text-on-surface-variant">Who new to-dos are assigned to by default.</p>
+            <div class="flex gap-2">
+              <button
+                v-for="opt in [['me', store.userName], ['partner', store.partnerName], ['both', 'Both']] as const"
+                :key="opt[0]"
+                @click="prefs.setDefaultTodoAssignee(opt[0])"
+                class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
+                :class="prefs.defaultTodoAssignee === opt[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+              >{{ opt[1] }}</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-on-surface pt-4">
+            <p class="text-body-md text-on-surface-variant">Reset categories, budget limits, and theme to defaults. Household data on the server is not affected.</p>
+            <TangoButton @click="resetPreferences" variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap">Reset Preferences</TangoButton>
+          </div>
         </div>
       </TangoCard>
     </div>

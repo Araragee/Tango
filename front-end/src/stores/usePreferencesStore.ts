@@ -26,8 +26,15 @@ export const usePreferencesStore = defineStore('preferences', () => {
   // { goalId, percent } — percent 0-100. Empty = feature off.
   const incomeAllocations = ref<{ goalId: string; percent: number }[]>([])
 
+  // Default assignee for new todos. 'both' keeps existing behaviour.
+  const defaultTodoAssignee = ref<'me' | 'partner' | 'both'>('both')
+
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
+  }
+
+  function setDefaultTodoAssignee(val: 'me' | 'partner' | 'both') {
+    defaultTodoAssignee.value = val
   }
 
   function addTodoCategory(cat: string) {
@@ -111,6 +118,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     categoryEmojis,
     mutedNotifCategories,
     incomeAllocations,
+    defaultTodoAssignee,
     setIncomeAllocation,
     removeIncomeAllocation,
     addTodoCategory,
@@ -119,6 +127,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     getBudgetLimit,
     setBudgetLimit,
     setNotificationsEnabled,
+    setDefaultTodoAssignee,
     getCategoryEmoji,
     setCategoryEmoji,
     clearCategoryEmoji,

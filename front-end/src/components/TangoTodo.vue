@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue';
-import { useAppStore, type Todo } from '../stores/useStore';
+import { useAppStore, type Todo, type ChecklistItem } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
@@ -147,6 +147,23 @@ const handoff = async (todo: Todo) => {
   } catch (e: any) {
     notify(e.message ?? 'Failed to hand off.', 'error');
   }
+};
+
+const toggleChecklistItem = async (todo: Todo, itemId: string) => {
+  const updated = (todo.checklist ?? []).map((item: ChecklistItem) =>
+    item.id === itemId ? { ...item, completed: !item.completed } : item
+  );
+  try {
+    await store.editTask(todo.id, { checklist: updated });
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to update checklist.', 'error');
+  }
+};
+
+const checklistProgress = (todo: Todo) => {
+  const items = todo.checklist ?? [];
+  if (!items.length) return null;
+  return { done: items.filter((i: ChecklistItem) => i.completed).length, total: items.length };
 };
 
 const confirmDelete = async (todo: Todo) => {
@@ -362,6 +379,30 @@ const phraseOfTheDay = computed(() => {
               {{ todo.recurrence }}
             </span>
           </div>
+
+          <!-- Inline checklist -->
+          <div
+            v-if="todo.checklist && todo.checklist.length > 0"
+            class="mt-2 flex flex-col gap-1"
+            @click.stop
+          >
+            <div
+              v-for="item in todo.checklist"
+              :key="item.id"
+              class="flex items-center gap-2 cursor-pointer"
+              @click="toggleChecklistItem(todo, item.id)"
+            >
+              <span
+                class="material-symbols-outlined text-[14px] flex-shrink-0 transition-colors"
+                :class="item.completed ? 'text-primary' : 'text-outline'"
+                style="font-variation-settings: 'FILL' 1;"
+              >{{ item.completed ? 'check_box' : 'check_box_outline_blank' }}</span>
+              <span
+                class="text-label-sm"
+                :class="item.completed ? 'line-through text-on-surface-variant' : 'text-on-surface'"
+              >{{ item.text }}</span>
+            </div>
+          </div>
         </div>
 
         <!-- Right side badges + actions -->
@@ -376,6 +417,17 @@ const phraseOfTheDay = computed(() => {
             }"
           >
             {{ todo.priority }}
+          </span>
+          <span
+            v-if="checklistProgress(todo)"
+            class="pixel-border-sm text-label-sm px-2 py-1 uppercase flex items-center gap-1"
+            :class="checklistProgress(todo)!.done === checklistProgress(todo)!.total
+              ? 'bg-secondary-container text-on-secondary-container'
+              : 'bg-surface-variant text-on-surface-variant'"
+            :title="`${checklistProgress(todo)!.done}/${checklistProgress(todo)!.total} checklist items done`"
+          >
+            <span class="material-symbols-outlined text-[10px]">checklist</span>
+            {{ checklistProgress(todo)!.done }}/{{ checklistProgress(todo)!.total }}
           </span>
           <button
             @click.stop="handoff(todo)"
