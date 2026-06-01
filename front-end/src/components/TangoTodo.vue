@@ -3,6 +3,7 @@ import { ref, inject, computed, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Todo, type ChecklistItem } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { useNotificationsStore } from '../stores/useNotificationsStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
@@ -14,6 +15,7 @@ import { localDateISO } from '../utils/dateUtils';
 const store = useAppStore();
 const auth = useAuthStore();
 const household = useHouseholdStore();
+const notificationsStore = useNotificationsStore();
 const notify = inject('notify') as (msg: string, type?: string) => void;
 
 const newTaskText = ref('');
@@ -164,6 +166,20 @@ const checklistProgress = (todo: Todo) => {
   const items = todo.checklist ?? [];
   if (!items.length) return null;
   return { done: items.filter((i: ChecklistItem) => i.completed).length, total: items.length };
+};
+
+const nudging = ref<string | null>(null);
+const nudgePartner = async (todo: Todo) => {
+  if (!household.partner) return;
+  nudging.value = todo.id;
+  try {
+    await notificationsStore.nudgePartnerTodo(todo.id);
+    notify(`${store.partnerName} nudged about "${todo.text}"`, 'success');
+  } catch (e: any) {
+    notify(e.message ?? 'Failed to nudge partner.', 'error');
+  } finally {
+    nudging.value = null;
+  }
 };
 
 const confirmDelete = async (todo: Todo) => {
@@ -436,6 +452,16 @@ const phraseOfTheDay = computed(() => {
             title="Hand off to partner / cycle assignee"
           >
             swap_horiz
+          </button>
+          <button
+            v-if="household.partner && !todo.completed"
+            @click.stop="nudgePartner(todo)"
+            :disabled="nudging === todo.id"
+            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-secondary transition-all text-[18px]"
+            aria-label="Nudge partner"
+            title="Remind partner about this task"
+          >
+            {{ nudging === todo.id ? 'hourglass_empty' : 'notifications_active' }}
           </button>
           <button
             @click.stop="openEditModal(todo)"

@@ -176,7 +176,8 @@ function goHome() {
 }
 
 provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
-  if (type === 'error' || prefs.notificationsEnabled) {
+  // Errors always show. Non-errors respect notificationsEnabled + quiet hours.
+  if (type === 'error' || (prefs.notificationsEnabled && !prefs.isInQuietHours())) {
     notificationRef.value?.add(message, type);
   }
 });

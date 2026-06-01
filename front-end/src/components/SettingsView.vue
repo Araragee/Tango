@@ -454,6 +454,44 @@ onMounted(() => {
             </div>
           </div>
 
+          <!-- Quiet hours -->
+          <div class="border-t border-on-surface pt-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-body-md font-bold uppercase">Quiet Hours</span>
+                <p class="text-label-sm text-on-surface-variant">Suppress in-app toasts during this window</p>
+              </div>
+              <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+                   :class="prefs.quietHoursEnabled ? 'bg-primary' : 'bg-surface-variant'"
+                   @click="prefs.setQuietHours(!prefs.quietHoursEnabled)"
+                   role="switch" :aria-checked="prefs.quietHoursEnabled">
+                <div class="absolute top-1 w-4 h-4 transition-all"
+                     :class="prefs.quietHoursEnabled ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
+              </div>
+            </div>
+            <div v-if="prefs.quietHoursEnabled" class="flex gap-4 items-end pl-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-label-sm text-on-surface-variant uppercase font-bold">Start</label>
+                <input
+                  type="time"
+                  :value="prefs.quietHoursStart"
+                  @change="(e) => prefs.setQuietHours(true, (e.target as HTMLInputElement).value)"
+                  class="px-2 py-1 sunken-input text-body-md"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-label-sm text-on-surface-variant uppercase font-bold">End</label>
+                <input
+                  type="time"
+                  :value="prefs.quietHoursEnd"
+                  @change="(e) => prefs.setQuietHours(true, undefined, (e.target as HTMLInputElement).value)"
+                  class="px-2 py-1 sunken-input text-body-md"
+                />
+              </div>
+              <p class="text-[10px] uppercase text-on-surface-variant pb-1">Errors always show</p>
+            </div>
+          </div>
+
           <div class="flex items-center justify-between border-t border-on-surface pt-4">
             <div>
               <span class="text-body-md font-bold uppercase">Push Notifications</span>

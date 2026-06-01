@@ -135,7 +135,7 @@ Gaps: ⬜ event reminders via push (needs pg_cron). ⬜ recurring events. ⬜ Go
 | N5 | As user, server triggers fire push on events. | ✅ `012`,`015` |
 | N6 | As user, mute specific notification categories (budget, goals, todos, events, partner). | ✅ Settings > Notifications |
 
-Gaps: ⬜ digest/summary push. ⬜ partner-nudge ("remind partner"). ⬜ quiet hours.
+Gaps: ⬜ digest/summary push (blocked — needs pg_cron/scheduler; dispatch_push requires server secret). ✅ partner-nudge (nudge_partner_todo RPC → partner.nudge notification → push via mig-015 trigger; bell button on todo rows). ✅ quiet hours (preferences store; in-app toast gate in App.vue notify; Settings UI with start/end time; errors always bypass).
 
 ---
 

@@ -29,12 +29,39 @@ export const usePreferencesStore = defineStore('preferences', () => {
   // Default assignee for new todos. 'both' keeps existing behaviour.
   const defaultTodoAssignee = ref<'me' | 'partner' | 'both'>('both')
 
+  // Quiet hours: suppress in-app toasts during the set window.
+  const quietHoursEnabled = ref(false)
+  const quietHoursStart = ref('22:00')
+  const quietHoursEnd = ref('07:00')
+
   function setNotificationsEnabled(val: boolean) {
     notificationsEnabled.value = val
   }
 
   function setDefaultTodoAssignee(val: 'me' | 'partner' | 'both') {
     defaultTodoAssignee.value = val
+  }
+
+  function setQuietHours(enabled: boolean, start?: string, end?: string) {
+    quietHoursEnabled.value = enabled
+    if (start !== undefined) quietHoursStart.value = start
+    if (end !== undefined) quietHoursEnd.value = end
+  }
+
+  function isInQuietHours(): boolean {
+    if (!quietHoursEnabled.value) return false
+    const now = new Date()
+    const nowMins = now.getHours() * 60 + now.getMinutes()
+    const parseMins = (t: string) => {
+      const [h, m] = t.split(':').map(Number)
+      return h * 60 + (m || 0)
+    }
+    const startMins = parseMins(quietHoursStart.value)
+    const endMins = parseMins(quietHoursEnd.value)
+    // Handle overnight range (e.g. 22:00 – 07:00)
+    return startMins <= endMins
+      ? nowMins >= startMins && nowMins < endMins
+      : nowMins >= startMins || nowMins < endMins
   }
 
   function addTodoCategory(cat: string) {
@@ -119,6 +146,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     mutedNotifCategories,
     incomeAllocations,
     defaultTodoAssignee,
+    quietHoursEnabled,
+    quietHoursStart,
+    quietHoursEnd,
+    setQuietHours,
+    isInQuietHours,
     setIncomeAllocation,
     removeIncomeAllocation,
     addTodoCategory,

@@ -63,6 +63,12 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }
   }
 
+  async function nudgePartnerTodo(todoId: string) {
+    if (!isConfigured) throw new Error('Supabase not configured')
+    const { error } = await supabase.rpc('nudge_partner_todo', { todo_id: todoId })
+    if (error) throw error
+  }
+
   async function remove(id: string) {
     if (!isConfigured) {
       items.value = items.value.filter(n => n.id !== id)
@@ -122,6 +128,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     loading,
     fetch,
     markRead,
+    nudgePartnerTodo,
     remove,
     subscribe,
     unsubscribe,
