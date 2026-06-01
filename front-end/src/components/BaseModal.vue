@@ -38,7 +38,7 @@ const emit = defineEmits(['close']);
         </div>
 
         <!-- Modal Footer -->
-        <div class="p-6 pt-0 flex gap-4 justify-end border-t-2 border-on-surface border-opacity-10 mt-2 md:pt-4">
+        <div class="p-6 pt-0 flex flex-wrap gap-4 justify-end border-t-2 border-on-surface border-opacity-10 mt-2 md:pt-4">
           <slot name="footer" />
         </div>
       </div>

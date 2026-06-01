@@ -16,10 +16,10 @@ withDefaults(defineProps<Props>(), {
     :class="[
       shadow === 'default' && 'hard-shadow',
       shadow === 'dark' && 'hard-shadow-dark',
-      padding === 'sm' && 'p-4',
-      padding === 'md' && 'p-6',
-      padding === 'lg' && 'p-8',
-      padding === 'xl' && 'p-12',
+      padding === 'sm' && 'p-2 sm:p-4',
+      padding === 'md' && 'p-4 sm:p-6',
+      padding === 'lg' && 'p-6 sm:p-8',
+      padding === 'xl' && 'p-6 sm:p-12',
     ]"
   >
     <slot />

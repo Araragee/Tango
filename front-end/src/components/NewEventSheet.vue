@@ -218,7 +218,7 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
 
         <div class="flex flex-col gap-2">
           <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-          <div class="flex gap-2 flex-wrap flex-wrap">
+          <div class="flex gap-2 flex-wrap">
             <button
               v-for="cat in prefs.eventCategories"
               :key="cat"
@@ -227,7 +227,7 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
               :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
             >{{ cat }}</button>
           </div>
-          <div class="flex gap-2 flex-wrap mt-1">
+          <div class="flex justify-between gap-2 flex-wrap mt-1">
             <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
               @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
             <TangoButton size="sm" variant="outline"
@@ -244,7 +244,7 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
             <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
             How was it?
           </h4>
-          <div class="flex justify-between gap-2">
+          <div class="flex flex-wrap justify-between gap-2">
             <button
               v-for="m in MOOD_OPTIONS"
               :key="m.value"

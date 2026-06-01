@@ -133,7 +133,7 @@ const deleteRecurring = async () => {
 
       <TangoInput v-model="title" label="Title" placeholder="e.g. Rent" :error="errors.title" required />
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <TangoInput v-model.number="amount" label="Amount" type="number" :error="errors.amount" required />
         <div class="flex flex-col gap-2">
           <label class="text-label-sm text-on-surface-variant uppercase font-bold">Cadence</label>
@@ -143,14 +143,14 @@ const deleteRecurring = async () => {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <TangoInput v-model="startDate" label="Start Date" type="date" required />
         <TangoInput v-model="endDate" label="End Date (optional)" type="date" />
       </div>
 
       <div class="flex flex-col gap-2">
         <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-        <div class="flex gap-2 flex-wrap flex-wrap">
+        <div class="flex gap-2 flex-wrap">
           <button
             v-for="cat in prefs.transactionCategories" :key="cat"
             @click="category = cat"

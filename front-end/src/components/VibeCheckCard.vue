@@ -120,7 +120,7 @@ const headlineTone = computed(() => {
       }"
     >{{ headline }}</p>
 
-    <div v-if="insights.hasData" class="grid grid-cols-2 gap-3 mb-4">
+    <div v-if="insights.hasData" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
       <div class="p-3 pixel-border-sm bg-surface-variant">
         <div class="text-label-sm uppercase text-on-surface-variant">Spent</div>
         <div class="text-body-lg font-bold text-error">{{ fmt(insights.tw_exp) }}</div>

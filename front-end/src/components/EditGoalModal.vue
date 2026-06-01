@@ -196,7 +196,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
         <TangoInput v-model="title" label="Goal Title" placeholder="e.g. Dream House" :error="errors.title" required />
         <TangoInput v-model="description" label="Description" placeholder="Why are we saving?" />
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TangoInput
                 v-if="!isEditing"
                 v-model.number="initialSaved"
@@ -226,7 +226,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
         <!-- Category picker -->
         <div class="flex flex-col gap-2">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
-            <div class="flex gap-2 flex-wrap flex-wrap">
+            <div class="flex gap-2 flex-wrap">
                 <button
                     v-for="cat in GOAL_CATEGORIES"
                     :key="cat"

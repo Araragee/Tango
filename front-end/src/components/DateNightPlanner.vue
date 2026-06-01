@@ -84,7 +84,7 @@ const scheduleCustom = async () => {
           <span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
           <h3 class="text-headline-md text-on-primary-container">Surprise Me</h3>
         </div>
-        <div v-if="surprise" class="flex items-center justify-between gap-3 p-3 bg-surface pixel-border-sm">
+        <div v-if="surprise" class="flex flex-wrap items-center justify-between gap-3 p-3 bg-surface pixel-border-sm">
           <div class="flex items-center gap-3 min-w-0">
             <span class="material-symbols-outlined text-primary text-3xl">{{ surprise.icon }}</span>
             <div class="min-w-0">
@@ -101,7 +101,7 @@ const scheduleCustom = async () => {
       </div>
 
       <!-- Filters -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div class="flex flex-col gap-1">
           <label class="text-label-sm uppercase text-on-surface-variant font-bold">Vibe</label>
           <select v-model="filterCategory" class="sunken-input px-3 py-2 text-body-md pixel-border-sm">
@@ -125,7 +125,7 @@ const scheduleCustom = async () => {
       </div>
 
       <!-- Date/time -->
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <TangoInput v-model="date" label="When" type="date" />
         <TangoInput v-model="time" label="Time" type="time" />
       </div>
@@ -135,7 +135,7 @@ const scheduleCustom = async () => {
         <div
           v-for="i in ideas"
           :key="i.id"
-          class="flex items-center justify-between p-2 bg-surface hover:bg-surface-variant pixel-border-sm transition-colors"
+          class="flex flex-wrap items-center justify-between gap-2 p-2 bg-surface hover:bg-surface-variant pixel-border-sm transition-colors"
         >
           <div class="flex items-center gap-3 min-w-0">
             <span class="material-symbols-outlined text-primary">{{ i.icon }}</span>
@@ -151,7 +151,7 @@ const scheduleCustom = async () => {
       <!-- Custom -->
       <div class="border-t-2 border-on-surface pt-4 space-y-2">
         <label class="text-label-sm uppercase text-on-surface-variant font-bold">Or write your own</label>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex justify-between gap-2 flex-wrap">
           <TangoInput v-model="customTitle" placeholder="e.g. Anniversary dinner at Luigi's" class="flex-1" />
           <TangoButton @click="scheduleCustom" shadow="dark" size="sm">Add</TangoButton>
         </div>

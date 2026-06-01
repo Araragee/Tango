@@ -49,7 +49,7 @@ function dismiss() {
   <Transition name="slide-fade">
     <div
       v-if="visible"
-      class="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 w-[calc(100%-2rem)] max-w-md p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
+      class="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 w-[80vw] p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
       role="region"
       aria-label="Install Tango"
     >
