@@ -50,6 +50,8 @@ export interface Goal {
   progress: number
   deadline?: string | null
   completed_at?: string | null
+  category?: string
+  priority?: 'Low' | 'Normal' | 'High'
   version?: number
 }
 
@@ -120,6 +122,8 @@ function mapGoal(r: any): Goal {
     progress: r.progress,
     deadline: r.deadline ?? null,
     completed_at: r.completed_at ?? null,
+    category: r.category ?? 'General',
+    priority: r.priority ?? 'Normal',
     version: r.version,
   }
 }

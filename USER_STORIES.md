@@ -88,7 +88,7 @@ Gaps:
 | G6 | As user, auto-allocate % of income to goal. | ✅ Settings > Income Auto-Allocate |
 | G7 | As user, see goal deadlines approaching in Plans view. | ✅ 7-day nudge banner + days-left badge |
 
-Gaps: ⬜ goal categories/priority. ⬜ goal push reminders (needs pg_cron).
+Gaps: ✅ goal categories/priority (category picker + priority Low/Normal/High in EditGoalModal; filter tabs + priority sort in TangoPlans). ⬜ goal push reminders (needs pg_cron or scheduled edge fn — client can't call dispatch_push directly; in-app 7-day banner covers it for now).
 
 ---
 

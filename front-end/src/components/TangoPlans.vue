@@ -10,11 +10,14 @@ import AchievementsCard from './AchievementsCard.vue';
 import SkeletonBlock from './SkeletonBlock.vue';
 import EmptyState from './EmptyState.vue';
 
+const PRIORITY_ORDER: Record<string, number> = { High: 0, Normal: 1, Low: 2 };
+
 const store = useAppStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const showEditModal = ref(false);
 const selectedGoalId = ref<string | null>(null);
+const activeCategory = ref<string>('All');
 
 const openNewGoal = () => {
     selectedGoalId.value = null;
@@ -40,6 +43,31 @@ const deadlineDaysLeft = (deadline: string) => {
   const diff = Math.ceil((new Date(deadline + 'T00:00:00').getTime() - Date.now()) / 86_400_000);
   return diff === 0 ? 'Today' : diff === 1 ? '1 day left' : `${diff} days left`;
 };
+
+const availableCategories = computed(() => {
+    const cats = new Set(store.plans.goals.map(g => g.category ?? 'General'));
+    return ['All', ...Array.from(cats).sort()];
+});
+
+const sortedFilteredGoals = computed(() => {
+    const goals = activeCategory.value === 'All'
+        ? store.plans.goals
+        : store.plans.goals.filter(g => (g.category ?? 'General') === activeCategory.value);
+
+    return [...goals].sort((a, b) => {
+        // Completed always last
+        if (a.status === 'Completed' && b.status !== 'Completed') return 1;
+        if (b.status === 'Completed' && a.status !== 'Completed') return -1;
+        // Then by priority
+        const pa = PRIORITY_ORDER[a.priority ?? 'Normal'] ?? 1;
+        const pb = PRIORITY_ORDER[b.priority ?? 'Normal'] ?? 1;
+        if (pa !== pb) return pa - pb;
+        // Then by deadline ascending (no deadline = lowest priority)
+        const da = a.deadline ?? '9999';
+        const db = b.deadline ?? '9999';
+        return da.localeCompare(db);
+    });
+});
 
 const confirmDelete = async (id: string, title: string) => {
     if (!confirm(`Delete goal "${title}"? This cannot be undone.`)) return;
@@ -83,6 +111,17 @@ const confirmDelete = async (id: string, title: string) => {
 
     <!-- Goals Grid -->
     <section class="space-y-lg mt-xl w-full">
+      <!-- Category filter tabs -->
+      <div v-if="!store.loading && availableCategories.length > 2" class="flex gap-2 flex-wrap">
+        <button
+          v-for="cat in availableCategories"
+          :key="cat"
+          @click="activeCategory = cat"
+          class="px-3 py-1 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
+          :class="activeCategory === cat ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'"
+        >{{ cat }}</button>
+      </div>
+
       <!-- Loading skeleton -->
       <div v-if="store.loading" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
         <TangoCard v-for="n in 2" :key="n" padding="lg" shadow="default" class="w-full space-y-4">
@@ -99,9 +138,9 @@ const confirmDelete = async (id: string, title: string) => {
         </TangoCard>
       </div>
 
-      <div v-else-if="store.plans.goals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
+      <div v-else-if="sortedFilteredGoals.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-xl w-full">
         <TangoCard
-            v-for="goal in store.plans.goals"
+            v-for="goal in sortedFilteredGoals"
             :key="goal.id"
             padding="lg"
             shadow="default"
@@ -129,6 +168,19 @@ const confirmDelete = async (id: string, title: string) => {
             </span>
           </div>
           <p class="text-body-md text-on-surface-variant mt-2">{{ goal.description }}</p>
+
+          <!-- Category + priority tags -->
+          <div class="flex items-center gap-2 mt-2 flex-wrap">
+            <span class="text-[10px] uppercase px-1.5 py-0.5 bg-surface-variant text-on-surface-variant pixel-border-sm">
+              {{ goal.category ?? 'General' }}
+            </span>
+            <span
+              v-if="goal.priority && goal.priority !== 'Normal'"
+              class="text-[10px] uppercase px-1.5 py-0.5 pixel-border-sm font-bold"
+              :class="goal.priority === 'High' ? 'bg-error text-on-error' : 'bg-surface-variant text-on-surface-variant'"
+            >{{ goal.priority }}</span>
+          </div>
+
           <div class="my-lg">
             <DuoBar :goal-id="goal.id" :target="goal.target" :show-legend="true" />
           </div>
@@ -156,7 +208,7 @@ const confirmDelete = async (id: string, title: string) => {
         </TangoCard>
       </div>
       <EmptyState
-        v-else
+        v-else-if="!store.loading && store.plans.goals.length === 0"
         icon="savings"
         title="No goals yet"
         description="Set your first joint goal and start tracking progress together."
@@ -166,6 +218,7 @@ const confirmDelete = async (id: string, title: string) => {
           New Goal
         </TangoButton>
       </EmptyState>
+      <p v-else-if="!store.loading" class="text-body-md text-on-surface-variant">No goals in this category.</p>
     </section>
 
     <AchievementsCard />

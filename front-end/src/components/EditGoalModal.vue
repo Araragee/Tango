@@ -18,12 +18,17 @@ const auth = useAuthStore();
 const contributions = useContributionsStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
+const GOAL_CATEGORIES = ['General', 'Travel', 'Home', 'Emergency', 'Vehicle', 'Education', 'Wedding', 'Health', 'Other'] as const;
+const GOAL_PRIORITIES = ['Low', 'Normal', 'High'] as const;
+
 const title = ref('');
 const description = ref('');
 const initialSaved = ref(0);
 const target = ref(0);
 const icon = ref('flag');
 const deadline = ref('');
+const category = ref<string>('General');
+const priority = ref<'Low' | 'Normal' | 'High'>('Normal');
 const errors = ref({ title: '', target: '' });
 
 const newContribAmount = ref<number | string>('');
@@ -55,6 +60,8 @@ watch(() => props.goalId, (newId) => {
             target.value = goal.target;
             icon.value = goal.icon;
             deadline.value = goal.deadline ?? '';
+            category.value = goal.category ?? 'General';
+            priority.value = goal.priority ?? 'Normal';
         }
     } else {
         title.value = '';
@@ -63,6 +70,8 @@ watch(() => props.goalId, (newId) => {
         target.value = 0;
         icon.value = 'flag';
         deadline.value = '';
+        category.value = 'General';
+        priority.value = 'Normal';
     }
     errors.value = { title: '', target: '' };
     newContribAmount.value = '';
@@ -101,26 +110,19 @@ const saveGoal = async () => {
                 description: description.value,
                 target: target.value,
                 icon: icon.value,
-                // Pass null (not undefined) when the field is cleared so Supabase
-                // receives an explicit NULL and clears the column. JSON serialisation
-                // strips `undefined`, leaving the old deadline on the server — same
-                // root cause as B66 (receipt_url) and B76 (note). (B94)
+                category: category.value,
+                priority: priority.value,
                 deadline: deadline.value || null,
             });
         } else {
-            // addGoal returns the new goal's ID — use it directly instead of
-            // accessing goals[goals.length - 1] which could be wrong if a
-            // realtime event fires and reorders the array before we read it. (B68)
             const newGoalId = await store.addGoal({
                 title: title.value,
                 description: description.value,
                 saved: 0,
                 target: target.value,
                 icon: icon.value,
-                // Pass null (not undefined) so the server receives an explicit NULL
-                // when no deadline is set. undefined is stripped by JSON serialisation —
-                // same root cause as B66/B76/B94. Only affects the new-goal path;
-                // the edit path was already fixed in B94. (B100)
+                category: category.value,
+                priority: priority.value,
                 deadline: deadline.value || null,
             });
             // If user typed a starting amount, post it as a first contribution
@@ -218,6 +220,40 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 >
                     <span class="material-symbols-outlined">{{ i }}</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Category picker -->
+        <div class="flex flex-col gap-2">
+            <label class="text-label-sm text-on-surface-variant uppercase font-bold">Category</label>
+            <div class="flex gap-2 flex-wrap">
+                <button
+                    v-for="cat in GOAL_CATEGORIES"
+                    :key="cat"
+                    @click="category = cat"
+                    class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
+                    :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+                    :aria-pressed="category === cat"
+                >{{ cat }}</button>
+            </div>
+        </div>
+
+        <!-- Priority picker -->
+        <div class="flex flex-col gap-2">
+            <label class="text-label-sm text-on-surface-variant uppercase font-bold">Priority</label>
+            <div class="flex gap-2">
+                <button
+                    v-for="p in GOAL_PRIORITIES"
+                    :key="p"
+                    @click="priority = p"
+                    class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
+                    :class="priority === p
+                        ? p === 'High' ? 'bg-error text-on-error'
+                          : p === 'Normal' ? 'bg-primary text-on-primary'
+                          : 'bg-surface-variant text-on-surface-variant'
+                        : 'bg-surface hover:bg-surface-variant'"
+                    :aria-pressed="priority === p"
+                >{{ p }}</button>
             </div>
         </div>
 
