@@ -646,6 +646,13 @@ export const useAppStore = defineStore('app', () => {
     const { data, error } = await q.select('version')
 
     if (error) {
+      // Offline: queue the update for replay on reconnect instead of rolling
+      // back, matching the offline-first behaviour of delete/insert paths and
+      // useRecurringStore.update (B108). (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('transactions', 'update', { ...updates, updated_by: auth.user?.id }, id)
+        return
+      }
       Object.assign(tx, oldTx)
       recalculateBudget()
       throw error
@@ -747,6 +754,11 @@ export const useAppStore = defineStore('app', () => {
     const { data, error } = await q.select('version')
 
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goals', 'update', { ...updates, progress, status, updated_at: new Date().toISOString() }, id)
+        return
+      }
       Object.assign(goal, oldGoal)
       throw error
     }
@@ -801,6 +813,11 @@ export const useAppStore = defineStore('app', () => {
       .update({ status: 'Completed', completed_at: goal.completed_at })
       .eq('id', id)
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goals', 'update', { status: 'Completed', completed_at: goal.completed_at }, id)
+        return
+      }
       goal.status = oldStatus
       goal.completed_at = oldCompletedAt  // restore prior value, not always null
       throw error
@@ -825,6 +842,11 @@ export const useAppStore = defineStore('app', () => {
 
     const { error } = await supabase.from('goals').update({ saved, progress, status }).eq('id', id)
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('goals', 'update', { saved, progress, status }, id)
+        return
+      }
       // Roll back on server error
       Object.assign(goal, { saved: oldSaved, progress: oldProgress, status: oldStatus })
       throw error
@@ -918,6 +940,16 @@ export const useAppStore = defineStore('app', () => {
     const { data, error } = await q.select('version')
 
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('todos', 'update', {
+          completed: todo.completed,
+          completed_at: todo.completed_at,
+          updated_at: new Date().toISOString(),
+          updated_by: auth.user?.id,
+        }, id)
+        return
+      }
       todo.completed = oldStatus
       todo.completed_at = oldCompletedAt
       throw error
@@ -967,6 +999,15 @@ export const useAppStore = defineStore('app', () => {
     const { data, error } = await q.select('version')
 
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('todos', 'update', {
+          ...updates,
+          updated_at: new Date().toISOString(),
+          updated_by: auth.user?.id,
+        }, id)
+        return
+      }
       Object.assign(todo, oldTodo)
       throw error
     }
@@ -1028,6 +1069,11 @@ export const useAppStore = defineStore('app', () => {
     const { data, error } = await q.select('version')
 
     if (error) {
+      // Offline: queue the update for replay on reconnect. (B109)
+      if (isNetworkError(error)) {
+        await useOfflineQueue().enqueue('calendar_events', 'update', { ...updates, updated_by: auth.user?.id }, id)
+        return
+      }
       Object.assign(event, oldEvent)
       throw error
     }

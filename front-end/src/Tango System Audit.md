@@ -306,6 +306,10 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phas
 - Read-based pass over `useRecurringStore`, `useContributionsStore`, `useOfflineQueue`, `useStore`, and `achievements.ts`. The three bugs above are all in `useRecurringStore` — they share the theme of the recurring store lagging behind the offline-first patterns established in the main store. All other offline-queue, realtime, and optimistic-update patterns audited hold up.
 - Environment limitation: shell unavailable (disk full) — changes are read-verified and type-safe but `npm run test`, `vue-tsc`, and `git` could not be run. Recommend running `npm run test` and `npm run build` before committing to main.
 
+**Phase 26 bugs — resolved**
+
+- **B109**: `useStore.ts` — `updateTransaction`, `editGoal`, `editTask`, `editEvent`, `toggleTodo`, `completeGoal`, and `updateGoalProgress` all lacked `isNetworkError` checks with offline-queue fallback. Offline edits silently rolled back the optimistic update instead of queuing for replay — breaking the offline-first contract that was already in place for all insert paths, all delete paths, and `useRecurringStore.update` (B108). Fixed: added `if (isNetworkError(error)) { await useOfflineQueue().enqueue(table, 'update', payload, id); return }` to all six update functions, matching the pattern established in B103/B108.
+
 ## OPEN ITEMS
 
 _All previously tracked bugs and features are closed. New items will be appended under a new Phase header as they are discovered._
