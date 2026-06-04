@@ -7,6 +7,7 @@ import { useAuthStore } from './useAuthStore'
 import { useOfflineQueue } from './useOfflineQueue'
 import { saveReadCache, loadReadCache } from '@/composables/useReadCache'
 import { categoryIcon } from '@/utils/categoryIcons'
+import { localDateISO } from '@/utils/dateUtils'
 import { usePreferencesStore } from './usePreferencesStore'
 
 export class VersionConflictError extends Error {
@@ -964,7 +965,12 @@ export const useAppStore = defineStore('app', () => {
     // When a recurring todo is completed, spawn the next instance with the
     // next due date. The completed todo stays as history.
     if (todo.completed && todo.recurrence && todo.recurrence !== 'none') {
-      const base = todo.due_date ?? todo.completed_at?.split('T')[0] ?? new Date().toISOString().split('T')[0]
+      // Use localDateISO to extract the local calendar date, not UTC.
+      // todo.completed_at is a UTC ISO timestamp; splitting on 'T' gives the
+      // UTC date, which for UTC+ users at evening hours would be yesterday's
+      // local date — causing the next recurring instance to be due one day
+      // early. Same root cause as B102 (achievements) and B107 (recurring store). (B110)
+      const base = todo.due_date ?? (todo.completed_at ? localDateISO(new Date(todo.completed_at)) : localDateISO())
       const nextDue = nextDueFor(base, todo.recurrence)
       await addTask({
         text: todo.text,

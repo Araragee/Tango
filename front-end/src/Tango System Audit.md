@@ -310,6 +310,13 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phas
 
 - **B109**: `useStore.ts` — `updateTransaction`, `editGoal`, `editTask`, `editEvent`, `toggleTodo`, `completeGoal`, and `updateGoalProgress` all lacked `isNetworkError` checks with offline-queue fallback. Offline edits silently rolled back the optimistic update instead of queuing for replay — breaking the offline-first contract that was already in place for all insert paths, all delete paths, and `useRecurringStore.update` (B108). Fixed: added `if (isNetworkError(error)) { await useOfflineQueue().enqueue(table, 'update', payload, id); return }` to all six update functions, matching the pattern established in B103/B108.
 
-## OPEN ITEMS
+---
 
-_All previously tracked bugs and features are closed. New items will be appended under a new Phase header as they are discovered._
+**Phase 27 bugs — resolved**
+
+- **B110**: `useStore.ts` `toggleTodo()` — when spawning the next recurring todo instance, `base` was derived from `todo.completed_at?.split('T')[0]` (splitting a UTC ISO timestamp returns the UTC date, not the local date) or fell back to `new Date().toISOString().split('T')[0]` (also UTC). For UTC+ timezone users (e.g. UTC+10), local evening hours map to the next UTC day, so the UTC date is already tomorrow's local date — the newly spawned recurring todo would be assigned a due date one day early. Fixed: replaced both UTC paths with `localDateISO(new Date(todo.completed_at))` and `localDateISO()` respectively, matching the fix pattern from B102 (achievements) and B107 (useRecurringStore). Import of `localDateISO` added to `useStore.ts`.
+
+**Phase 27 audit notes**
+
+- Full read-based pass over `useStore.ts`, `useRecurringStore.ts`, `useContributionsStore.ts`, `useHouseholdStore.ts`, `useNotificationsStore.ts`, `useOfflineQueue.ts`, `router/middleware.ts`, `useIdleTimeout.ts`, `ActivityFeed.vue`, `VibeCheckCard.vue`, `TangoTodo.vue`, `SharedCalendar.vue`, `NewEventSheet.vue`, `DateNightPlanner.vue`, `TransactionDetailsModal.vue`, `AddTransactionModal.vue`, `EditGoalModal.vue`, `CsvImportModal.vue`, `SettingsView.vue`. No regressions found beyond B110. All offline-first patterns (B80/B93/B103/B106/B108/B109), realtime reconnect backoff (B101), optimistic-update rollbacks, and local-date conventions hold across all audited files.
+- Environment limitation: shell unavailable (disk full) — the B110 change is read-verified and type-safe (reuses the existing `localDateISO` import pattern from `useRecurringStore.ts`) but was **not** executed against the Vitest suite. Recommend running `npm run test` and `npm run build` before committing to main.
