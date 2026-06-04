@@ -15,6 +15,9 @@ export const usePresenceStore = defineStore('presence', () => {
 
   let _channel: RealtimeChannel | null = null
   let _householdId: string | null = null
+  // Exponential-backoff reconnect on CHANNEL_ERROR, matching useStore.ts (B101). (B118)
+  let _reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let _reconnectDelay = 2_000
 
   function handleNetworkChange() {
     isOnline.value = navigator.onLine
@@ -73,15 +76,33 @@ export const usePresenceStore = defineStore('presence', () => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && _channel && auth.user) {
+          // Reset backoff on a clean connection. (B118)
+          _reconnectDelay = 2_000
+          if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
           await _channel.track({
             user_id: auth.user.id,
             online_at: new Date().toISOString(),
           })
         }
+        if (status === 'CHANNEL_ERROR') {
+          // Schedule a reconnect with exponential backoff (2s → 4s → 8s … capped
+          // at 30s). Without this, a presence channel error silently breaks
+          // partner-online indicators for the entire session. (B118)
+          console.error('[Presence] Channel error — reconnecting in', _reconnectDelay, 'ms')
+          if (_reconnectTimer) clearTimeout(_reconnectTimer)
+          const delay = _reconnectDelay
+          _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000)
+          _reconnectTimer = setTimeout(() => {
+            _reconnectTimer = null
+            if (_channel) { supabase.removeChannel(_channel); _channel = null; _householdId = null }
+            subscribe(householdId)
+          }, delay)
+        }
       })
   }
 
   async function unsubscribe() {
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
     if (_channel) {
       try { await _channel.untrack() } catch {}
       await supabase.removeChannel(_channel)

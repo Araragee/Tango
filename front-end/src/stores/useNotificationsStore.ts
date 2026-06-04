@@ -24,6 +24,10 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   let _channel: RealtimeChannel | null = null
   let _userId: string | null = null
+  // Exponential-backoff reconnect on CHANNEL_ERROR, matching useStore.ts (B101)
+  // and useRecurringStore.ts (B115). (B117)
+  let _reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let _reconnectDelay = 2_000
 
   const unread = computed(() => items.value.filter(n => !n.read_at))
   const unreadCount = computed(() => unread.value.length)
@@ -109,10 +113,30 @@ export const useNotificationsStore = defineStore('notifications', () => {
         const id = (payload.old as any).id
         items.value = items.value.filter(n => n.id !== id)
       })
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          // Reset backoff on a clean connection. (B117)
+          _reconnectDelay = 2_000
+          if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
+        }
+        if (status === 'CHANNEL_ERROR') {
+          // Schedule a reconnect with exponential backoff (2s → 4s → 8s … capped
+          // at 30s) instead of silently losing realtime notifications. (B117)
+          console.error('[Notifications] Channel error — reconnecting in', _reconnectDelay, 'ms')
+          if (_reconnectTimer) clearTimeout(_reconnectTimer)
+          const delay = _reconnectDelay
+          _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000)
+          _reconnectTimer = setTimeout(() => {
+            _reconnectTimer = null
+            if (_channel) { supabase.removeChannel(_channel); _channel = null; _userId = null }
+            subscribe(userId)
+          }, delay)
+        }
+      })
   }
 
   function unsubscribe() {
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
     if (_channel) {
       supabase.removeChannel(_channel)
       _channel = null

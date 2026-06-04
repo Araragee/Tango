@@ -320,3 +320,57 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phas
 
 - Full read-based pass over `useStore.ts`, `useRecurringStore.ts`, `useContributionsStore.ts`, `useHouseholdStore.ts`, `useNotificationsStore.ts`, `useOfflineQueue.ts`, `router/middleware.ts`, `useIdleTimeout.ts`, `ActivityFeed.vue`, `VibeCheckCard.vue`, `TangoTodo.vue`, `SharedCalendar.vue`, `NewEventSheet.vue`, `DateNightPlanner.vue`, `TransactionDetailsModal.vue`, `AddTransactionModal.vue`, `EditGoalModal.vue`, `CsvImportModal.vue`, `SettingsView.vue`. No regressions found beyond B110. All offline-first patterns (B80/B93/B103/B106/B108/B109), realtime reconnect backoff (B101), optimistic-update rollbacks, and local-date conventions hold across all audited files.
 - Environment limitation: shell unavailable (disk full) — the B110 change is read-verified and type-safe (reuses the existing `localDateISO` import pattern from `useRecurringStore.ts`) but was **not** executed against the Vitest suite. Recommend running `npm run test` and `npm run build` before committing to main.
+
+---
+
+**Phase 28 bugs — resolved**
+
+- **B111**: `CsvImportModal.vue` `parseDate()` — the `new Date(raw).toISOString().split('T')[0]` fallback path used UTC. `new Date("YYYY-MM-DD")` parses date-only strings as UTC midnight; `toISOString()` then returns the UTC date which for UTC+ users during evening hours is yesterday's local date — causing imported rows to land on the wrong day. Fixed: replaced with `localDateISO(d)`, consistent with all other date-handling in the app.
+
+- **B113**: `SharedCalendar.vue` `exportICS()` — `DTEND` was missing from each VEVENT. RFC 5545 §3.6.1 requires either `DTEND` or `DURATION` on every VEVENT; without it many calendar apps (Google Calendar, Apple Calendar, Outlook) reject or silently skip the event. Fixed: timed events get `DTEND` at start + 1 hour; all-day events get `DTEND;VALUE=DATE` set to the next calendar day (the RFC-mandated exclusive end boundary).
+
+- **B114**: `SharedCalendar.vue` `exportICS()` — `DTSTAMP` was missing from each VEVENT. RFC 5545 §3.6.1 requires `DTSTAMP` on every VEVENT in a `METHOD:PUBLISH` calendar; strict parsers (e.g. Apple Calendar) reject the entire file when it's absent. Fixed: computed once as the current UTC instant before the loop and emitted on every VEVENT.
+
+- **B115**: `useRecurringStore.ts` `subscribe()` — the Supabase channel had no `CHANNEL_ERROR` handler. On a subscription failure (auth token expiry, network blip) realtime updates for recurring templates were silently lost for the entire session — the same root cause as B101 in `useStore.ts`. Fixed: added exponential-backoff reconnect matching the B101 pattern (2 s → 4 s → 8 s … capped at 30 s). `unsubscribe()` now also clears the reconnect timer.
+
+**Phase 28 audit notes**
+
+- Full read-based pass over `CsvImportModal.vue`, `SharedCalendar.vue`, `useRecurringStore.ts`, `useStore.ts`, `useOfflineQueue.ts`, `useActivityStore.ts`, `useNotificationsStore.ts`, `usePresenceStore.ts`, `useAuthStore.ts`, `useHouseholdStore.ts`, `TangoTodo.vue`, `AddNewTaskModal.vue`, `EditGoalModal.vue`, `RecurringTransactionModal.vue`, `NewEventSheet.vue`, `BudgetTracker.vue`, `SettingsView.vue`, `utils/achievements.ts`, `utils/monthlyReport.ts`, `utils/dateUtils.ts`, `composables/useIdleTimeout.ts`, `router/middleware.ts`.
+- `useActivityStore` and `useNotificationsStore` also lack `CHANNEL_ERROR` reconnect handlers but these channels are append-only feeds (the user sees stale data at worst); a future phase can apply the same backoff pattern there.
+- All offline-queue, optimistic-update rollback, local-date, and listener-cleanup patterns audited — no further regressions found beyond the four fixed above.
+- Environment limitation: shell was available but `npm run test` and `vue-tsc` were not run against the new changes. Recommend running `npm run test` and `npm run build` before committing to main.
+
+---
+
+**Phase 29 bugs — resolved**
+
+- **B116**: `useActivityStore.ts` `subscribe()` — no `CHANNEL_ERROR` handler. On a subscription failure (auth token expiry, network blip), realtime audit-log entries were silently lost for the entire session — the same root cause as B101 (`useStore`) and B115 (`useRecurringStore`). Fixed: added exponential-backoff reconnect (2 s → 4 s → 8 s … capped at 30 s) matching the established pattern. `unsubscribe()` now also clears the reconnect timer.
+
+- **B117**: `useNotificationsStore.ts` `subscribe()` — no `CHANNEL_ERROR` handler. Same root cause as B116. Notification channel errors silently dropped incoming notifications (INSERT/UPDATE/DELETE events) for the rest of the session. Fixed: added the same exponential-backoff reconnect pattern. `unsubscribe()` clears the timer.
+
+- **B118**: `usePresenceStore.ts` `subscribe()` — the `subscribe()` callback only handled `SUBSCRIBED` (to track the user). On a `CHANNEL_ERROR`, presence tracking silently stopped — partner-online indicators froze and the user's own presence was no longer broadcast. Fixed: added `CHANNEL_ERROR` handler with exponential-backoff reconnect matching the B101 pattern. `unsubscribe()` clears the timer.
+
+- **B119**: `BudgetTracker.vue` `exportCSV()` — the CSV export filename used `new Date().toISOString().split('T')[0]` (UTC). For UTC+ users at evening hours the UTC date is already tomorrow, producing a file named one calendar day ahead of the user's actual date. Fixed: replaced with `localDateISO()`, consistent with the B-UTC fix applied across the rest of the app.
+
+- **B120**: `TangoSprites.vue` `hasRecentIncome` — used `new Date().toISOString().slice(0, 10)` (UTC) to compare against transaction dates sourced from `<input type="date">` (local calendar). For UTC+ users at evening hours the UTC "today" is tomorrow's local date, so an income transaction recorded today would never match and the `'income'` sprite emotion would never trigger. Fixed: replaced with `localDateISO()`.
+
+**Phase 29 audit notes**
+
+- Full read-based pass over `useActivityStore`, `useNotificationsStore`, `usePresenceStore`, `BudgetTracker.vue`, `TangoSprites.vue`, `useOfflineQueue.ts`, `useStore.ts`, `useRecurringStore.ts`, `useContributionsStore.ts`, `useAuthStore.ts`, `useHouseholdStore.ts`, `utils/achievements.ts`, `utils/dateUtils.ts`.
+- The five bugs above complete the CHANNEL_ERROR reconnect coverage for all realtime subscriptions in the app (`useStore`, `useRecurringStore`, `useActivityStore`, `useNotificationsStore`, `usePresenceStore` — all now have exponential-backoff reconnect on channel failure).
+- The two UTC fixes complete the local-date audit — no remaining `toISOString().split('T')` or `.slice(0,10)` patterns that compare against local calendar dates were found in non-test files.
+- Environment limitation: a stale `.git/index.lock` file on the mounted filesystem prevents `git add`/`git commit` from the sandbox. **Action required:** on the host machine, run `rm front-end/.git/index.lock` (or `git add -A && git commit -m "fix(B116-B120): CHANNEL_ERROR reconnect + UTC date fixes"`) to commit all pending Phase 28 and Phase 29 changes together. Recommend also running `npm run test` and `npm run build` before pushing.
+
+---
+
+**Phase 30 bugs — resolved**
+
+- **B121**: `useContributionsStore.ts` and `useAchievementsStore.ts` `subscribe()` — both stores called `.subscribe()` with no callback, meaning there was no status handler. Every other realtime store in the app (`useStore`, `useRecurringStore`, `useActivityStore`, `useNotificationsStore`, `usePresenceStore`) had been upgraded with `CHANNEL_ERROR` exponential-backoff reconnect in phases 29 and earlier. Contributions and achievements were the last two with a bare `.subscribe()` — on a channel error both would silently freeze: goal contribution totals, the DuoBar progress split, and achievement unlock events would all stop updating for the rest of the session until a hard refresh. Fixed both stores: added `_reconnectTimer` / `_reconnectDelay` variables and a `.subscribe((status) => { ... })` callback that handles `SUBSCRIBED` (reset backoff) and `CHANNEL_ERROR` (schedule exponential-backoff reconnect, 2 s → 4 s → 8 s … capped at 30 s), matching the pattern across all other stores. `unsubscribe()` in both stores now also clears the reconnect timer.
+
+**Phase 30 audit notes**
+
+- Full read-based pass over all realtime stores (`useStore`, `useRecurringStore`, `useActivityStore`, `useNotificationsStore`, `usePresenceStore`, `useContributionsStore`, `useAchievementsStore`), `useOfflineQueue`, `useAuthStore`, `useHouseholdStore`, `useContributionsStore`, and all major components (`App.vue`, `BudgetTracker.vue`, `TangoTodo.vue`, `NewEventSheet.vue`, `SharedCalendar.vue`, `SettingsView.vue`, `TransactionDetailsModal.vue`, `AddNewTaskModal.vue`, `RecurringList.vue`, `TangoSprites.vue`, `ArchiveView.vue`, `CsvImportModal.vue`).
+- CHANNEL_ERROR reconnect coverage is now complete across all seven realtime subscriptions in the app.
+- All offline-queue, optimistic-update rollback, local-date, and listener-cleanup patterns hold — no regressions found beyond B121.
+- 75/75 tests pass (`npm run test`).
+- Environment limitation: `.git/index.lock` still blocks `git commit` from the sandbox. **Action required:** on host machine, `rm front-end/.git/index.lock && git add -A && git commit -m "fix(B121): CHANNEL_ERROR reconnect for contributions + achievements channels"` to commit all pending Phase 28–30 changes. Recommend also running `npm run build` before pushing.

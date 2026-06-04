@@ -3,6 +3,7 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { useAuthStore } from '../stores/useAuthStore';
+import { localDateISO } from '../utils/dateUtils';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
@@ -147,7 +148,10 @@ const exportCSV = () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `tango-transactions-${new Date().toISOString().split('T')[0]}.csv`;
+  // Use localDateISO (local calendar date) not toISOString (UTC) — for UTC+
+  // users at evening hours the UTC date is already tomorrow, producing a
+  // filename one day ahead of the user's current date. (B119)
+  a.download = `tango-transactions-${localDateISO()}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

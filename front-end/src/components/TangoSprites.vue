@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useAppStore } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import SpriteCharacter, { type SpriteEmotion } from './SpriteCharacter.vue';
+import { localDateISO } from '../utils/dateUtils';
 
 /**
  * TangoSprites — the couple avatar widget.
@@ -57,7 +58,11 @@ const negativeBalance = computed(() => store.budget.balance < 0);
 
 /** Recent income (money coming in) */
 const hasRecentIncome = computed(() => {
-  const today = new Date().toISOString().slice(0, 10);
+  // Use localDateISO (local calendar date) not toISOString (UTC) — for UTC+
+  // users at evening hours the UTC date is already tomorrow, so an income
+  // transaction recorded today would never match and the 'income' mood would
+  // never trigger. (B120)
+  const today = localDateISO();
   return store.budget.recentActivity.some(
     (tx) => tx.type === 'income' && tx.date === today
   );

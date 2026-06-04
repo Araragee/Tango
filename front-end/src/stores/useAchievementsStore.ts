@@ -22,6 +22,10 @@ export const useAchievementsStore = defineStore('achievements', () => {
   let _channel: RealtimeChannel | null = null
   let _userId: string | null = null
   let _evaluating = false
+  // Exponential-backoff reconnect on CHANNEL_ERROR, matching useStore.ts (B101)
+  // and all other realtime stores. (B121)
+  let _reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let _reconnectDelay = 2_000
 
   const unlockedCodes = computed(() => new Set(unlocked.value.map(u => u.code)))
 
@@ -98,10 +102,30 @@ export const useAchievementsStore = defineStore('achievements', () => {
         event: '*', schema: 'public', table: 'achievements',
         filter: `user_id=eq.${userId}`,
       }, () => fetch())
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          // Reset backoff on a clean connection. (B121)
+          _reconnectDelay = 2_000
+          if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
+        }
+        if (status === 'CHANNEL_ERROR') {
+          // Schedule a reconnect with exponential backoff (2s → 4s → 8s … capped
+          // at 30s) instead of silently losing realtime achievement unlocks. (B121)
+          console.error('[Achievements] Channel error — reconnecting in', _reconnectDelay, 'ms')
+          if (_reconnectTimer) clearTimeout(_reconnectTimer)
+          const delay = _reconnectDelay
+          _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000)
+          _reconnectTimer = setTimeout(() => {
+            _reconnectTimer = null
+            if (_channel) { supabase.removeChannel(_channel); _channel = null; _userId = null }
+            subscribe(userId)
+          }, delay)
+        }
+      })
   }
 
   function unsubscribe() {
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
     if (_channel) {
       supabase.removeChannel(_channel)
       _channel = null

@@ -207,12 +207,32 @@ const exportICS = () => {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
   ];
+  // RFC 5545 requires DTSTAMP on every VEVENT in a METHOD:PUBLISH calendar.
+  // Without it some strict parsers reject the entire file. (B114)
+  const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   for (const ev of store.calendar.events) {
     const dt = ev.date.replace(/-/g, '');
     const tm = ev.time && ev.time !== 'All Day' ? ev.time.replace(/:/g, '') + '00' : null;
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${ev.id}@tango`);
+    lines.push(`DTSTAMP:${dtstamp}`);
     lines.push(tm ? `DTSTART:${dt}T${tm}` : `DTSTART;VALUE=DATE:${dt}`);
+    // RFC 5545 requires DTEND (or DURATION) on every VEVENT. Without it many
+    // calendar apps reject the event or display it with zero duration. For
+    // all-day events DTEND is the next day (exclusive end); for timed events
+    // default to 1-hour duration. (B113)
+    if (tm) {
+      // Add 1 hour to the start time for timed events
+      const startMs = new Date(`${ev.date}T${ev.time}`).getTime();
+      const endIso = new Date(startMs + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0];
+      lines.push(`DTEND:${endIso}`);
+    } else {
+      // All-day: DTEND = next calendar day (exclusive)
+      const next = new Date(ev.date + 'T00:00:00');
+      next.setDate(next.getDate() + 1);
+      const nextDt = `${next.getFullYear()}${String(next.getMonth() + 1).padStart(2, '0')}${String(next.getDate()).padStart(2, '0')}`;
+      lines.push(`DTEND;VALUE=DATE:${nextDt}`);
+    }
     lines.push(`SUMMARY:${ev.title.replace(/[,;\\]/g, (c) => '\\' + c)}`);
     if (ev.notes) lines.push(`DESCRIPTION:${ev.notes.replace(/\n/g, '\\n').replace(/[,;\\]/g, (c) => '\\' + c)}`);
     lines.push('END:VEVENT');

@@ -106,7 +106,10 @@ function parseDate(raw: string): string {
     if (c > 1900) return `${c}-${String(a).padStart(2, '0')}-${String(b).padStart(2, '0')}`;
   }
   const d = new Date(raw);
-  if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+  // Use localDateISO instead of toISOString().split('T')[0]: new Date(raw)
+  // parses date-only strings as UTC midnight, so toISOString() returns the
+  // UTC date which for UTC+ users during evening hours is yesterday. (B111)
+  if (!isNaN(d.getTime())) return localDateISO(d);
   return todayISO;
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { ref, inject, watch } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
@@ -10,7 +10,7 @@ import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { iconForCategory } from '../utils/categoryIcons';
 import { localDateISO } from '../utils/dateUtils';
 
-defineProps<{ show: boolean }>();
+const props = defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
 const prefs = usePreferencesStore();
@@ -29,6 +29,23 @@ const newCategory = ref('');
 // true = current user paid; false = partner paid. null = untracked.
 // Only relevant when a partner exists in the household.
 const paidByMe = ref<boolean | null>(null);
+
+// Reset all fields whenever the modal is opened so stale values from a prior
+// cancelled session never show up on the next open. Also refreshes `date` to
+// today's local date — without this, if the app is left open past midnight
+// the date field would show yesterday when the modal is next opened. (B-RESET-1)
+watch(() => props.show, (open) => {
+  if (!open) return;
+  title.value = '';
+  amount.value = 0;
+  category.value = 'Food';
+  type.value = 'expense';
+  date.value = localDateISO();
+  note.value = '';
+  paidByMe.value = null;
+  errors.value = { title: '', amount: '' };
+  newCategory.value = '';
+});
 
 const addCategory = () => {
   if (!newCategory.value.trim()) return;

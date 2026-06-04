@@ -40,6 +40,10 @@ export const useContributionsStore = defineStore('contributions', () => {
 
   let _channel: RealtimeChannel | null = null
   let _householdId: string | null = null
+  // Exponential-backoff reconnect on CHANNEL_ERROR, matching useStore.ts (B101)
+  // and all other realtime stores. (B121)
+  let _reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let _reconnectDelay = 2_000
 
   async function fetchForHousehold(householdId: string) {
     if (!isConfigured || !householdId) return
@@ -177,10 +181,30 @@ export const useContributionsStore = defineStore('contributions', () => {
           await fetchForHousehold(household.householdId)
         }
       })
-      .subscribe()
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          // Reset backoff on a clean connection. (B121)
+          _reconnectDelay = 2_000
+          if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
+        }
+        if (status === 'CHANNEL_ERROR') {
+          // Schedule a reconnect with exponential backoff (2s → 4s → 8s … capped
+          // at 30s) instead of silently losing realtime contribution updates. (B121)
+          console.error('[Contributions] Channel error — reconnecting in', _reconnectDelay, 'ms')
+          if (_reconnectTimer) clearTimeout(_reconnectTimer)
+          const delay = _reconnectDelay
+          _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000)
+          _reconnectTimer = setTimeout(() => {
+            _reconnectTimer = null
+            if (_channel) { supabase.removeChannel(_channel); _channel = null; _householdId = null }
+            subscribe(householdId)
+          }, delay)
+        }
+      })
   }
 
   function unsubscribe() {
+    if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null }
     if (_channel) {
       supabase.removeChannel(_channel)
       _channel = null
