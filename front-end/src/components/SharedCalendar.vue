@@ -199,6 +199,34 @@ const syncScore = computed(() => {
 
 // ── ICS Export ─────────────────────────────────────────────────────────────
 
+// RFC 5545 §3.1: content lines MUST NOT exceed 75 octets. Longer lines must
+// be folded with CRLF + a single SPACE (or TAB) continuation character.
+// Without folding, strict parsers (Thunderbird, some Outlook builds) reject
+// or truncate lines. We fold on octets (UTF-8 bytes), not characters, so a
+// multi-byte character is never split mid-sequence. (B122)
+function foldICSLine(line: string): string {
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(line)
+  if (bytes.length <= 75) return line
+
+  const decoder = new TextDecoder()
+  const parts: string[] = []
+  let offset = 0
+  let first = true
+  while (offset < bytes.length) {
+    const limit = first ? 75 : 74 // continuation lines start with 1 space byte
+    let end = Math.min(offset + limit, bytes.length)
+    // Walk back if we split a multi-byte UTF-8 sequence (continuation bytes
+    // are 0x80–0xBF). A leading byte of a sequence is either 0x00–0x7F (1b),
+    // 0xC0–0xDF (2b), 0xE0–0xEF (3b), or 0xF0–0xF7 (4b).
+    while (end < bytes.length && (bytes[end] & 0xC0) === 0x80) end--
+    parts.push(decoder.decode(bytes.slice(offset, end)))
+    offset = end
+    first = false
+  }
+  return parts.join('\r\n ')
+}
+
 const exportICS = () => {
   const lines = [
     'BEGIN:VCALENDAR',
@@ -233,8 +261,8 @@ const exportICS = () => {
       const nextDt = `${next.getFullYear()}${String(next.getMonth() + 1).padStart(2, '0')}${String(next.getDate()).padStart(2, '0')}`;
       lines.push(`DTEND;VALUE=DATE:${nextDt}`);
     }
-    lines.push(`SUMMARY:${ev.title.replace(/[,;\\]/g, (c) => '\\' + c)}`);
-    if (ev.notes) lines.push(`DESCRIPTION:${ev.notes.replace(/\n/g, '\\n').replace(/[,;\\]/g, (c) => '\\' + c)}`);
+    lines.push(foldICSLine(`SUMMARY:${ev.title.replace(/[,;\\]/g, (c) => '\\' + c)}`));
+    if (ev.notes) lines.push(foldICSLine(`DESCRIPTION:${ev.notes.replace(/\n/g, '\\n').replace(/[,;\\]/g, (c) => '\\' + c)}`));
     lines.push('END:VEVENT');
   }
   lines.push('END:VCALENDAR');

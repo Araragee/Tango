@@ -111,15 +111,24 @@ export const usePreferencesStore = defineStore('preferences', () => {
     delete categoryEmojis.value[category.toLowerCase()]
   }
 
-  function setIncomeAllocation(goalId: string, percent: number) {
+  function setIncomeAllocation(goalId: string, percent: number): string | null {
     const clamped = Math.max(0, Math.min(100, Math.round(percent)));
     const idx = incomeAllocations.value.findIndex(a => a.goalId === goalId)
     if (clamped === 0) {
       if (idx !== -1) incomeAllocations.value.splice(idx, 1)
-      return
+      return null
+    }
+    // Guard: total of all allocations must not exceed 100%.
+    // Without this, multiple goals can be set to e.g. 50% each, causing
+    // addTransaction() to silently contribute >100% of the income amount. (B123)
+    const currentForGoal = idx !== -1 ? incomeAllocations.value[idx].percent : 0
+    const totalWithout = incomeAllocations.value.reduce((s, a) => a.goalId === goalId ? s : s + a.percent, 0)
+    if (totalWithout + clamped > 100) {
+      return `Total allocation would be ${totalWithout + clamped}% — reduce other goals first.`
     }
     if (idx === -1) incomeAllocations.value.push({ goalId, percent: clamped })
     else incomeAllocations.value[idx].percent = clamped
+    return null
   }
 
   function removeIncomeAllocation(goalId: string) {

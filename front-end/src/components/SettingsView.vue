@@ -648,7 +648,7 @@ onMounted(() => {
                 max="100"
                 class="w-16 px-2 py-1 sunken-input text-body-md text-center"
                 :value="prefs.incomeAllocations.find(a => a.goalId === goal.id)?.percent ?? 0"
-                @change="(e) => prefs.setIncomeAllocation(goal.id, +(e.target as HTMLInputElement).value)"
+                @change="(e) => { const err = prefs.setIncomeAllocation(goal.id, +(e.target as HTMLInputElement).value); if (err) notify(err, 'error'); }"
               />
               <span class="text-body-md text-on-surface-variant">%</span>
               <button

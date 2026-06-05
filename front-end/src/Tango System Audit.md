@@ -374,3 +374,21 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phas
 - All offline-queue, optimistic-update rollback, local-date, and listener-cleanup patterns hold — no regressions found beyond B121.
 - 75/75 tests pass (`npm run test`).
 - Environment limitation: `.git/index.lock` still blocks `git commit` from the sandbox. **Action required:** on host machine, `rm front-end/.git/index.lock && git add -A && git commit -m "fix(B121): CHANNEL_ERROR reconnect for contributions + achievements channels"` to commit all pending Phase 28–30 changes. Recommend also running `npm run build` before pushing.
+
+---
+
+**Phase 31 bugs — resolved**
+
+- **B122**: `SharedCalendar.vue` `exportICS()` — RFC 5545 §3.1 requires content lines to be no longer than 75 octets; longer lines must be folded with CRLF + a single SPACE continuation. Long event titles (e.g. > ~67 characters, since `SUMMARY:` is 8 bytes) and long `DESCRIPTION` values produced non-conforming output that strict parsers (Thunderbird, some Outlook builds) reject or truncate. Fixed: added `foldICSLine(line)` helper that encodes to UTF-8 bytes, splits at the 75-octet boundary without splitting multi-byte sequences (walks back past any continuation bytes `0x80–0xBF`), and joins segments with `\r\n `. Applied to `SUMMARY` and `DESCRIPTION` lines; all other lines in the export are short enough to never need folding.
+
+- **B123**: `usePreferencesStore.ts` `setIncomeAllocation()` — each individual allocation was clamped to 0–100% but the sum of all allocations across goals was never checked. With two goals both set to 60%, `addTransaction()` would silently auto-contribute 120% of each income amount (60% twice), creating contributions exceeding the transaction value. Fixed: before applying the new value, `setIncomeAllocation` computes `totalWithout + clamped`; if this exceeds 100 the function returns an error string and makes no change. The caller in `SettingsView.vue` passes the error string to `notify(..., 'error')` so the user sees a clear message ("Total allocation would be X% — reduce other goals first."). When the value is 0 or valid, the function returns `null` (no error). Return type updated from `void` to `string | null`.
+
+**Phase 31 audit notes**
+
+- Full read-based pass over all stores (`useStore`, `useRecurringStore`, `useActivityStore`, `useNotificationsStore`, `usePresenceStore`, `useContributionsStore`, `useAchievementsStore`, `useOfflineQueue`, `useAuthStore`, `useHouseholdStore`, `usePreferencesStore`, `usePushStore`, `useThemeStore`), all composables (`useIdleTimeout`, `useReadCache`, `usePwaUpdate`, `usePushSubscription`), router (`index.ts`, `middleware.ts`), `utils/safeRedirect.ts`, `utils/achievements.ts`, `utils/monthlyReport.ts`, `utils/dateUtils.ts`, `utils/categoryIcons.ts`, `utils/dateNightIdeas.ts`, all components, and the `dispatch_push` edge function.
+- No further offline-queue, realtime, UTC-date, or listener-cleanup regressions found beyond B122/B123.
+- `dispatch_push` edge function: constant-time secret comparison already in place; 410 Gone cleanup already handled; JSON validation correct.
+- `safeRedirect.ts`: SAFE_PATH_RE correctly rejects `//evil.com` and `http://...` while accepting `/app/budget`-style paths; `"/"` falls through to the fallback which is acceptable (post-login routes never use `"/"` as a redirect target).
+- `usePreferencesStore.isInQuietHours()`: overnight range logic correct; `< endMins` boundary is intentional (quiet hours end at the start of the `end` minute, not after it).
+- Income allocation auto-contribute loop: B123 fix means the sum-of-percents ≤ 100 invariant is now enforced at write time, so the loop in `addTransaction` cannot over-allocate.
+- 75/75 tests pass (`npm run test`).
