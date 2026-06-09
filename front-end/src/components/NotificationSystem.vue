@@ -46,6 +46,12 @@ defineExpose({ add });
                 {{ n.type === 'success' ? 'check_circle' : n.type === 'error' ? 'error' : 'info' }}
             </span>
             <span class="flex-1 min-w-0 text-label-sm uppercase font-bold break-words">{{ n.message }}</span>
+            <!-- B126: manual dismiss so users don't have to wait the 3s auto-timeout -->
+            <button
+                @click="remove(n.id)"
+                class="material-symbols-outlined text-[16px] shrink-0 text-outline hover:text-on-surface transition-colors"
+                aria-label="Dismiss"
+            >close</button>
         </div>
     </TransitionGroup>
   </div>

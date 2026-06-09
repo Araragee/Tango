@@ -39,6 +39,22 @@ const filteredActivity = computed(() =>
     : store.budget.recentActivity.filter((tx: Transaction) => tx.type === filter.value)
 );
 
+// I23: month-to-date income and expense totals for the balance card summary row.
+// Derived from recentActivity (same source as recalculateBudget) so it's always
+// in sync with the balance figure without an extra fetch.
+const monthSummary = computed(() => {
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  let income = 0;
+  let expense = 0;
+  for (const tx of store.budget.recentActivity) {
+    if (!tx.date.startsWith(thisMonth)) continue;
+    if (tx.type === 'income') income += tx.amount;
+    else expense += Math.abs(tx.amount);
+  }
+  return { income, expense };
+});
+
 // Reactive tick so the "Updated Xm ago" label refreshes even when no other
 // dep changes — without a timer it could stay stale indefinitely. (I12)
 const _tick = ref(0);
@@ -183,10 +199,17 @@ const exportCSV = () => {
           </div>
         </TangoCard>
 
-        <!-- Saved This Month -->
-        <div class="flex justify-between items-center px-4 py-2 bg-secondary-container pixel-border-sm">
-          <span class="text-label-sm uppercase text-on-secondary-container">Saved This Month</span>
-          <span class="text-body-lg font-bold text-on-secondary-container">+${{ store.budget.savedThisMonth.toLocaleString() }}</span>
+        <!-- I23: month-to-date income / expense split so the user sees where money
+             is coming from and going to, not just the running balance total. -->
+        <div class="grid grid-cols-2 gap-px border-2 border-black dark:border-white bg-black dark:bg-white">
+          <div class="flex flex-col items-center py-2 px-3 bg-secondary-container">
+            <span class="text-label-sm uppercase text-on-secondary-container">Income this month</span>
+            <span class="text-body-lg font-bold text-on-secondary-container">+${{ monthSummary.income.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span>
+          </div>
+          <div class="flex flex-col items-center py-2 px-3 bg-error-container">
+            <span class="text-label-sm uppercase text-on-error-container">Spent this month</span>
+            <span class="text-body-lg font-bold text-on-error-container">-${{ monthSummary.expense.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span>
+          </div>
         </div>
 
         <VibeCheckCard />

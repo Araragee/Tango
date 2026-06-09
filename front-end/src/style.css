@@ -38,7 +38,7 @@
   --surface-container-high: #ebe8e3;
   --surface-container-highest: #e5e2dd;
 
-  --outline: #887273;
+  --outline: #796263;
   --outline-variant: #dac0c1;
   --border-color: #1c1c19;
   --shadow-color: var(--primary);
@@ -65,6 +65,7 @@
 
   --border-color: #e6e1e5;
   --dither-color: #2b2930;
+  --outline: #a18b8c;
   
   --secondary: #b7ccb9;
   --on-secondary: #233428;

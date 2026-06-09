@@ -121,7 +121,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     // Guard: total of all allocations must not exceed 100%.
     // Without this, multiple goals can be set to e.g. 50% each, causing
     // addTransaction() to silently contribute >100% of the income amount. (B123)
-    const currentForGoal = idx !== -1 ? incomeAllocations.value[idx].percent : 0
     const totalWithout = incomeAllocations.value.reduce((s, a) => a.goalId === goalId ? s : s + a.percent, 0)
     if (totalWithout + clamped > 100) {
       return `Total allocation would be ${totalWithout + clamped}% — reduce other goals first.`

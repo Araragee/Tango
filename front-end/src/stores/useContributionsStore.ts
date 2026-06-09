@@ -6,6 +6,7 @@ import { useAuthStore } from './useAuthStore'
 import { useHouseholdStore } from './useHouseholdStore'
 import { useAppStore } from './useStore'
 import { useOfflineQueue } from './useOfflineQueue'
+import type { Database } from '@/types/database.types'
 
 function isNetworkError(e: any): boolean {
   if (!e) return false
@@ -23,7 +24,7 @@ export interface Contribution {
   created_at: string
 }
 
-function mapContribution(r: any): Contribution {
+function mapContribution(r: Database['public']['Tables']['goal_contributions']['Row']): Contribution {
   return {
     id: r.id,
     goal_id: r.goal_id,
@@ -178,7 +179,25 @@ export const useContributionsStore = defineStore('contributions', () => {
           || appStore.plans.goals.some((g: any) => g.id === affectedGoalId)
 
         if (isOurs) {
-          await fetchForHousehold(household.householdId)
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newContrib = mapContribution(payload.new as any)
+            if (!items.value.some(c => c.id === newContrib.id)) {
+              items.value = [newContrib, ...items.value]
+            }
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            const updatedContrib = mapContribution(payload.new as any)
+            const idx = items.value.findIndex(c => c.id === updatedContrib.id)
+            if (idx !== -1) {
+              items.value[idx] = updatedContrib
+            }
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            const deletedId = (payload.old as any).id
+            if (deletedId) {
+              items.value = items.value.filter(c => c.id !== deletedId)
+            }
+          } else {
+            await fetchForHousehold(household.householdId)
+          }
         }
       })
       .subscribe((status: string) => {

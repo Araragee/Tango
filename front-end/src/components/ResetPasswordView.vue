@@ -49,11 +49,11 @@ const submit = async () => {
       <form @submit.prevent="submit" class="space-y-4">
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm uppercase" for="new-pw">New Password</label>
-          <input v-model="password" id="new-pw" type="password" placeholder="••••••••" class="sunken-input px-sm py-3 text-body-md focus:outline-none focus:ring-0" />
+          <input v-model="password" id="new-pw" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus:outline-none focus:ring-0" />
         </div>
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm uppercase" for="confirm-pw">Confirm Password</label>
-          <input v-model="confirm" id="confirm-pw" type="password" placeholder="••••••••" class="sunken-input px-sm py-3 text-body-md focus:outline-none focus:ring-0" />
+          <input v-model="confirm" id="confirm-pw" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus:outline-none focus:ring-0" />
         </div>
 
         <p v-if="error" class="text-error text-label-sm">{{ error }}</p>

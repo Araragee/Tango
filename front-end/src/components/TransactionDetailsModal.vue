@@ -84,6 +84,24 @@ const removeReceipt = async () => {
         // the server value unchanged and causing the receipt to reappear after
         // the next realtime refetch. (B66)
         await store.updateTransaction(props.transaction.id, { receipt_url: null });
+
+        // Also delete the file from Supabase Storage so orphaned objects don't
+        // accumulate in the bucket. Extract the in-bucket path by splitting the
+        // public URL on the `/public/<bucket>/` segment. (B124)
+        if (isConfigured) {
+            const marker = `/public/${RECEIPTS_BUCKET}/`;
+            const markerIdx = props.transaction.receipt_url.indexOf(marker);
+            if (markerIdx !== -1) {
+                const storagePath = props.transaction.receipt_url.slice(markerIdx + marker.length);
+                // Fire-and-forget: a storage delete failure is non-fatal — the DB
+                // column is already cleared and the file is effectively orphaned
+                // at worst. Log the error but don't surface it to the user.
+                supabase.storage.from(RECEIPTS_BUCKET).remove([storagePath]).catch((err: any) => {
+                    console.warn('[removeReceipt] storage delete failed:', err);
+                });
+            }
+        }
+
         notify('Receipt removed.', 'success');
     } catch (e: any) {
         notify(e.message ?? 'Failed to remove receipt.', 'error');

@@ -20,7 +20,7 @@ const isActive = (path: string) => route.path === path;
       v-for="item in navItems"
       :key="item.path"
       @click="router.push(item.path)"
-      class="flex flex-col items-center justify-center p-2 active:scale-95 transition-transform"
+      class="flex flex-col items-center justify-center p-2 min-w-[48px] min-h-[48px] active:scale-95 transition-transform"
       :class="[
         isActive(item.path)
           ? 'bg-primary text-on-primary pixel-border hard-shadow-dark'

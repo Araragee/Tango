@@ -12,6 +12,7 @@ import TangoCard from './TangoCard.vue';
 import TangoInput from './TangoInput.vue';
 import QrCode from './QrCode.vue';
 import EmojiCategoryEditor from './EmojiCategoryEditor.vue';
+import { useOfflineQueue } from '../stores/useOfflineQueue';
 
 const router = useRouter();
 const store = useAppStore();
@@ -20,6 +21,7 @@ const household = useHouseholdStore();
 const themeStore = useThemeStore();
 const prefs = usePreferencesStore();
 const push = usePushStore();
+const offline = useOfflineQueue();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const userName = ref(store.userName);
@@ -362,7 +364,7 @@ onMounted(() => {
           <TangoInput label="Your Name" v-model="userName" />
           <div class="flex flex-col gap-1">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Partner</label>
-            <div class="px-4 py-3 sunken-input bg-surface-variant text-on-surface-variant opacity-70">
+            <div class="px-4 py-3 sunken-input pixel-border-sm bg-surface-variant text-on-surface-variant opacity-70">
               {{ store.partnerName }}
             </div>
             <p class="text-[10px] text-on-surface-variant uppercase mt-1">Managed by partner</p>
@@ -476,7 +478,7 @@ onMounted(() => {
                   type="time"
                   :value="prefs.quietHoursStart"
                   @change="(e) => prefs.setQuietHours(true, (e.target as HTMLInputElement).value)"
-                  class="px-2 py-1 sunken-input text-body-md"
+                  class="px-2 py-1 sunken-input pixel-border-sm text-body-md"
                 />
               </div>
               <div class="flex flex-col gap-1">
@@ -485,7 +487,7 @@ onMounted(() => {
                   type="time"
                   :value="prefs.quietHoursEnd"
                   @change="(e) => prefs.setQuietHours(true, undefined, (e.target as HTMLInputElement).value)"
-                  class="px-2 py-1 sunken-input text-body-md"
+                  class="px-2 py-1 sunken-input pixel-border-sm text-body-md"
                 />
               </div>
               <p class="text-[10px] uppercase text-on-surface-variant pb-1">Errors always show</p>
@@ -589,7 +591,7 @@ onMounted(() => {
         <div class="space-y-6">
           <div class="flex flex-col gap-2">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Current Email</label>
-            <div class="px-4 py-3 sunken-input bg-surface-variant text-on-surface-variant">{{ auth.email ?? '—' }}</div>
+            <div class="px-4 py-3 sunken-input pixel-border-sm bg-surface-variant text-on-surface-variant">{{ auth.email ?? '—' }}</div>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
@@ -646,7 +648,7 @@ onMounted(() => {
                 type="number"
                 min="0"
                 max="100"
-                class="w-16 px-2 py-1 sunken-input text-body-md text-center"
+                class="w-16 px-2 py-1 sunken-input pixel-border-sm text-body-md text-center"
                 :value="prefs.incomeAllocations.find(a => a.goalId === goal.id)?.percent ?? 0"
                 @change="(e) => { const err = prefs.setIncomeAllocation(goal.id, +(e.target as HTMLInputElement).value); if (err) notify(err, 'error'); }"
               />
@@ -686,6 +688,51 @@ onMounted(() => {
             <p class="text-body-md text-on-surface-variant">Reset categories, budget limits, and theme to defaults. Household data on the server is not affected.</p>
             <TangoButton @click="resetPreferences" variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap">Reset Preferences</TangoButton>
           </div>
+        </div>
+      </TangoCard>
+
+      <TangoCard padding="lg" class="md:col-span-2" v-if="offline.pending.length || offline.failed.length">
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Sync Status</h3>
+
+        <!-- Pending Queue -->
+        <div v-if="offline.pending.length" class="space-y-3 mb-6">
+          <h4 class="text-label-md uppercase font-bold text-primary">Pending Changes ({{ offline.pending.length }})</h4>
+          <p class="text-label-sm text-on-surface-variant">These changes are queued in memory and will automatically sync when online.</p>
+          <div class="space-y-1 max-h-48 overflow-y-auto">
+            <div v-for="item in offline.pending" :key="item.id" class="flex items-center justify-between px-3 py-2 bg-surface-variant pixel-border-sm text-label-sm">
+              <div class="flex flex-col">
+                <span class="font-bold uppercase">{{ item.table }} · {{ item.op }}</span>
+                <span class="text-[10px] text-outline uppercase">Queued at {{ new Date(item.created_at).toLocaleTimeString() }}</span>
+              </div>
+              <span class="text-[10px] uppercase font-bold text-outline">Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Failed Queue -->
+        <div v-if="offline.failed.length" class="space-y-3">
+          <h4 class="text-label-md uppercase font-bold text-error">Sync Alerts / Failures ({{ offline.failed.length }})</h4>
+          <p class="text-label-sm text-on-surface-variant">The following updates could not be synced with the server. Review the errors and choose to retry or discard.</p>
+          <div class="space-y-2 max-h-64 overflow-y-auto">
+            <div v-for="item in offline.failed" :key="item.id" class="p-3 bg-error-container text-on-error-container pixel-border-sm text-label-sm space-y-2">
+              <div class="flex justify-between items-start">
+                <div>
+                  <span class="font-bold uppercase block">{{ item.table }} · {{ item.op }}</span>
+                  <span class="text-[10px] opacity-70 block">Attempts: {{ item.attempts }} / 5</span>
+                </div>
+                <div class="flex gap-2">
+                  <button @click="offline.retryFailed(item.id)" class="px-2 py-0.5 pixel-border-sm bg-primary text-on-primary text-[10px] uppercase font-bold hover:opacity-90">Retry</button>
+                  <button @click="offline.clearFailed(item.id)" class="px-2 py-0.5 pixel-border-sm bg-surface text-on-surface text-[10px] uppercase font-bold hover:opacity-90">Dismiss</button>
+                </div>
+              </div>
+              <p class="text-xs font-mono p-2 bg-black/10 rounded-sm border border-error/20 overflow-x-auto select-all" v-if="item.last_error">
+                {{ item.last_error }}
+              </p>
+            </div>
+          </div>
+          <TangoButton @click="offline.clearAllFailed()" variant="outline" class="text-error border-error border-2 hover:bg-error-container w-full mt-2" size="sm">
+            Dismiss All Failures
+          </TangoButton>
         </div>
       </TangoCard>
     </div>

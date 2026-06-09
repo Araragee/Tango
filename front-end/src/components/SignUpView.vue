@@ -111,7 +111,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="name">Your Name</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">person</span>
-            <input v-model="displayName" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="name" placeholder="Alex" type="text" autocomplete="name"/>
+            <input v-model="displayName" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="name" placeholder="Alex" type="text" autocomplete="name"/>
           </div>
         </div>
 
@@ -119,7 +119,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
+            <input v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
           </div>
         </div>
 
@@ -127,7 +127,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="new-password"/>
+            <input v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="new-password"/>
           </div>
           <div v-if="password" class="flex items-center gap-2 mt-1">
             <div class="flex-1 h-1.5 bg-surface-variant pixel-border-sm overflow-hidden">
@@ -143,7 +143,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="confirmPassword">Confirm Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="confirmPassword" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="confirmPassword" placeholder="••••••••" type="password" autocomplete="new-password"/>
+            <input v-model="confirmPassword" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="confirmPassword" placeholder="••••••••" type="password" autocomplete="new-password"/>
           </div>
         </div>
 

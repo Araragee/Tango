@@ -40,9 +40,14 @@ const redeem = async () => {
 
 onMounted(async () => {
     if (!isConfigured) return;
-    if (!auth.initialized) await auth.init();
-    if (auth.user && !household.householdId) {
-        await redeem();
+    try {
+        if (!auth.initialized) await auth.init();
+        if (auth.user && !household.householdId) {
+            await redeem();
+        }
+    } catch (e: any) {
+        error.value = e.message ?? 'Auth initialization failed.';
+        notify('Failed to initialize: ' + (e.message ?? 'Unknown error'), 'error');
     }
 });
 </script>

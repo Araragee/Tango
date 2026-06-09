@@ -16,7 +16,9 @@ export const isConfigured =
 export const AVATARS_BUCKET: string = import.meta.env.VITE_AVATARS_BUCKET ?? 'avatars'
 export const RECEIPTS_BUCKET: string = import.meta.env.VITE_RECEIPTS_BUCKET ?? 'avatars'
 
-export const supabase = createClient(
+import type { Database } from '@/types/database.types'
+
+export const supabase = createClient<Database>(
   isConfigured ? supabaseUrl : 'https://placeholder.supabase.co',
   isConfigured ? supabaseKey : 'placeholder-key',
   {

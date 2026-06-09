@@ -50,9 +50,9 @@ const currentGoal = computed<Goal | undefined>(() => {
     return store.plans.goals.find((g: Goal) => g.id === props.goalId);
 });
 
-watch(() => props.goalId, (newId) => {
-    if (newId) {
-        const goal = store.plans.goals.find((g: Goal) => g.id === newId);
+function populateForm(id: string | null | undefined) {
+    if (id) {
+        const goal = store.plans.goals.find((g: Goal) => g.id === id);
         if (goal) {
             title.value = goal.title;
             description.value = goal.description;
@@ -76,7 +76,18 @@ watch(() => props.goalId, (newId) => {
     errors.value = { title: '', target: '' };
     newContribAmount.value = '';
     newContribNote.value = '';
+}
+
+watch(() => props.goalId, (newId) => {
+    populateForm(newId);
 }, { immediate: true });
+
+// B125: also re-populate when the modal is opened with the same goalId —
+// the goalId watch won't fire if TangoPlans keeps selectedGoalId set across
+// close/reopen cycles, leaving stale unsaved edits visible on the next open.
+watch(() => props.show, (open) => {
+    if (open) populateForm(props.goalId);
+});
 
 const deleteGoal = async () => {
     if (!props.goalId) return;

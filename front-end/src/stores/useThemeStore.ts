@@ -45,7 +45,6 @@ export const useThemeStore = defineStore('theme', () => {
     systemDark.value = _mql.matches
     _mqlHandler = (e: MediaQueryListEvent) => {
       systemDark.value = e.matches
-      applyTheme()
     }
     _mql.addEventListener('change', _mqlHandler)
     applyTheme()

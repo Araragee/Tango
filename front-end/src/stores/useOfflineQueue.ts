@@ -25,15 +25,23 @@ export interface QueuedMutation {
 
 const DB_NAME = 'tango-offline'
 const STORE = 'mutations'
+const FAILED_STORE = 'failed'
 
 let _dbPromise: Promise<IDBPDatabase> | null = null
 
 function db(): Promise<IDBPDatabase> {
   if (!_dbPromise) {
-    _dbPromise = openDB(DB_NAME, 1, {
-      upgrade(database) {
-        if (!database.objectStoreNames.contains(STORE)) {
-          database.createObjectStore(STORE, { keyPath: 'id' })
+    _dbPromise = openDB(DB_NAME, 2, {
+      upgrade(database, oldVersion) {
+        if (oldVersion < 1) {
+          if (!database.objectStoreNames.contains(STORE)) {
+            database.createObjectStore(STORE, { keyPath: 'id' })
+          }
+        }
+        if (oldVersion < 2) {
+          if (!database.objectStoreNames.contains(FAILED_STORE)) {
+            database.createObjectStore(FAILED_STORE, { keyPath: 'id' })
+          }
         }
       },
     })
@@ -43,14 +51,24 @@ function db(): Promise<IDBPDatabase> {
 
 export const useOfflineQueue = defineStore('offlineQueue', () => {
   const pending = ref<QueuedMutation[]>([])
+  const failed = ref<QueuedMutation[]>([])
   const flushing = ref(false)
 
+  let _loadPromise: Promise<void> | null = null
+
   async function load() {
-    const d = await db()
-    pending.value = (await d.getAll(STORE)) as QueuedMutation[]
+    if (!_loadPromise) {
+      _loadPromise = (async () => {
+        const d = await db()
+        pending.value = (await d.getAll(STORE)) as QueuedMutation[]
+        failed.value = (await d.getAll(FAILED_STORE)) as QueuedMutation[]
+      })()
+    }
+    return _loadPromise
   }
 
   async function enqueue(table: string, op: QueueOp, payload: Record<string, any>, row_id?: string) {
+    await load()
     const entry: QueuedMutation = {
       id: crypto.randomUUID(),
       table,
@@ -66,12 +84,14 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
   }
 
   async function clearEntry(id: string) {
+    await load()
     const d = await db()
     await d.delete(STORE, id)
     pending.value = pending.value.filter(m => m.id !== id)
   }
 
   async function bumpFailure(id: string, message: string) {
+    await load()
     const d = await db()
     const item = (await d.get(STORE, id)) as QueuedMutation | undefined
     if (!item) return
@@ -81,26 +101,69 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     pending.value = pending.value.map(m => m.id === id ? item : m)
   }
 
+  async function moveToFailed(entry: QueuedMutation) {
+    await load()
+    const d = await db()
+    await d.delete(STORE, entry.id)
+    pending.value = pending.value.filter(m => m.id !== entry.id)
+    await d.put(FAILED_STORE, entry)
+    failed.value = [...failed.value, entry]
+  }
+
+  async function retryFailed(id: string) {
+    await load()
+    const d = await db()
+    const item = (await d.get(FAILED_STORE, id)) as QueuedMutation | undefined
+    if (!item) return
+
+    await d.delete(FAILED_STORE, id)
+    failed.value = failed.value.filter(m => m.id !== id)
+
+    item.attempts = 0
+    item.last_error = undefined
+    await d.put(STORE, item)
+    pending.value = [...pending.value, item]
+
+    flush()
+  }
+
+  async function clearFailed(id: string) {
+    await load()
+    const d = await db()
+    await d.delete(FAILED_STORE, id)
+    failed.value = failed.value.filter(m => m.id !== id)
+  }
+
+  async function clearAllFailed() {
+    await load()
+    const d = await db()
+    await d.clear(FAILED_STORE)
+    failed.value = []
+  }
+
   async function replay(entry: QueuedMutation) {
     if (!isConfigured) return
     if (entry.op === 'insert') {
-      const { error } = await supabase.from(entry.table).insert(entry.payload)
+      const { error } = await supabase.from(entry.table as any).insert(entry.payload as any)
       if (error) throw error
     } else if (entry.op === 'update') {
       if (!entry.row_id) throw new Error('Missing row_id for update')
-      const { error } = await supabase.from(entry.table).update(entry.payload).eq('id', entry.row_id)
+      const { error } = await supabase.from(entry.table as any).update(entry.payload as any).eq('id', entry.row_id)
       if (error) throw error
     } else if (entry.op === 'delete') {
       if (!entry.row_id) throw new Error('Missing row_id for delete')
-      const { error } = await supabase.from(entry.table).delete().eq('id', entry.row_id)
+      const { error } = await supabase.from(entry.table as any).delete().eq('id', entry.row_id)
       if (error) throw error
     }
   }
 
   async function clearAll() {
+    await load()
     const d = await db()
     await d.clear(STORE)
+    await d.clear(FAILED_STORE)
     pending.value = []
+    failed.value = []
   }
 
   async function flush() {
@@ -119,20 +182,12 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
         } catch (e: any) {
           const networkErr = isNetworkError(e)
           await bumpFailure(entry.id, e.message ?? String(e))
-          // bumpFailure writes a new object into pending.value but `entry` is
-          // still the pre-bumpFailure copy from the spread at the top of flush().
-          // Using `entry.attempts` here would read the stale pre-increment value,
-          // causing entries to be dropped after the 6th failure instead of the
-          // intended 5th. Add 1 to account for the increment done inside
-          // bumpFailure. (B93)
           if (entry.attempts + 1 >= 5) {
-            console.warn('[offline] dropping mutation after 5 attempts', entry)
-            await clearEntry(entry.id)
+            console.warn('[offline] moving mutation to failed after 5 attempts', entry)
+            entry.attempts += 1
+            entry.last_error = e.message ?? String(e)
+            await moveToFailed(entry)
           }
-          // Only pause the queue for network errors — the device is offline so
-          // all subsequent replays would fail too.  For permanent server errors
-          // (4xx / 5xx) the entry stays queued for a later retry and we continue
-          // flushing remaining mutations rather than blocking everything. (B80)
           if (networkErr) break
         }
       }
@@ -141,13 +196,9 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     }
   }
 
-  // Stable listener reference so we can remove the exact same function later
-  // and avoid accumulating duplicate 'online' listeners across hot-reloads or
-  // Pinia store re-initialisation.
   let _onlineHandler: (() => void) | null = null
 
   function startAutoFlush() {
-    // Remove any stale listener from a previous startAutoFlush call
     if (_onlineHandler) {
       window.removeEventListener('online', _onlineHandler)
     }
@@ -163,8 +214,11 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     }
   }
 
+  load()
+
   return {
     pending,
+    failed,
     flushing,
     load,
     enqueue,
@@ -173,5 +227,8 @@ export const useOfflineQueue = defineStore('offlineQueue', () => {
     flush,
     startAutoFlush,
     stopAutoFlush,
+    retryFailed,
+    clearFailed,
+    clearAllFailed,
   }
 })

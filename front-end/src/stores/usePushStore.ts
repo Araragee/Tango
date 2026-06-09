@@ -87,16 +87,19 @@ export const usePushStore = defineStore('push', () => {
     const household = useHouseholdStore()
     if (!isConfigured || !auth.user) return
     const json = sub.toJSON()
+    const p256dh = (json.keys as any)?.p256dh
+    const auth_key = (json.keys as any)?.auth
+    if (!p256dh || !auth_key) return
+
     const row = {
       user_id: auth.user.id,
-      household_id: household.householdId,
-      endpoint: json.endpoint,
-      p256dh: (json.keys as any)?.p256dh ?? null,
-      auth_key: (json.keys as any)?.auth ?? null,
+      endpoint: json.endpoint!,
+      p256dh,
+      auth_key,
     }
     const { error } = await supabase
       .from('push_subscriptions')
-      .upsert(row, { onConflict: 'endpoint' })
+      .upsert(row, { onConflict: 'user_id,endpoint' })
     if (error) console.error('[push.persist]', error)
   }
 

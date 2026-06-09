@@ -186,7 +186,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
+            <input v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="password" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="current-password"/>
+            <input v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="current-password"/>
           </div>
           <div class="flex justify-end mt-xs">
             <button
@@ -247,7 +247,7 @@ onMounted(() => {
           <label class="text-label-sm uppercase" for="ml-email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" id="ml-email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0"/>
+            <input v-model="email" id="ml-email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0"/>
           </div>
           <p class="text-label-sm text-on-surface-variant mt-xs">We'll email you a one-tap sign-in link.</p>
         </div>

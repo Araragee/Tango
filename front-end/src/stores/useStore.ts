@@ -9,6 +9,8 @@ import { saveReadCache, loadReadCache } from '@/composables/useReadCache'
 import { categoryIcon } from '@/utils/categoryIcons'
 import { localDateISO } from '@/utils/dateUtils'
 import { usePreferencesStore } from './usePreferencesStore'
+import { useContributionsStore } from './useContributionsStore'
+import type { Database } from '@/types/database.types'
 
 export class VersionConflictError extends Error {
   constructor(public table: string, public id: string) {
@@ -97,7 +99,7 @@ export interface CalendarEvent {
 
 // ─── Mappers ─────────────────────────────────────────────────────────────────
 
-function mapTransaction(r: any): Transaction {
+function mapTransaction(r: Database['public']['Tables']['transactions']['Row']): Transaction {
   return {
     id: r.id,
     title: r.title,
@@ -118,7 +120,7 @@ function mapTransaction(r: any): Transaction {
   }
 }
 
-function mapGoal(r: any): Goal {
+function mapGoal(r: Database['public']['Tables']['goals']['Row']): Goal {
   return {
     id: r.id,
     title: r.title,
@@ -136,28 +138,28 @@ function mapGoal(r: any): Goal {
   }
 }
 
-function mapTodo(r: any): Todo {
+function mapTodo(r: Database['public']['Tables']['todos']['Row']): Todo {
   return {
     id: r.id,
     text: r.text,
     completed: r.completed,
     category: r.category,
     shared: r.shared,
-    subtext: r.subtext,
-    assigned: r.assigned,
+    subtext: r.subtext ?? undefined,
+    assigned: r.assigned ?? undefined,
     assignee_id: r.assignee_id ?? null,
-    priority: r.priority,
+    priority: r.priority ?? undefined,
     due_date: r.due_date ?? null,
     created_at: r.created_at ?? null,
     completed_at: r.completed_at ?? null,
-    recurrence: r.recurrence ?? null,
+    recurrence: r.recurrence as Todo['recurrence'],
     recurrence_next_at: r.recurrence_next_at ?? null,
     checklist: Array.isArray(r.checklist) ? r.checklist : [],
     version: r.version,
   }
 }
 
-function mapEvent(r: any): CalendarEvent {
+function mapEvent(r: Database['public']['Tables']['calendar_events']['Row']): CalendarEvent {
   return {
     id: r.id,
     title: r.title,
@@ -336,6 +338,22 @@ export const useAppStore = defineStore('app', () => {
       .update({ avatar_url: null })
       .eq('id', auth.user.id)
     if (error) throw error
+
+    // Also delete the file from Supabase Storage to prevent orphaned objects
+    // accumulating in the avatars bucket. Extract the in-bucket path by
+    // splitting on '/public/avatars/'. Fire-and-forget — a storage delete
+    // failure is non-fatal (the DB column is already cleared). (I21)
+    if (avatarUrl.value) {
+      const marker = '/public/avatars/'
+      const markerIdx = avatarUrl.value.indexOf(marker)
+      if (markerIdx !== -1) {
+        const storagePath = avatarUrl.value.slice(markerIdx + marker.length)
+        supabase.storage.from('avatars').remove([storagePath]).catch((err: any) => {
+          console.warn('[removeAvatar] storage delete failed:', err)
+        })
+      }
+    }
+
     avatarUrl.value = null
   }
 
@@ -561,7 +579,6 @@ export const useAppStore = defineStore('app', () => {
       id,
       household_id: household.householdId,
       created_by: auth.user?.id,
-      updated_by: auth.user?.id,
       ...transaction,
     }
 
@@ -581,7 +598,6 @@ export const useAppStore = defineStore('app', () => {
     if (transaction.type === 'income') {
       const prefs = usePreferencesStore()
       if (prefs.incomeAllocations.length > 0) {
-        const { useContributionsStore } = await import('./useContributionsStore')
         const contributions = useContributionsStore()
         for (const alloc of prefs.incomeAllocations) {
           const goal = goals.value.find(g => g.id === alloc.goalId && g.status !== 'Completed')
@@ -642,7 +658,7 @@ export const useAppStore = defineStore('app', () => {
 
     if (!isConfigured) return
 
-    let q = supabase.from('transactions').update({ ...updates, updated_by: auth.user?.id }).eq('id', id)
+    let q = supabase.from('transactions').update(updates).eq('id', id)
     if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
     const { data, error } = await q.select('version')
 
@@ -876,9 +892,14 @@ export const useAppStore = defineStore('app', () => {
       completed: false,
       shared: true,
       updated_by: auth.user?.id,
+      ...task,
+      // These must come AFTER ...task so the ?? null coercion wins over any
+      // `undefined` values the spread would carry in for optional fields.
+      // If ...task ran last, `task.recurrence = undefined` would overwrite the
+      // intended `null`, sending an absent key to Supabase and relying on the
+      // DB column default rather than the explicit null the schema expects. (B127)
       recurrence: task.recurrence ?? null,
       recurrence_next_at: task.recurrence_next_at ?? null,
-      ...task,
     }
 
     const { error } = await supabase.from('todos').insert(payload)
@@ -1043,7 +1064,6 @@ export const useAppStore = defineStore('app', () => {
       id,
       household_id: household.householdId,
       created_by: auth.user?.id,
-      updated_by: auth.user?.id,
       ...event,
     }
 
@@ -1070,7 +1090,7 @@ export const useAppStore = defineStore('app', () => {
 
     if (!isConfigured) return
 
-    let q = supabase.from('calendar_events').update({ ...updates, updated_by: auth.user?.id }).eq('id', id)
+    let q = supabase.from('calendar_events').update(updates).eq('id', id)
     if (typeof expectedVersion === 'number') q = q.eq('version', expectedVersion)
     const { data, error } = await q.select('version')
 

@@ -13,8 +13,12 @@ const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'i
 
 const showModal = ref(false);
 const editingId = ref<string | null>(null);
+// I25: expand toggle — show only 6 by default, reveal all on demand.
+const showAll = ref(false);
 
-const upcoming = computed(() => recurring.upcoming.slice(0, 6));
+const upcoming = computed(() =>
+  showAll.value ? recurring.upcoming : recurring.upcoming.slice(0, 6)
+);
 
 const openNew = () => {
     editingId.value = null;
@@ -116,6 +120,16 @@ onMounted(async () => {
         </div>
       </li>
     </ul>
+
+    <!-- I25: show/hide toggle when there are more than 6 recurring items -->
+    <button
+      v-if="recurring.upcoming.length > 6"
+      @click="showAll = !showAll"
+      class="mt-3 w-full text-center text-label-sm uppercase text-on-surface-variant hover:text-primary transition-colors"
+    >
+      {{ showAll ? 'Show less' : `Show all ${recurring.upcoming.length}` }}
+      <span class="material-symbols-outlined text-[14px] align-middle">{{ showAll ? 'expand_less' : 'expand_more' }}</span>
+    </button>
 
     <RecurringTransactionModal :show="showModal" :recurring-id="editingId" @close="showModal = false" />
   </TangoCard>

@@ -167,7 +167,8 @@ create policy "profiles_select" on public.profiles for select
 
 -- Profiles: users can update their own
 create policy "profiles_update" on public.profiles for update
-  using (id = auth.uid());
+  using (id = auth.uid())
+  with check (id = auth.uid());
 
 -- Profiles: users can insert their own (on signup/onboarding)
 create policy "profiles_insert" on public.profiles for insert
@@ -197,7 +198,8 @@ create policy "transactions_select" on public.transactions for select
 create policy "transactions_insert" on public.transactions for insert
   with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "transactions_update" on public.transactions for update
-  using (public.is_household_member(household_id));
+  using (public.is_household_member(household_id))
+  with check (public.is_household_member(household_id));
 create policy "transactions_delete" on public.transactions for delete
   using (public.is_household_member(household_id));
 
@@ -207,7 +209,8 @@ create policy "goals_select" on public.goals for select
 create policy "goals_insert" on public.goals for insert
   with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "goals_update" on public.goals for update
-  using (public.is_household_member(household_id));
+  using (public.is_household_member(household_id))
+  with check (public.is_household_member(household_id));
 create policy "goals_delete" on public.goals for delete
   using (public.is_household_member(household_id));
 
@@ -223,6 +226,10 @@ create policy "todos_update" on public.todos for update
   using (
     (shared = false and owner_id = auth.uid()) or
     (shared = true and public.is_household_member(household_id))
+  )
+  with check (
+    (shared = false and owner_id = auth.uid()) or
+    (shared = true and public.is_household_member(household_id))
   );
 create policy "todos_delete" on public.todos for delete
   using (owner_id = auth.uid());
@@ -233,7 +240,8 @@ create policy "events_select" on public.calendar_events for select
 create policy "events_insert" on public.calendar_events for insert
   with check (public.is_household_member(household_id) and created_by = auth.uid());
 create policy "events_update" on public.calendar_events for update
-  using (public.is_household_member(household_id));
+  using (public.is_household_member(household_id))
+  with check (public.is_household_member(household_id));
 create policy "events_delete" on public.calendar_events for delete
   using (public.is_household_member(household_id));
 

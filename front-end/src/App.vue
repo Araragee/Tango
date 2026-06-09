@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, provide, onMounted, onUnmounted, watch } from 'vue';
+import { computed, ref, provide, onMounted, onUnmounted, watch, onErrorCaptured } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue';
@@ -181,6 +181,12 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
     notificationRef.value?.add(message, type);
   }
 });
+
+onErrorCaptured((err: any) => {
+  console.error('[App Error Captured]', err);
+  notificationRef.value?.add('An unexpected error occurred: ' + (err.message || String(err)), 'error');
+  return false;
+});
 </script>
 
 <template>
@@ -207,11 +213,20 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 
       <!-- Actions (right) -->
       <div class="flex items-center gap-3 ml-auto">
+        <!-- I22: show pending mutation count alongside the offline badge so users
+             know how many writes are queued for when the network comes back. -->
+        <span
+          v-if="showNav && offline.failed.length"
+          @click="router.push('/app/settings')"
+          class="px-2 py-0.5 pixel-border-sm bg-[#f59e0b] text-black text-[10px] uppercase font-bold cursor-pointer animate-pulse"
+          :title="`${offline.failed.length} sync failure(s) — tap to view`"
+        >Sync Alert · {{ offline.failed.length }}</span>
+
         <span
           v-if="showNav && !presence.isOnline"
           class="px-2 py-0.5 pixel-border-sm bg-error text-on-error text-[10px] uppercase font-bold"
-          title="You are offline"
-        >Offline</span>
+          :title="offline.pending.length ? `${offline.pending.length} change(s) queued — will sync when back online` : 'You are offline'"
+        >Offline<span v-if="offline.pending.length"> · {{ offline.pending.length }}</span></span>
 
         <button
           v-if="showNav"
@@ -329,5 +344,17 @@ provide('notify', (message: string, type?: 'success' | 'error' | 'info') => {
 .slide-fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-fade-enter-active,
+  .slide-fade-leave-active {
+    transition: none !important;
+  }
+  .slide-fade-enter-from,
+  .slide-fade-leave-to {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 </style>

@@ -392,3 +392,42 @@ All original B1–B30 bugs have been fixed, plus new bugs found in Phase 7, Phas
 - `usePreferencesStore.isInQuietHours()`: overnight range logic correct; `< endMins` boundary is intentional (quiet hours end at the start of the `end` minute, not after it).
 - Income allocation auto-contribute loop: B123 fix means the sum-of-percents ≤ 100 invariant is now enforced at write time, so the loop in `addTransaction` cannot over-allocate.
 - 75/75 tests pass (`npm run test`).
+
+---
+
+**Phase 32 bugs — resolved**
+
+- **B124**: `TransactionDetailsModal.vue` `removeReceipt()` — nulled out `receipt_url` in the DB but never called `supabase.storage.remove()`, so every removed receipt left an orphaned file in the storage bucket indefinitely. Fixed: after the DB update succeeds, extract the in-bucket path by splitting the public URL on `/public/<RECEIPTS_BUCKET>/` and call `storage.from(RECEIPTS_BUCKET).remove([path])`. The storage delete is fire-and-forget (non-fatal — the DB column is already cleared; worst case is one orphaned file rather than a broken UI).
+
+**Phase 32 improvements**
+
+- **I20**: `usePreferencesStore.ts` `setIncomeAllocation()` — `currentForGoal` (the existing percent for the goal being updated) was computed on line 124 but never referenced anywhere in the function body; only `totalWithout` is used for the over-100% guard. Removed the dead variable.
+
+- **I21**: `useStore.ts` `removeAvatar()` — same root cause as B124: nulled out `avatar_url` in the DB but never called `supabase.storage.from('avatars').remove()`, leaving orphaned avatar files in the bucket. Fixed with the same fire-and-forget pattern: extract path from the stored public URL before clearing `avatarUrl.value`, then issue the storage delete.
+
+**Phase 32 audit notes**
+
+- Full read-based pass over all stores, composables, router, utilities, and all components. No further regressions beyond B124/I20/I21 found.
+- Storage lifecycle: both avatar and receipt files are now properly deleted from Supabase Storage when removed. `uploadAvatar` uses `upsert: true` with a UUID-keyed path so each upload is a new object (old avatars are not overwritten in place) — the delete-on-remove fix closes that leak.
+- 75/75 tests pass (`npm run test`). `vue-tsc --noEmit` clean.
+- 75/75 tests pass (`npm run test`). `vue-tsc --noEmit` clean.
+
+---
+
+**Phase 33 bugs — resolved**
+
+- **B125**: `EditGoalModal.vue` — form fields were not re-populated when the same goal was reopened after the modal was closed without saving. `TangoPlans.vue` never resets `selectedGoalId` to `null` on close, so the `watch(() => props.goalId, ...)` never re-fires on a re-open of the same goal. Unsaved edits from the previous session were visible when the modal opened again. Fix: extracted the population logic into `populateForm(id)` and added a separate `watch(() => props.show, (open) => { if (open) populateForm(props.goalId) })` that re-reads fresh store data every time the modal becomes visible.
+
+- **B126**: `NotificationSystem.vue` — toasts had no manual dismiss control. Users had to wait the full 3-second auto-timeout, which was especially disruptive on mobile when an error toast blocked touch targets. Fix: added a `close` icon button to each toast that calls `remove(n.id)` on click, matching the ARIA `aria-label="Dismiss"` pattern used elsewhere.
+
+**Phase 33 improvements**
+
+- **I22**: `App.vue` offline badge — the badge previously showed only the static text "Offline" with no indication of how many write operations were queued. Extended the badge to also render the `offline.pending.length` count (e.g. "Offline · 3") and updated the `title` tooltip to explain that changes will sync when back online. The count reacts live to enqueue/dequeue events via Pinia reactivity.
+
+- **I23**: `BudgetTracker.vue` — the balance card showed only the running total balance with no breakdown of where money came from or went this month. Added a two-cell month-to-date `Income this month` / `Spent this month` summary strip directly below the balance card. Derived from `recentActivity` filtered to the current calendar month — no extra fetch; always in sync with the balance figure. Income cell uses `secondary-container` theming; expense cell uses `error-container` so the split is immediately readable at a glance.
+
+**Phase 33 audit notes**
+
+- Full read-based pass over `EditGoalModal.vue`, `TangoPlans.vue`, `NotificationSystem.vue`, `App.vue`, `BudgetTracker.vue`, `useOfflineQueue.ts`, `usePreferencesStore.ts`, `usePresenceStore.ts`, `useStore.ts`, and all realtime stores.
+- No new offline-queue, realtime, UTC-date, or listener-cleanup regressions found beyond B125/B126/I22/I23.
+- Numbering note: B124 was used in Phase 32 for `TransactionDetailsModal.vue` receipt orphan cleanup. Phase 33 items pick up at B125.
