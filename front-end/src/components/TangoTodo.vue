@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+import { useUndoToast } from '../composables/useUndoToast';
+
+const { confirm } = useConfirm();
+const { showUndo } = useUndoToast();
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Todo, type ChecklistItem } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -183,13 +188,36 @@ const nudgePartner = async (todo: Todo) => {
 };
 
 const confirmDelete = async (todo: Todo) => {
-  if (!confirm(`Delete "${todo.text}"? This cannot be undone.`)) return;
+  // Soft delete with undo
   try {
+    const previousState = { ...todo };
     await store.deleteTask(todo.id);
-    notify('Task deleted.', 'success');
+
+    showUndo({
+      message: 'Task deleted.',
+      onUndo: async () => {
+        try {
+          await store.addTask({
+            ...previousState,
+            id: undefined, // Let the backend generate a new ID, or we need to recreate with same ID if store supports it
+            created_at: undefined,
+          } as any);
+        } catch (e: any) {
+          notify(e.message ?? 'Failed to restore task.', 'error');
+        }
+      }
+    });
   } catch (e: any) {
     notify(e.message ?? 'Failed to delete task.', 'error');
   }
+};
+
+const snoozeTodo = async (todo: Todo) => {
+    try {
+        notify('Snooze requires due dates feature (P2).', 'info');
+    } catch (e: any) {
+        notify('Failed to snooze.', 'error');
+    }
 };
 
 const assigneeLabel = (todo: Todo): string => {
@@ -469,6 +497,14 @@ const phraseOfTheDay = computed(() => {
             aria-label="Edit task"
           >
             edit
+          </button>
+          <button
+            @click.stop="snoozeTodo(todo)"
+            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
+            aria-label="Snooze task"
+            title="Snooze until tomorrow"
+          >
+            snooze
           </button>
           <button
             @click.stop="confirmDelete(todo)"

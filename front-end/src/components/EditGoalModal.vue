@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+import { useUndoToast } from '../composables/useUndoToast';
+
+const { confirm } = useConfirm();
+const { showUndo } = useUndoToast();
 import { ref, computed, watch, inject } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
@@ -91,7 +96,7 @@ watch(() => props.show, (open) => {
 
 const deleteGoal = async () => {
     if (!props.goalId) return;
-    if (!confirm('Delete this goal? This cannot be undone.')) return;
+    if (!(await confirm({ title: 'Delete Goal', message: 'Delete this goal? This cannot be undone.', isDestructive: true }))) return;
     try {
         await store.deleteGoal(props.goalId);
         emit('close');
@@ -182,15 +187,30 @@ const addContribution = async () => {
 };
 
 const removeContribution = async (id: string) => {
-    if (!confirm('Remove this contribution? Goal progress will be recalculated.')) return;
     const contrib = contributions.items.find(c => c.id === id);
     const goal = currentGoal.value;
     try {
+        const previousState = contrib ? { ...contrib } : null;
         await contributions.removeContribution(id);
-        // Sync goal.saved downward immediately so the progress bar updates
-        // without waiting for realtime — same pattern as addContribution. (B81)
+
         if (contrib && goal && props.goalId) {
-            await store.updateGoalProgress(props.goalId, Math.max(0, goal.saved - contrib.amount));
+            await store.updateGoalProgress(props.goalId, Math.max(0, goal.saved - (contrib?.amount || 0)));
+        }
+
+        if (previousState) {
+          showUndo({
+            message: 'Contribution removed.',
+            onUndo: async () => {
+              try {
+                await contributions.addContribution(previousState.goal_id, previousState.amount, previousState.note || '');
+                if (goal && props.goalId) {
+                  await store.updateGoalProgress(props.goalId, Math.max(0, goal.saved - (contrib?.amount || 0)) + previousState.amount);
+                }
+              } catch (e: any) {
+                notify('Failed to restore contribution: ' + (e.message ?? 'Unknown error'), 'error');
+              }
+            }
+          });
         }
     } catch (e: any) {
         notify('Failed to remove: ' + (e.message ?? 'Unknown error'), 'error');

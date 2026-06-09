@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+
+const { confirm } = useConfirm();
 import { ref, inject, computed } from 'vue';
 import { localDateISO } from '../utils/dateUtils';
 import { useAppStore } from '../stores/useStore';
@@ -70,7 +73,7 @@ const sortedFilteredGoals = computed(() => {
 });
 
 const confirmDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete goal "${title}"? This cannot be undone.`)) return;
+    if (!(await confirm({ title: 'Delete Goal', message: `Delete goal "${title}"? This cannot be undone.`, isDestructive: true }))) return;
     try {
         await store.deleteGoal(id);
         notify('Goal deleted.', 'success');

@@ -332,7 +332,7 @@ function reset() {
           </label>
           <select
             v-model="mapping[field.key]"
-            class="sunken-input px-3 py-2 text-body-md pixel-border-sm bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
+            class="sunken-input px-3 py-2 text-body-md pixel-border-sm bg-surface focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
           >
             <option value="">— skip —</option>
             <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>

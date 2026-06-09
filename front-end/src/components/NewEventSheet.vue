@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+
+const { confirm } = useConfirm();
 import { ref, watch, computed, inject, onMounted, onUnmounted } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
@@ -86,7 +89,7 @@ const saveBusy = ref(false);
 
 const deleteEvent = async () => {
     if (!editingEventId.value) return;
-    if (!confirm('Delete this event?')) return;
+    if (!(await confirm({ title: 'Delete Event', message: 'Delete this event?', isDestructive: true }))) return;
     saveBusy.value = true;
     try {
         await store.deleteEvent(editingEventId.value);
