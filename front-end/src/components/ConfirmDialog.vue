@@ -67,7 +67,7 @@ const handleKeydown = (e: KeyboardEvent) => {
           {{ options.cancelText || 'Cancel' }}
         </TangoButton>
         <TangoButton
-          :variant="options.isDestructive ? 'primary' : 'primary'"
+          variant="primary"
           :class="options.isDestructive ? 'bg-error hover:bg-error/90 text-on-error' : ''"
           @click="handleAccept"
           :disabled="options.requireTypedText ? typedText !== options.requireTypedText : false"

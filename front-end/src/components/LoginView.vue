@@ -19,7 +19,6 @@ const mode = ref<Mode>('password');
 const email = ref('');
 const password = ref('');
 const showPassword = ref(false);
-const magicLinkCooldown = ref(0);
 const keepLoggedIn = ref(true);
 const error = ref('');
 const loading = ref(false);

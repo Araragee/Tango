@@ -38,11 +38,11 @@ const { isVisible, currentOptions, handleUndo, hide } = useUndoToast()
 
 .toast-enter-from {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translateX(-50%) translateY(20px);
 }
 
 .toast-leave-to {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translateX(-50%) translateY(20px);
 }
 </style>

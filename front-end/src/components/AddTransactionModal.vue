@@ -42,7 +42,14 @@ watch(() => props.show, (open) => {
   type.value = 'expense';
   date.value = localDateISO();
   note.value = '';
-  paidByMe.value = null;
+  const saved = localStorage.getItem('tango:default_paid_by');
+  if (saved === auth.user?.id) {
+    paidByMe.value = true;
+  } else if (saved === household.partner?.user_id) {
+    paidByMe.value = false;
+  } else {
+    paidByMe.value = null;
+  }
   errors.value = { title: '', amount: '' };
   newCategory.value = '';
 });

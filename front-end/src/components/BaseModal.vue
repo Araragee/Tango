@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { FocusTrap } from 'focus-trap-vue';
+import { useScrollLock } from '../composables/useScrollLock';
 
 interface Props {
   show: boolean;
@@ -13,6 +14,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 const emit = defineEmits(['close']);
 
+const { lock, unlock } = useScrollLock();
+
 const onKeydown = (e: KeyboardEvent) => {
   if (props.show && e.key === 'Escape') {
     emit('close');
@@ -21,11 +24,11 @@ const onKeydown = (e: KeyboardEvent) => {
 
 watch(() => props.show, (newShow) => {
   if (newShow) {
-    document.body.style.overflow = 'hidden';
+    lock();
   } else {
-    document.body.style.overflow = '';
+    unlock();
   }
-});
+}, { immediate: true });
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown);
@@ -33,7 +36,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown);
-  document.body.style.overflow = '';
+  unlock();
 });
 
 </script>
@@ -66,7 +69,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Modal Footer -->
-          <div class="p-6 pt-0 flex flex-wrap gap-4 justify-end border-t-2 border-on-surface border-opacity-10 mt-2 md:pt-4">
+          <div class="p-6 pt-0 flex flex-wrap gap-4 justify-end border-t-2 border-on-surface/10 mt-2 md:pt-4">
             <slot name="footer" />
           </div>
         </div>

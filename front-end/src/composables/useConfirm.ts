@@ -15,10 +15,13 @@ const options = ref<ConfirmOptions>({
   message: ''
 })
 
-let resolvePromise: (value: boolean) => void
+let resolvePromise: ((value: boolean) => void) | null = null
 
 export function useConfirm() {
   const confirm = (opts: ConfirmOptions): Promise<boolean> => {
+    if (isOpen.value && resolvePromise) {
+      resolvePromise(false)
+    }
     options.value = {
       confirmText: 'Confirm',
       cancelText: 'Cancel',
@@ -33,12 +36,18 @@ export function useConfirm() {
 
   const cancel = () => {
     isOpen.value = false
-    if (resolvePromise) resolvePromise(false)
+    if (resolvePromise) {
+      resolvePromise(false)
+      resolvePromise = null
+    }
   }
 
   const accept = () => {
     isOpen.value = false
-    if (resolvePromise) resolvePromise(true)
+    if (resolvePromise) {
+      resolvePromise(true)
+      resolvePromise = null
+    }
   }
 
   return {

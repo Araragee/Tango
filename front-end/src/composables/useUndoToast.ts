@@ -12,6 +12,8 @@ let timeoutId: number | null = null
 
 export function useUndoToast() {
   const showUndo = (options: UndoOptions) => {
+    // Note: Calling showUndo while a toast is active replaces the prior undo.
+    // The user loses the ability to undo the previous action.
     if (timeoutId) {
       clearTimeout(timeoutId)
     }

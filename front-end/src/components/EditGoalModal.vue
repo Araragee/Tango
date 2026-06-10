@@ -204,7 +204,7 @@ const removeContribution = async (id: string) => {
               try {
                 await contributions.addContribution(previousState.goal_id, previousState.amount, previousState.note || '');
                 if (goal && props.goalId) {
-                  await store.updateGoalProgress(props.goalId, Math.max(0, goal.saved - (contrib?.amount || 0)) + previousState.amount);
+                  await store.updateGoalProgress(props.goalId, goal.saved + previousState.amount);
                 }
               } catch (e: any) {
                 notify('Failed to restore contribution: ' + (e.message ?? 'Unknown error'), 'error');
