@@ -74,7 +74,7 @@ function printReport() {
           <input
             v-model="selectedMonth"
             type="month"
-            class="sunken-input px-3 py-1.5 text-body-md pixel-border-sm focus:outline-none focus:ring-1 focus:ring-primary"
+            class="sunken-input px-3 py-1.5 text-body-md pixel-border-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
           />
         </label>
         <TangoButton size="sm" shadow="dark" @click="printReport">

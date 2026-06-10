@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+
+const { confirm } = useConfirm();
 import { ref, watch, inject } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
@@ -111,7 +114,7 @@ const save = async () => {
 
 const deleteRecurring = async () => {
     if (!props.recurringId) return;
-    if (!confirm('Delete this recurring transaction? Future occurrences will stop. Past spawned transactions are untouched.')) return;
+    if (!(await confirm({ title: 'Delete Recurring Transaction', message: 'Delete this recurring transaction? Future occurrences will stop. Past spawned transactions are untouched.', isDestructive: true }))) return;
     try {
         await recurring.remove(props.recurringId);
         emit('close');
@@ -137,7 +140,7 @@ const deleteRecurring = async () => {
         <TangoInput v-model.number="amount" label="Amount" type="number" :error="errors.amount" required />
         <div class="flex flex-col gap-2">
           <label class="text-label-sm text-on-surface-variant uppercase font-bold">Cadence</label>
-          <select v-model="cadence" class="sunken-input px-3 py-2 text-body-md focus:outline-none focus:ring-0 pixel-border-sm">
+          <select v-model="cadence" class="sunken-input px-3 py-2 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none pixel-border-sm">
             <option v-for="c in cadences" :key="c.value" :value="c.value">{{ c.label }}</option>
           </select>
         </div>

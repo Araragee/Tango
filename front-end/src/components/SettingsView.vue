@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+
+const { confirm } = useConfirm();
 import { ref, computed, watch, inject, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
@@ -110,7 +113,7 @@ const onAvatarChosen = async (e: Event) => {
 };
 
 const removeAvatar = async () => {
-    if (!confirm('Remove your avatar?')) return;
+    if (!(await confirm({ title: 'Remove Avatar', message: 'Remove your avatar?', isDestructive: true }))) return;
     try {
         await store.removeAvatar();
         notify('Avatar removed.', 'success');
@@ -178,7 +181,7 @@ const regenerateInvite = async () => {
 };
 
 const revokeInvites = async () => {
-    if (!confirm('Revoke any outstanding invites? Existing partner is not affected.')) return;
+    if (!(await confirm({ title: 'Revoke Invites', message: 'Revoke any outstanding invites? Existing partner is not affected.', isDestructive: true }))) return;
     try {
         await household.revokeInvites();
         notify('Invites revoked.', 'success');
@@ -214,7 +217,7 @@ const copyLink = async () => {
 const transferCreator = async () => {
     const target = household.partner;
     if (!target) return;
-    if (!confirm(`Transfer creator role to ${store.partnerName}? You'll become the partner.`)) return;
+    if (!(await confirm({ title: 'Transfer Role', message: `Transfer creator role to ${store.partnerName}? You'll become the partner.`, isDestructive: true, requireTypedText: store.partnerName }))) return;
     try {
         await household.transferCreator(target.user_id);
         notify('Creator role transferred.', 'success');
@@ -227,7 +230,7 @@ const removingPartner = ref(false);
 const removePartner = async () => {
     const target = household.partner;
     if (!target) return;
-    if (!confirm(`Remove ${store.partnerName} from your household? They will lose access to all shared data.`)) return;
+    if (!(await confirm({ title: 'Remove Partner', message: `Remove ${store.partnerName} from your household? They will lose access to all shared data.`, isDestructive: true, requireTypedText: store.partnerName }))) return;
     removingPartner.value = true;
     try {
         await household.removeMember(target.user_id);
@@ -244,7 +247,7 @@ const removePartner = async () => {
 };
 
 const leaveHousehold = async () => {
-    if (!confirm('Leave this household? You will lose access to shared data. This cannot be undone.')) return;
+    if (!(await confirm({ title: 'Leave Household', message: 'Leave this household? You will lose access to shared data. This cannot be undone.', isDestructive: true, requireTypedText: 'LEAVE' }))) return;
     try {
         await household.leaveHousehold();
         notify('You left the household.', 'success');
@@ -255,12 +258,9 @@ const leaveHousehold = async () => {
 };
 
 const deleteAccount = async () => {
-    if (!confirm('Permanently delete your account? All your data will be removed. This cannot be undone.')) return;
-    const typed = window.prompt('Type DELETE to confirm account deletion:');
-    if ((typed ?? '').trim().toUpperCase() !== 'DELETE') {
-        if (typed !== null) notify('Confirmation text did not match. Account not deleted.', 'info');
-        return;
-    }
+    if (!(await confirm({ title: 'Delete Account', message: 'Permanently delete your account? All your data will be removed. This cannot be undone.', isDestructive: true, requireTypedText: 'DELETE' }))) return;
+
+
     try {
         await household.deleteAccount();
         notify('Account deleted.', 'success');
@@ -270,8 +270,8 @@ const deleteAccount = async () => {
     }
 };
 
-const resetPreferences = () => {
-    if (!confirm('Reset categories, budget limits, and theme to defaults? Your household data (transactions, goals, todos, events) will not be touched.')) return;
+const resetPreferences = async () => {
+    if (!(await confirm({ title: 'Reset Settings', message: 'Reset categories, budget limits, and theme to defaults? Your household data (transactions, goals, todos, events) will not be touched.', isDestructive: true }))) return;
     localStorage.removeItem('tango:preferences');
     localStorage.removeItem('tango-theme'); // plugin key (was tango-dark + tango-accent)
     localStorage.removeItem('tango-dark');   // legacy key — keep for clean migration
@@ -291,7 +291,7 @@ const signOut = async () => {
 
 const loggingOutAll = ref(false);
 const signOutAllDevices = async () => {
-    if (!confirm('Sign out from all devices? You will need to sign in again.')) return;
+    if (!(await confirm({ title: 'Sign Out All', message: 'Sign out from all devices? You will need to sign in again.', isDestructive: true, requireTypedText: 'SIGNOUT' }))) return;
     loggingOutAll.value = true;
     try {
         await auth.logoutAllDevices();

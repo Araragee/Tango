@@ -258,7 +258,9 @@ const exportCSV = () => {
               </div>
             </div>
             <div v-else-if="store.budget.monthlySpending.length === 0">
-              <EmptyState icon="pie_chart" title="No spending yet" description="Expenses this month will appear here." />
+              <EmptyState icon="pie_chart" title="No spending yet" description="Expenses this month will appear here.">
+                  <TangoButton class="mt-4" @click="showAddModal = true">Add Transaction</TangoButton>
+              </EmptyState>
             </div>
             <div v-else v-for="cat in store.budget.monthlySpending" :key="cat.id">
               <div class="flex justify-between text-label-sm mb-2 uppercase items-center">

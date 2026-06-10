@@ -119,7 +119,7 @@ describe('App', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('TANGO');
+    expect(wrapper.text()).toContain('Tango');
     expect(wrapper.text()).toContain('Finance & Planning');
   });
 });

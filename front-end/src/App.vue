@@ -2,9 +2,13 @@
 import { computed, ref, provide, onMounted, onUnmounted, watch, onErrorCaptured } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
-import NotificationSystem from './components/NotificationSystem.vue';
+import NotificationSystem from './components/NotificationSystem.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
+import UndoToast from './components/UndoToast.vue';
 import GlobalSearch from './components/GlobalSearch.vue';
-import NotificationsBell from './components/NotificationsBell.vue';
+import NotificationsBell from './components/NotificationsBell.vue'
+import HelpDialog from './components/HelpDialog.vue'
+import SyncStatusPill from './components/SyncStatusPill.vue';
 import ActivityFeed from './components/ActivityFeed.vue';
 import PresenceBadge from './components/PresenceBadge.vue';
 import PushPromptBanner from './components/PushPromptBanner.vue';
@@ -30,6 +34,7 @@ const route = useRoute();
 const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null);
 const showSearch = ref(false);
 const showActivity = ref(false);
+const showHelp = ref(false);
 
 const auth = useAuthStore();
 const household = useHouseholdStore();
@@ -87,6 +92,14 @@ onUnmounted(() => {
   window.removeEventListener('keydown', onGlobalKey);
   offline.stopAutoFlush();
   presence.stopNetworkWatch();
+
+  // Teardown all channels
+  notifications.unsubscribe();
+  achievements.unsubscribe();
+  activity.unsubscribe();
+  presence.unsubscribe();
+  contributions.unsubscribe();
+  recurring.unsubscribe();
 });
 
 watch(
@@ -194,39 +207,9 @@ onErrorCaptured((err: any) => {
     <header class="fixed top-0 left-0 w-full z-40 flex items-center px-4 md:px-8 h-16 bg-surface border-b-2 border-black dark:border-white">
       <!-- Logo -->
       <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="goHome()">
-        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
-        <h1 class="text-2xl font-black text-primary tracking-[0.1em] italic uppercase">TANGO</h1>
-      </div>
 
-      <!-- Desktop nav (center) -->
-      <nav v-if="showNav" class="hidden md:flex items-center gap-1 mx-auto">
-        <button
-          v-for="item in navItems"
-          :key="item.path"
-          @click="router.push(item.path)"
-          class="px-4 py-1.5 text-label-sm uppercase font-bold tracking-wider transition-all"
-          :class="route.path === item.path
-            ? 'bg-primary text-on-primary pixel-border hard-shadow-dark'
-            : 'text-on-surface hover:text-primary'"
-        >{{ item.name }}</button>
-      </nav>
 
-      <!-- Actions (right) -->
-      <div class="flex items-center gap-3 ml-auto">
-        <!-- I22: show pending mutation count alongside the offline badge so users
-             know how many writes are queued for when the network comes back. -->
-        <span
-          v-if="showNav && offline.failed.length"
-          @click="router.push('/app/settings')"
-          class="px-2 py-0.5 pixel-border-sm bg-[#f59e0b] text-black text-[10px] uppercase font-bold cursor-pointer animate-pulse"
-          :title="`${offline.failed.length} sync failure(s) — tap to view`"
-        >Sync Alert · {{ offline.failed.length }}</span>
 
-        <span
-          v-if="showNav && !presence.isOnline"
-          class="px-2 py-0.5 pixel-border-sm bg-error text-on-error text-[10px] uppercase font-bold"
-          :title="offline.pending.length ? `${offline.pending.length} change(s) queued — will sync when back online` : 'You are offline'"
-        >Offline<span v-if="offline.pending.length"> · {{ offline.pending.length }}</span></span>
 
         <button
           v-if="showNav"
@@ -239,8 +222,18 @@ onErrorCaptured((err: any) => {
           <kbd class="hidden lg:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
         </button>
 
+        <SyncStatusPill v-if="showNav" />
         <NotificationsBell v-if="showNav" />
 
+
+        <button
+          v-if="showNav"
+          @click="showHelp = true"
+          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          aria-label="Help"
+        >
+          help
+        </button>
         <button
           v-if="showNav"
           @click="showActivity = true"
@@ -298,10 +291,13 @@ onErrorCaptured((err: any) => {
     <BottomNav v-if="showNav" />
 
     <NotificationSystem ref="notificationRef" />
+    <ConfirmDialog />
+    <UndoToast />
 
     <GlobalSearch :show="showSearch" @close="showSearch = false" />
 
     <ActivityFeed :show="showActivity" @close="showActivity = false" />
+    <HelpDialog :show="showHelp" @close="showHelp = false" />
 
     <PushPromptBanner />
     <IosInstallHint />

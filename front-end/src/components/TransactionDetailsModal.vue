@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+import { useUndoToast } from '../composables/useUndoToast';
+
+const { confirm } = useConfirm();
+const { showUndo } = useUndoToast();
 import { ref, watch, inject } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
@@ -77,7 +82,7 @@ const onReceiptChosen = async (e: Event) => {
 
 const removeReceipt = async () => {
     if (!props.transaction?.receipt_url) return;
-    if (!confirm('Remove the attached receipt?')) return;
+    if (!(await confirm({ title: 'Remove Receipt', message: 'Remove the attached receipt?', isDestructive: true }))) return;
     try {
         // Pass null (not undefined) so Supabase serialises it as JSON null and
         // actually clears the column.  undefined is stripped from JSON, leaving
@@ -124,11 +129,32 @@ const saveBusy = ref(false);
 
 const deleteTx = async () => {
     if (!props.transaction) return;
-    if (!confirm(`Delete "${props.transaction.title}"? This cannot be undone.`)) return;
     deleteBusy.value = true;
     try {
+        const previousState = { ...props.transaction };
         await store.deleteTransaction(props.transaction.id);
         emit('close');
+
+        showUndo({
+          message: 'Transaction deleted.',
+          onUndo: async () => {
+            try {
+              await store.addTransaction({
+                title: previousState.title,
+                amount: previousState.amount,
+                date: previousState.date,
+                category: previousState.category,
+                paid_by: previousState.paid_by,
+                type: previousState.type,
+                note: previousState.note,
+                receipt_url: previousState.receipt_url,
+                icon: previousState.icon
+              });
+            } catch (e: any) {
+              notify(e.message ?? 'Failed to restore transaction.', 'error');
+            }
+          }
+        });
     } catch (e: any) {
         notify(e.message ?? 'Failed to delete transaction.', 'error');
     } finally {
@@ -207,7 +233,7 @@ const saveEdit = async () => {
                 v-model="editNote"
                 rows="3"
                 placeholder="Add a note…"
-                class="sunken-input px-4 py-2 text-body-md focus:outline-none focus:ring-1 focus:ring-primary pixel-border-sm w-full resize-none"
+                class="sunken-input px-4 py-2 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none pixel-border-sm w-full resize-none"
             ></textarea>
         </div>
 

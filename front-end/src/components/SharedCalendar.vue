@@ -492,7 +492,9 @@ const upcomingGoalDeadlines = computed(() => {
         </div>
         <ul class="space-y-4">
           <li v-if="upcomingEvents.length === 0">
-            <EmptyState icon="calendar_month" title="Nothing coming up" />
+            <EmptyState icon="calendar_month" title="Nothing coming up">
+              <TangoButton class="mt-4" variant="secondary" @click="showEventSheet = true">Add Event</TangoButton>
+            </EmptyState>
           </li>
           <li
             v-for="event in upcomingEvents" :key="event.id"

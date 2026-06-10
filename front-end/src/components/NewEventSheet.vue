@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useConfirm } from '../composables/useConfirm';
+
+const { confirm } = useConfirm();
 import { ref, watch, computed, inject, onMounted, onUnmounted } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
@@ -86,7 +89,7 @@ const saveBusy = ref(false);
 
 const deleteEvent = async () => {
     if (!editingEventId.value) return;
-    if (!confirm('Delete this event?')) return;
+    if (!(await confirm({ title: 'Delete Event', message: 'Delete this event?', isDestructive: true }))) return;
     saveBusy.value = true;
     try {
         await store.deleteEvent(editingEventId.value);
@@ -204,9 +207,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
 
       <div
         class="space-y-4 pt-4 transition-all duration-300 rounded-lg"
-        :class="{ 'bg-primary-container bg-opacity-10 p-4 ring-1 ring-primary ring-opacity-20': editingEventId }"
+        :class="{ 'bg-primary-container/10 p-4 ring-1 ring-primary/20': editingEventId }"
       >
-        <h3 class="text-label-sm uppercase font-bold border-b pb-1" :class="editingEventId ? 'text-primary border-primary border-opacity-30' : 'text-on-surface-variant border-outline-variant'">
+        <h3 class="text-label-sm uppercase font-bold border-b pb-1" :class="editingEventId ? 'text-primary border-primary/30' : 'text-on-surface-variant border-outline-variant'">
           {{ editingEventId ? 'Edit Mode: ' + title : 'Add New Event' }}
         </h3>
         <TangoInput v-model="title" label="Event Name" placeholder="e.g. Anniversary Dinner" :error="errors.title" required />

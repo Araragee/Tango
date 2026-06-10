@@ -109,7 +109,7 @@ function clear(cat: string) {
               type="text"
               maxlength="4"
               placeholder="Paste any emoji"
-              class="sunken-input px-3 py-2 text-body-md w-32 pixel-border-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              class="sunken-input px-3 py-2 text-body-md w-32 pixel-border-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
               @keyup.enter="applyCustom(cat)"
             />
             <button

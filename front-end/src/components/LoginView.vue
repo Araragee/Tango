@@ -18,6 +18,7 @@ type Mode = 'password' | 'magic';
 const mode = ref<Mode>('password');
 const email = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const keepLoggedIn = ref(true);
 const error = ref('');
 const loading = ref(false);
@@ -186,7 +187,7 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
+            <input v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
           </div>
         </div>
 
@@ -194,7 +195,10 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0" id="password" placeholder="••••••••" type="password" autocomplete="current-password"/>
+            <input v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-10 py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" id="password" placeholder="••••••••" :type="showPassword ? 'text' : 'password'" autocomplete="current-password"/>
+            <button type="button" @click="showPassword = !showPassword" class="absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface" tabindex="-1">
+                <span class="material-symbols-outlined text-[20px]">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
           </div>
           <div class="flex justify-end mt-xs">
             <button
@@ -247,7 +251,7 @@ onMounted(() => {
           <label class="text-label-sm uppercase" for="ml-email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" id="ml-email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus:outline-none focus:ring-0"/>
+            <input v-model="email" id="ml-email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"/>
           </div>
           <p class="text-label-sm text-on-surface-variant mt-xs">We'll email you a one-tap sign-in link.</p>
         </div>

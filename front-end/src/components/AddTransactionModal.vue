@@ -42,7 +42,14 @@ watch(() => props.show, (open) => {
   type.value = 'expense';
   date.value = localDateISO();
   note.value = '';
-  paidByMe.value = null;
+  const saved = localStorage.getItem('tango:default_paid_by');
+  if (saved === auth.user?.id) {
+    paidByMe.value = true;
+  } else if (saved === household.partner?.user_id) {
+    paidByMe.value = false;
+  } else {
+    paidByMe.value = null;
+  }
   errors.value = { title: '', amount: '' };
   newCategory.value = '';
 });
@@ -68,6 +75,7 @@ const saveTransaction = async () => {
         ? (household.partner?.user_id ?? null)
         : null;
 
+    if (paid_by) localStorage.setItem('tango:default_paid_by', paid_by);
     await store.addTransaction({
       title: title.value,
       amount: type.value === 'expense' ? -Math.abs(amount.value) : Math.abs(amount.value),
@@ -133,13 +141,13 @@ const saveTransaction = async () => {
           v-model="note"
           rows="2"
           placeholder="e.g. Split with partner, receipt in wallet…"
-          class="sunken-input px-4 py-2 text-body-md focus:outline-none focus:ring-1 focus:ring-primary pixel-border-sm w-full resize-none"
+          class="sunken-input px-4 py-2 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none pixel-border-sm w-full resize-none"
         ></textarea>
       </div>
 
       <!-- Paid by — only when a partner is paired -->
       <div v-if="household.partner" class="flex flex-col gap-2">
-        <label class="text-label-sm text-on-surface-variant uppercase font-bold">Paid by</label>
+        <label class="text-label-sm text-primary uppercase font-bold">Who Paid? <span class="text-[10px] text-on-surface-variant font-normal normal-case">(We'll remember your choice)</span></label>
         <div class="flex gap-2 flex-wrap">
           <button
             @click="paidByMe = paidByMe === true ? null : true"
