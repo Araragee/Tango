@@ -6,29 +6,15 @@
   NODE_VERSION = "22"
 
 # ── Security Headers ─────────────────────────────────────────────────────────
-# Applied to every response served by Netlify (HTML, assets, API).
-# These complement the meta CSP tag in index.html; HTTP headers take precedence.
 [[headers]]
   for = "/*"
   [headers.values]
-    # Prevent embedding in iframes (clickjacking)
-    X-Frame-Options = "DENY"
-    # Stop MIME-type sniffing (drive-by download attacks)
     X-Content-Type-Options = "nosniff"
-    # Limit referrer leakage
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # Disable browser features the app doesn't need
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
-    # Force HTTPS for 1 year (enable only once you've confirmed HTTPS works end-to-end)
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    # Content Security Policy
-    # - script-src 'self': no inline scripts, no external JS (Vite bundles everything)
-    # - style-src 'unsafe-inline': needed for Tailwind utility classes injected at runtime
-    # - connect-src: Supabase REST + Realtime websocket + Push endpoint
-    # - worker-src blob:: required for the Vite PWA service-worker bundle
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none';"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'self' https://architect-vue.vercel.app;"
 
-# Cache immutable hashed assets aggressively; never cache HTML entry point
 [[headers]]
   for = "/assets/*"
   [headers.values]
