@@ -35,6 +35,7 @@ const notificationRef = ref<InstanceType<typeof NotificationSystem> | null>(null
 const showSearch = ref(false);
 const showActivity = ref(false);
 const showHelp = ref(false);
+const showMoreMenu = ref(false);
 
 const auth = useAuthStore();
 const household = useHouseholdStore();
@@ -204,58 +205,101 @@ onErrorCaptured((err: any) => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <header class="fixed top-0 left-0 w-full z-40 flex items-center px-4 md:px-8 h-16 bg-surface border-b-2 border-black dark:border-white">
-      <!-- Logo -->
-      <div class="flex items-center gap-2 cursor-pointer shrink-0" @click="goHome()">
+    <header class="fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 h-16 bg-surface border-b-2 border-black dark:border-white">
+      <!-- Logo / Home -->
+      <button
+        @click="goHome()"
+        class="flex items-center gap-2 shrink-0 -ml-1 px-1 py-1 hover:opacity-80 transition-opacity"
+        aria-label="Tango home"
+      >
+        <span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+        <span class="text-headline-md font-bold text-on-surface hidden xs:inline">Tango</span>
+      </button>
 
-
-
-
+      <!-- Desktop primary navigation -->
+      <nav v-if="showNav" class="hidden md:flex items-center gap-1 ml-2" aria-label="Primary">
         <button
-          v-if="showNav"
+          v-for="item in navItems"
+          :key="item.path"
+          @click="router.push(item.path)"
+          class="px-3 py-1.5 text-label-sm uppercase font-bold pixel-border-sm transition-colors"
+          :class="route.path === item.path
+            ? 'bg-primary text-on-primary'
+            : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+        >{{ item.name }}</button>
+      </nav>
+
+      <!-- Spacer pushes actions to the right -->
+      <div class="flex-1"></div>
+
+      <!-- Right-side actions -->
+      <div v-if="showNav" class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <button
           @click="showSearch = true"
-          class="flex items-center gap-2 px-3 py-1.5 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
+          class="flex items-center gap-2 px-2.5 py-1.5 min-h-9 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
           aria-label="Search (Cmd+K)"
         >
-          <span class="material-symbols-outlined text-[16px]">search</span>
+          <span class="material-symbols-outlined text-[18px]">search</span>
           <span class="hidden lg:inline">Search</span>
           <kbd class="hidden lg:inline px-1 bg-surface text-[10px] pixel-border-sm">⌘K</kbd>
         </button>
 
-        <SyncStatusPill v-if="showNav" />
-        <NotificationsBell v-if="showNav" />
+        <SyncStatusPill />
+        <NotificationsBell />
 
-
+        <!-- Secondary actions — inline on desktop -->
         <button
-          v-if="showNav"
           @click="showHelp = true"
-          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Help"
-        >
-          help
-        </button>
+        >help</button>
         <button
-          v-if="showNav"
           @click="showActivity = true"
-          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Activity"
-        >
-          timeline
-        </button>
-
+        >timeline</button>
         <button
-          v-if="showNav"
           @click="router.push('/app/archive')"
-          class="material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Archive"
-        >
-          history
-        </button>
+        >history</button>
 
-        <div
-          v-if="showNav"
-          class="relative w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+        <!-- Secondary actions — overflow menu on mobile -->
+        <div class="relative md:hidden">
+          <button
+            @click="showMoreMenu = !showMoreMenu"
+            class="tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+            aria-label="More actions"
+            aria-haspopup="true"
+            :aria-expanded="showMoreMenu"
+          >more_vert</button>
+          <div v-if="showMoreMenu" class="fixed inset-0 z-40" @click="showMoreMenu = false"></div>
+          <div
+            v-if="showMoreMenu"
+            class="absolute right-0 top-full mt-1 z-50 w-48 bg-surface pixel-border hard-shadow-dark py-1"
+            role="menu"
+          >
+            <button
+              v-for="m in [
+                { icon: 'help', label: 'How it works', act: () => { showHelp = true; } },
+                { icon: 'timeline', label: 'Activity', act: () => { showActivity = true; } },
+                { icon: 'history', label: 'Archive', act: () => { router.push('/app/archive'); } },
+              ]"
+              :key="m.label"
+              @click="m.act(); showMoreMenu = false"
+              class="w-full flex items-center gap-3 px-3 py-2.5 text-left text-body-md hover:bg-surface-variant transition-colors"
+              role="menuitem"
+            >
+              <span class="material-symbols-outlined text-[20px] text-on-surface-variant">{{ m.icon }}</span>
+              {{ m.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Settings / avatar -->
+        <button
           @click="router.push('/app/settings')"
+          class="relative w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity"
           aria-label="Settings"
         >
           <img
@@ -273,7 +317,7 @@ onErrorCaptured((err: any) => {
             v-if="household.partner"
             class="absolute -bottom-0.5 -right-0.5"
           />
-        </div>
+        </button>
       </div>
     </header>
 

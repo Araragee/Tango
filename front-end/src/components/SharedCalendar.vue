@@ -298,36 +298,42 @@ const upcomingGoalDeadlines = computed(() => {
         <h2 class="text-headline-lg text-primary">{{ periodLabel }}</h2>
         <p class="text-body-md text-on-surface-variant">Syncing with {{ store.partnerName }}</p>
       </div>
-      <div class="flex gap-2 flex-wrap items-center">
-        <!-- View switcher -->
-        <div class="flex pixel-border-sm overflow-hidden">
-          <button v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"
-            @click="calendarView = v[0]"
-            class="px-3 py-1.5 text-label-sm uppercase transition-colors"
-            :class="calendarView === v[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'">
-            {{ v[1] }}
-          </button>
+      <div class="flex flex-col gap-2 w-full md:w-auto md:items-end">
+        <!-- Row 1: view switcher + period navigation -->
+        <div class="flex items-center justify-between gap-2 w-full">
+          <div class="flex pixel-border-sm overflow-hidden shrink-0">
+            <button v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"
+              @click="calendarView = v[0]"
+              class="px-3 py-2 min-h-11 text-label-sm uppercase transition-colors"
+              :class="calendarView === v[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'">
+              {{ v[1] }}
+            </button>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <TangoButton @click="prevPeriod" variant="surface" size="md" aria-label="Previous period">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </TangoButton>
+            <TangoButton @click="goToday" variant="surface" size="md" aria-label="Go to today">Today</TangoButton>
+            <TangoButton @click="nextPeriod" variant="surface" size="md" aria-label="Next period">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </TangoButton>
+          </div>
         </div>
-        <!-- Nav -->
-        <TangoButton @click="prevPeriod" variant="surface" size="md" class="w-10 h-10" aria-label="Previous">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </TangoButton>
-        <TangoButton @click="goToday" variant="surface" size="md" aria-label="Go to today">Today</TangoButton>
-        <TangoButton @click="nextPeriod" variant="surface" size="md" class="w-10 h-10" aria-label="Next">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </TangoButton>
-        <TangoButton @click="exportICS" variant="surface" size="md" aria-label="Export ICS">
-          <span class="material-symbols-outlined text-[16px]">download</span>
-          .ics
-        </TangoButton>
-        <TangoButton @click="showDatePlanner = true" variant="surface" size="md" aria-label="Plan Date Night">
-          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
-          Date Night
-        </TangoButton>
-        <TangoButton @click="showEventSheet = true" variant="primary" size="md" aria-label="New Event">
-          <span class="material-symbols-outlined">add</span>
-          New Event
-        </TangoButton>
+        <!-- Row 2: actions — equal-width on mobile, inline on desktop -->
+        <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto">
+          <TangoButton @click="exportICS" variant="surface" size="md" class="w-full sm:w-auto" aria-label="Export ICS">
+            <span class="material-symbols-outlined text-[16px]">download</span>
+            .ics
+          </TangoButton>
+          <TangoButton @click="showDatePlanner = true" variant="surface" size="md" class="w-full sm:w-auto" aria-label="Plan Date Night">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
+            <span class="truncate">Date Night</span>
+          </TangoButton>
+          <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="w-full sm:w-auto" aria-label="New Event">
+            <span class="material-symbols-outlined">add</span>
+            <span class="truncate">New Event</span>
+          </TangoButton>
+        </div>
       </div>
     </section>
 

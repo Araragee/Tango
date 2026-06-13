@@ -208,6 +208,50 @@ body {
 .hard-shadow-dark { box-shadow: 4px 4px 0px 0px var(--border-color); }
 .btn-active:active { transform: translate(2px, 2px); box-shadow: none !important; }
 
+/* Accessible touch target — ensures icon-only controls meet the ~44px hit-area
+   guideline (WCAG 2.5.5) without forcing a visible box that breaks dense rows. */
+.tap-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Comfortable hit-area on touch screens only; on pointer-precise screens the
+   control reverts to its intrinsic size so dense desktop rows stay compact. */
+.tap-target-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 639.98px) {
+  .tap-target-mobile {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* App-wide visible focus indicator. Uses :where() so specificity stays 0 and
+   any component can still opt into its own focus style. A primary-coloured
+   outline with an offset is visible against every button variant because the
+   outline sits on the surrounding background, not the element itself. Only
+   shows for keyboard / programmatic focus (:focus-visible), never on click. */
+:where(a, button, [role="button"], [role="switch"], [role="tab"], summary, input, select, textarea):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 .bg-dither { 
     background-image: repeating-linear-gradient(45deg, var(--dither-color) 25%, transparent 25%, transparent 75%, var(--dither-color) 75%, var(--dither-color)), 
                       repeating-linear-gradient(45deg, var(--dither-color) 25%, var(--background) 25%, var(--background) 75%, var(--dither-color) 75%, var(--dither-color)); 

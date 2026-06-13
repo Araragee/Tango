@@ -26,10 +26,10 @@ withDefaults(defineProps<Props>(), {
       shadow === 'default' && 'hard-shadow',
       shadow === 'dark' && 'hard-shadow-dark',
       
-      // Sizes
-      size === 'sm' && 'px-3 py-1 text-label-sm',
-      size === 'md' && 'px-4 py-2 text-body-md',
-      size === 'lg' && 'px-8 py-4 text-body-lg uppercase tracking-wider',
+      // Sizes — min-heights keep tap targets comfortable on touch screens
+      size === 'sm' && 'px-3 py-1 min-h-9 text-label-sm',
+      size === 'md' && 'px-4 py-2 min-h-11 text-body-md',
+      size === 'lg' && 'px-8 py-4 min-h-13 text-body-lg uppercase tracking-wider',
     ]"
   >
     <slot />

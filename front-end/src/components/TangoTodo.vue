@@ -212,11 +212,19 @@ const confirmDelete = async (todo: Todo) => {
   }
 };
 
+// Snooze pushes the due date out by one day. If the task has no due date (or an
+// overdue one) we anchor to today so "snooze" always lands on tomorrow. (B-snooze)
 const snoozeTodo = async (todo: Todo) => {
+    const anchor = todo.due_date && todo.due_date >= todayStr.value
+        ? new Date(todo.due_date + 'T00:00:00')
+        : new Date();
+    anchor.setDate(anchor.getDate() + 1);
+    const next = `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(anchor.getDate()).padStart(2, '0')}`;
     try {
-        notify('Snooze requires due dates feature (P2).', 'info');
+        await store.editTask(todo.id, { due_date: next });
+        notify(`Snoozed to ${formatDueDate(next)}.`, 'success');
     } catch (e: any) {
-        notify('Failed to snooze.', 'error');
+        notify(e.message ?? 'Failed to snooze.', 'error');
     }
 };
 
@@ -331,7 +339,7 @@ const phraseOfTheDay = computed(() => {
         <span class="flex-grow text-body-lg" :class="{ 'line-through text-on-surface-variant': item.completed }">{{ item.text }}</span>
         <button
           @click.stop="confirmDelete(item)"
-          class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-error text-[18px] flex-shrink-0"
+          class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-error text-[18px] flex-shrink-0"
         >delete</button>
       </div>
     </div>
@@ -381,21 +389,23 @@ const phraseOfTheDay = computed(() => {
       <div
         v-for="todo in filteredTodos"
         :key="todo.id"
-        class="bg-surface pixel-border p-4 flex items-center gap-4 hard-shadow w-full group"
+        class="bg-surface pixel-border p-4 hard-shadow w-full group flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4"
         :class="{ 'opacity-60': todo.completed }"
       >
-        <!-- Checkbox -->
-        <button
-          class="w-6 h-6 sunken-input flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors"
-          :class="{ 'bg-primary text-on-primary': todo.completed }"
-          @click="toggleTodo(todo.id)"
-          :aria-label="todo.completed ? 'Mark incomplete' : 'Mark complete'"
-        >
-          <span v-if="todo.completed" class="material-symbols-outlined text-[16px] font-bold">check</span>
-        </button>
+        <!-- Checkbox + text -->
+        <div class="flex items-start gap-4 flex-grow min-w-0">
+          <!-- Checkbox -->
+          <button
+            class="w-7 h-7 mt-0.5 sunken-input flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors"
+            :class="{ 'bg-primary text-on-primary': todo.completed }"
+            @click="toggleTodo(todo.id)"
+            :aria-label="todo.completed ? 'Mark incomplete' : 'Mark complete'"
+          >
+            <span v-if="todo.completed" class="material-symbols-outlined text-[16px] font-bold">check</span>
+          </button>
 
-        <!-- Text content -->
-        <div class="flex flex-col flex-grow min-w-0 cursor-pointer" @click="openEditModal(todo)">
+          <!-- Text content -->
+          <div class="flex flex-col flex-grow min-w-0 cursor-pointer" @click="openEditModal(todo)">
           <span
             class="text-body-lg text-on-surface break-words"
             :class="{ 'text-on-surface-variant line-through': todo.completed }"
@@ -448,9 +458,10 @@ const phraseOfTheDay = computed(() => {
             </div>
           </div>
         </div>
+        </div>
 
-        <!-- Right side badges + actions -->
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- Badges + actions — own row under the text on mobile, right-aligned on desktop -->
+        <div class="flex items-center gap-1 flex-wrap pl-11 sm:pl-0 sm:flex-nowrap sm:flex-shrink-0 sm:justify-end border-t sm:border-t-0 border-on-surface/10 pt-2 sm:pt-0">
           <span
             v-if="todo.priority"
             class="pixel-border-sm text-label-sm px-3 py-1 uppercase"
@@ -475,7 +486,7 @@ const phraseOfTheDay = computed(() => {
           </span>
           <button
             @click.stop="handoff(todo)"
-            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
+            class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Hand off task"
             title="Hand off to partner / cycle assignee"
           >
@@ -485,7 +496,7 @@ const phraseOfTheDay = computed(() => {
             v-if="household.partner && !todo.completed"
             @click.stop="nudgePartner(todo)"
             :disabled="nudging === todo.id"
-            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-secondary transition-all text-[18px]"
+            class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-secondary transition-all text-[18px]"
             aria-label="Nudge partner"
             title="Remind partner about this task"
           >
@@ -493,14 +504,14 @@ const phraseOfTheDay = computed(() => {
           </button>
           <button
             @click.stop="openEditModal(todo)"
-            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
+            class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Edit task"
           >
             edit
           </button>
           <button
             @click.stop="snoozeTodo(todo)"
-            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
+            class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Snooze task"
             title="Snooze until tomorrow"
           >
@@ -508,7 +519,7 @@ const phraseOfTheDay = computed(() => {
           </button>
           <button
             @click.stop="confirmDelete(todo)"
-            class="material-symbols-outlined text-outline opacity-0 group-hover:opacity-100 hover:text-error transition-all text-[18px]"
+            class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-error transition-all text-[18px]"
             aria-label="Delete task"
           >
             delete

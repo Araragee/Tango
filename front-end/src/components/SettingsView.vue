@@ -3,7 +3,7 @@ import { useConfirm } from '../composables/useConfirm';
 
 const { confirm } = useConfirm();
 import { ref, computed, watch, inject, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
@@ -18,7 +18,40 @@ import EmojiCategoryEditor from './EmojiCategoryEditor.vue';
 import { useOfflineQueue } from '../stores/useOfflineQueue';
 
 const router = useRouter();
+const route = useRoute();
 const store = useAppStore();
+
+// ── Section navigation ───────────────────────────────────────────────────────
+// Settings is grouped into focused tabs so neither partner has to scroll a long
+// wall of cards on mobile. The active tab is mirrored in the URL (?tab=) so deep
+// links work — e.g. the sync-status pill links straight to ?tab=data.
+type SettingsTab = 'profile' | 'household' | 'account' | 'notifications' | 'appearance' | 'budget' | 'data';
+const TABS: { id: SettingsTab; label: string; icon: string }[] = [
+    { id: 'profile', label: 'Profile', icon: 'person' },
+    { id: 'household', label: 'Household', icon: 'group' },
+    { id: 'account', label: 'Account', icon: 'lock' },
+    { id: 'notifications', label: 'Notifications', icon: 'notifications' },
+    { id: 'appearance', label: 'Appearance', icon: 'palette' },
+    { id: 'budget', label: 'Budget', icon: 'savings' },
+    { id: 'data', label: 'Data & Sync', icon: 'sync' },
+];
+const VALID_TABS = TABS.map((t) => t.id) as string[];
+const activeTab = ref<SettingsTab>('profile');
+
+const syncTabFromQuery = () => {
+    const q = route.query.tab;
+    if (typeof q === 'string' && VALID_TABS.includes(q)) {
+        activeTab.value = q as SettingsTab;
+    }
+};
+syncTabFromQuery();
+watch(() => route.query.tab, syncTabFromQuery);
+
+const setTab = (id: SettingsTab) => {
+    activeTab.value = id;
+    // replace (not push) so the back button still leaves Settings in one step
+    router.replace({ query: { ...route.query, tab: id } });
+};
 const auth = useAuthStore();
 const household = useHouseholdStore();
 const themeStore = useThemeStore();
@@ -328,13 +361,35 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto space-y-8">
+  <div class="max-w-5xl mx-auto space-y-6">
     <div class="border-b-2 border-black dark:border-white pb-4">
       <h2 class="text-headline-xl">Settings</h2>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <TangoCard padding="lg">
+    <!-- Section tabs — horizontally scrollable on mobile so groups stay one tap away -->
+    <nav
+      class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1"
+      role="tablist"
+      aria-label="Settings sections"
+    >
+      <button
+        v-for="t in TABS"
+        :key="t.id"
+        @click="setTab(t.id)"
+        role="tab"
+        :aria-selected="activeTab === t.id"
+        class="shrink-0 flex items-center gap-2 px-4 py-2 min-h-11 pixel-border-sm text-label-sm uppercase font-bold transition-colors whitespace-nowrap"
+        :class="activeTab === t.id
+          ? 'bg-primary text-on-primary hard-shadow-dark'
+          : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+      >
+        <span class="material-symbols-outlined text-[18px]">{{ t.icon }}</span>
+        {{ t.label }}
+      </button>
+    </nav>
+
+    <div class="space-y-8">
+      <TangoCard v-show="activeTab === 'profile'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Profile</h3>
         <div class="space-y-4">
           <div class="flex items-center gap-4">
@@ -373,7 +428,7 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg">
+      <TangoCard v-show="activeTab === 'appearance'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Appearance</h3>
         <div class="space-y-6">
           <!-- Follow system preference (F15) -->
@@ -420,8 +475,14 @@ onMounted(() => {
           </div>
 
           <EmojiCategoryEditor />
+        </div>
+      </TangoCard>
 
-          <div class="flex items-center justify-between border-t border-on-surface pt-4">
+      <!-- Notifications — split out of Appearance so alerts live in their own group -->
+      <TangoCard v-show="activeTab === 'notifications'" padding="lg">
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Notifications</h3>
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">In-App Notifications</span>
             <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
                  :class="prefs.notificationsEnabled ? 'bg-primary' : 'bg-surface-variant'"
@@ -520,7 +581,7 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg" class="md:col-span-2">
+      <TangoCard v-show="activeTab === 'household'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Household</h3>
         <div class="space-y-6">
 
@@ -586,7 +647,7 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg" class="md:col-span-2">
+      <TangoCard v-show="activeTab === 'account'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Account</h3>
         <div class="space-y-6">
           <div class="flex flex-col gap-2">
@@ -627,7 +688,7 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg" class="md:col-span-2">
+      <TangoCard v-show="activeTab === 'budget'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Income Auto-Allocate</h3>
         <p class="text-body-md text-on-surface-variant mb-4">When income is added, automatically contribute a % to a goal.</p>
         <div v-if="store.plans.goals.filter(g => g.status !== 'Completed').length === 0" class="text-body-md text-on-surface-variant">
@@ -667,7 +728,7 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg" class="md:col-span-2">
+      <TangoCard v-show="activeTab === 'budget'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Local Preferences</h3>
         <div class="space-y-6">
           <div class="flex flex-col gap-2">
@@ -691,7 +752,10 @@ onMounted(() => {
         </div>
       </TangoCard>
 
-      <TangoCard padding="lg" class="md:col-span-2" v-if="offline.pending.length || offline.failed.length">
+      <TangoCard
+        v-show="activeTab === 'data' && (offline.pending.length > 0 || offline.failed.length > 0)"
+        padding="lg"
+      >
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Sync Status</h3>
 
         <!-- Pending Queue -->
@@ -733,6 +797,22 @@ onMounted(() => {
           <TangoButton @click="offline.clearAllFailed()" variant="outline" class="text-error border-error border-2 hover:bg-error-container w-full mt-2" size="sm">
             Dismiss All Failures
           </TangoButton>
+        </div>
+      </TangoCard>
+
+      <!-- Data & Sync — friendly empty state when everything is synced -->
+      <TangoCard
+        v-show="activeTab === 'data' && offline.pending.length === 0 && offline.failed.length === 0"
+        padding="lg"
+      >
+        <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Data &amp; Sync</h3>
+        <div class="flex flex-col items-center text-center gap-3 py-6">
+          <span class="material-symbols-outlined text-secondary text-5xl" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+          <p class="text-body-md font-bold text-on-surface">Everything is synced</p>
+          <p class="text-label-sm text-on-surface-variant max-w-sm">
+            Changes you make are saved to the server right away. If you ever go offline, queued and
+            failed changes will show up here so you can retry them.
+          </p>
         </div>
       </TangoCard>
     </div>
