@@ -191,14 +191,16 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
             </div>
             <div class="flex items-center gap-2">
               <span class="text-label-sm text-outline">{{ event.time }}</span>
-              <span
+              <button
                 v-if="editingEventId === event.id"
                 @click.stop="cancelEdit"
-                class="material-symbols-outlined text-sm text-primary cursor-pointer hover:scale-125 transition-transform"
-              >close</span>
+                aria-label="Cancel edit"
+                class="material-symbols-outlined tap-target-mobile text-[18px] text-primary hover:scale-125 transition-transform"
+              >close</button>
               <span
                 v-else
-                class="material-symbols-outlined text-sm text-outline group-hover:text-primary transition-colors"
+                aria-hidden="true"
+                class="material-symbols-outlined text-[18px] text-outline transition-colors"
               >edit</span>
             </div>
           </div>

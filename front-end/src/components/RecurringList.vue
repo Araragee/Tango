@@ -114,7 +114,7 @@ onMounted(async () => {
           </span>
           <button
             @click.stop="togglePause(r)"
-            class="material-symbols-outlined text-outline hover:text-primary transition-colors text-sm"
+            class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-primary transition-colors"
             :aria-label="r.active ? 'Pause' : 'Resume'"
           >{{ r.active ? 'pause' : 'play_arrow' }}</button>
         </div>

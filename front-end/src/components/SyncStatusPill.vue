@@ -28,7 +28,7 @@ const pillClass = computed(() => {
 
 const handleClick = () => {
   if (queue.failed.length > 0 || queue.pending.length > 0) {
-    router.push('/app/settings?tab=data') // We'll add this tab later
+    router.push('/app/settings?tab=data') // Opens the Data & Sync settings tab
   }
 }
 </script>

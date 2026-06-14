@@ -235,7 +235,7 @@ const saveTask = async () => {
             <span class="flex-1 text-body-md">{{ item.text }}</span>
             <button
               @click="removeChecklistItem(item.id)"
-              class="material-symbols-outlined text-outline hover:text-error text-[14px]"
+              class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error"
               aria-label="Remove checklist item"
             >close</button>
           </div>

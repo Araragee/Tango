@@ -202,7 +202,7 @@ const confirmDelete = async (id: string, title: string) => {
             </div>
             <button
               @click.stop="confirmDelete(goal.id, goal.title)"
-              class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
+              class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error transition-colors"
               aria-label="Delete goal"
             >
               delete

@@ -37,6 +37,9 @@ dist/
 # Vite
 .vite/
 */.vite/
+# Transient config-load cache Vite writes next to vite.config.ts — never commit these
+vite.config.ts.timestamp-*.mjs
+*/vite.config.ts.timestamp-*.mjs
 
 # Claude Code local state (worktrees, settings.local.json)
 .claude/

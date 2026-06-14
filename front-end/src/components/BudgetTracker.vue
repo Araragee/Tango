@@ -285,8 +285,8 @@ const exportCSV = () => {
                       @keyup.enter="saveLimit"
                       @keyup.escape="editingLimit = null"
                     />
-                    <button @click="saveLimit" class="material-symbols-outlined text-[14px] text-secondary hover:text-primary">check</button>
-                    <button @click="editingLimit = null" class="material-symbols-outlined text-[14px] text-outline hover:text-error">close</button>
+                    <button @click="saveLimit" aria-label="Save limit" class="material-symbols-outlined tap-target-mobile text-[18px] text-secondary hover:text-primary">check</button>
+                    <button @click="editingLimit = null" aria-label="Cancel" class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error">close</button>
                   </span>
                 </span>
               </div>

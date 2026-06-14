@@ -327,7 +327,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                     <button
                         v-if="c.user_id === auth.user?.id"
                         @click="removeContribution(c.id)"
-                        class="material-symbols-outlined text-outline hover:text-error transition-colors text-sm"
+                        class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error transition-colors"
                         aria-label="Remove contribution"
                     >delete</button>
                 </div>
