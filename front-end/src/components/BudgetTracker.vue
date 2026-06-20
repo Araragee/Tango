@@ -178,12 +178,14 @@ const exportCSV = () => {
 <template>
   <div class="flex flex-col gap-8 w-full">
     <main class="w-full grid grid-cols-1 md:grid-cols-12 gap-8">
-      <!-- Left Column -->
+      <!-- Left Column. On mobile the children are reordered via order-* (Balance,
+           Income/Spent, Analytics, Category, then the rest); md:order-none restores
+           the source order on desktop so the two-column layout is unchanged. -->
       <div class="md:col-span-7 flex flex-col gap-8 w-full">
         <!-- I23: month-to-date income / expense split so the user sees where money
              is coming from and going to, not just the running balance total.
              Stacks vertically on mobile, side-by-side from sm up. -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-px border-2 border-black dark:border-white bg-black dark:bg-white">
+        <div class="order-2 md:order-none grid grid-cols-1 sm:grid-cols-2 gap-px border-2 border-black dark:border-white bg-black dark:bg-white">
           <div class="flex flex-col items-center py-2 px-3 bg-secondary-container">
             <span class="text-label-sm uppercase text-on-secondary-container">Income this month</span>
             <span class="text-body-lg font-bold text-on-secondary-container tabular-nums">+{{ prefs.money(monthSummary.income) }}</span>
@@ -197,7 +199,7 @@ const exportCSV = () => {
         <!-- Balance Card with Sprites. Stacks vertically on mobile so the
              balance figure gets the full width and never clips; row layout
              from sm up. -->
-        <TangoCard padding="none" shadow="default" class="flex flex-col sm:flex-row items-stretch relative w-full overflow-hidden sm:min-h-44">
+        <TangoCard padding="none" shadow="default" class="order-1 md:order-none flex flex-col sm:flex-row items-stretch relative w-full overflow-hidden sm:min-h-44">
           <!-- Sprite Widget Panel -->
           <div class="flex flex-col items-center justify-end gap-2 px-3 sm:px-4 pt-4 pb-3 bg-surface-variant border-b-2 sm:border-b-0 sm:border-r-2 border-black dark:border-white shrink-0 sm:min-w-[140px]">
             <TangoSprites :size="64" />
@@ -215,10 +217,10 @@ const exportCSV = () => {
           </div>
         </TangoCard>
 
-        <VibeCheckCard />
+        <VibeCheckCard class="order-5 md:order-none" />
 
         <!-- Settle Up — only when paired and at least one tracked tx exists -->
-        <TangoCard v-if="settleUp" padding="lg" shadow="default" class="w-full">
+        <TangoCard v-if="settleUp" padding="lg" shadow="default" class="order-6 md:order-none w-full">
           <div class="flex justify-between items-center mb-4 border-b-2 border-on-background pb-2">
             <h3 class="text-headline-lg text-on-surface">Settle Up</h3>
             <span class="text-label-sm text-on-surface-variant uppercase">This month</span>
@@ -244,7 +246,7 @@ const exportCSV = () => {
         </TangoCard>
 
         <!-- Category Breakdown -->
-        <TangoCard padding="lg" shadow="dark" class="w-full">
+        <TangoCard padding="lg" shadow="dark" class="order-4 md:order-none w-full">
           <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
             <h3 class="text-headline-lg text-on-surface">Category Breakdown</h3>
             <span class="text-label-sm text-on-surface-variant uppercase">Click limit to edit</span>
@@ -306,32 +308,33 @@ const exportCSV = () => {
           </div>
         </TangoCard>
 
-        <BudgetAnalytics />
+        <BudgetAnalytics class="order-3 md:order-none" />
 
-        <RecurringList />
+        <RecurringList class="order-7 md:order-none" />
       </div>
 
       <!-- Right Column -->
       <div class="md:col-span-5 flex flex-col gap-8 w-full">
         <TangoCard padding="lg" shadow="default" class="flex-grow flex flex-col w-full">
-          <div class="flex justify-between items-center mb-6 border-b-2 border-on-background pb-2">
+          <div class="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6 border-b-2 border-on-background pb-2">
             <h3 class="text-headline-lg text-on-surface">Recent</h3>
-            <div class="flex gap-2 flex-wrap">
-              <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" aria-label="Monthly report">
+            <!-- Icon-only on mobile to keep a single tidy row; labels return at sm. -->
+            <div class="grid grid-cols-4 gap-2 sm:flex">
+              <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" class="justify-center" aria-label="Monthly report">
                 <span class="material-symbols-outlined text-[16px]">summarize</span>
-                Report
+                <span class="hidden sm:inline">Report</span>
               </TangoButton>
-              <TangoButton @click="exportCSV" variant="surface" size="sm" aria-label="Export CSV">
+              <TangoButton @click="exportCSV" variant="surface" size="sm" class="justify-center" aria-label="Export CSV">
                 <span class="material-symbols-outlined text-[16px]">download</span>
-                Export
+                <span class="hidden sm:inline">Export</span>
               </TangoButton>
-              <TangoButton @click="showCsvImport = true" variant="surface" size="sm" aria-label="Import CSV">
+              <TangoButton @click="showCsvImport = true" variant="surface" size="sm" class="justify-center" aria-label="Import CSV">
                 <span class="material-symbols-outlined text-[16px]">upload_file</span>
-                Import
+                <span class="hidden sm:inline">Import</span>
               </TangoButton>
-              <TangoButton @click="showAddModal = true" shadow="dark" size="sm" aria-label="Add Transaction">
+              <TangoButton @click="showAddModal = true" shadow="dark" size="sm" class="justify-center" aria-label="Add Transaction">
                 <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">add</span>
-                ADD
+                <span class="hidden sm:inline">ADD</span>
               </TangoButton>
             </div>
           </div>
