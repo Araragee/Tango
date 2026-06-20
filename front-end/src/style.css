@@ -176,6 +176,10 @@
   --container-page: 72rem;    /* 1152px */
 }
 
+/* NOTE: max-w-{sm,md,lg,xl} are unusable in this project — the --spacing-{sm,md,lg,xl}
+   tokens above (8/16/24/48px) win over the container scale, so those utilities cap
+   width at a few pixels. Use explicit max-w-[Nrem] values instead. */
+
 :root {
   font-family: "Space Grotesk", system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -230,6 +234,43 @@ body {
     min-width: 44px;
     min-height: 44px;
   }
+}
+
+/* ── Safe-area handling for notched / home-indicator devices ──────────────────
+   These env() insets are 0 in a normal browser tab, so layout is unchanged there.
+   They only take effect in an installed (standalone) PWA where content extends
+   under the status-bar notch and the home-indicator. Requires `viewport-fit=cover`
+   on the viewport meta (set in index.html). Kept as semantic classes (rather than
+   fragile Tailwind calc/env arbitrary values) so the calc stays valid CSS. */
+
+/* Fixed top app-bar: reserve the notch height above the 4rem control row. */
+.app-header {
+  min-height: calc(4rem + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+/* Main content offset to clear the fixed header (header row 4rem + 1rem gap). */
+.with-header-offset {
+  padding-top: calc(5rem + env(safe-area-inset-top));
+}
+/* Bottom padding so the home-indicator never overlaps tappable content. */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Float a banner/toast clear of the mobile bottom-nav (incl. its safe inset);
+   on desktop (≥ md) there is no bottom-nav so it drops to a normal 2rem. */
+.bottom-above-nav {
+  bottom: calc(7rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 48rem) {
+  .bottom-above-nav { bottom: 2rem; }
+}
+/* Top toast stack: 1rem below the notch. */
+.top-safe {
+  top: calc(1rem + env(safe-area-inset-top));
+}
+/* Banner pinned just under the fixed header (5rem) + notch inset. */
+.top-below-header {
+  top: calc(5rem + env(safe-area-inset-top));
 }
 
 /* App-wide visible focus indicator. Uses :where() so specificity stays 0 and

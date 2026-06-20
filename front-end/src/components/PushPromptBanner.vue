@@ -50,7 +50,7 @@ watch(
   <Transition name="slide-fade">
     <div
       v-if="visible"
-      class="fixed left-1/2 -translate-x-1/2 top-20 z-50 w-[80vw] p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
+      class="top-below-header fixed left-1/2 -translate-x-1/2 z-50 w-[80vw] max-w-[28rem] p-3 pixel-border bg-surface text-on-surface flex items-start gap-3"
       role="region"
       aria-label="Enable notifications"
     >

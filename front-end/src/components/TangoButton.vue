@@ -14,7 +14,7 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <button
-    class="pixel-border btn-active font-bold transition-transform flex items-center justify-center gap-2"
+    class="pixel-border btn-active font-bold transition-transform flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-x-0 disabled:active:translate-y-0"
     :class="[
       // Variants
       variant === 'primary' && 'bg-primary text-on-primary',

@@ -299,8 +299,8 @@ const upcomingGoalDeadlines = computed(() => {
         <p class="text-body-md text-on-surface-variant">Syncing with {{ store.partnerName }}</p>
       </div>
       <div class="flex flex-col gap-2 w-full md:w-auto md:items-end">
-        <!-- Row 1: view switcher + period navigation -->
-        <div class="flex items-center justify-between gap-2 w-full">
+        <!-- Row 1: view switcher + period navigation (wraps on narrow screens) -->
+        <div class="flex flex-wrap items-center justify-between gap-2 w-full">
           <div class="flex pixel-border-sm overflow-hidden shrink-0">
             <button v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"
               @click="calendarView = v[0]"
@@ -319,19 +319,19 @@ const upcomingGoalDeadlines = computed(() => {
             </TangoButton>
           </div>
         </div>
-        <!-- Row 2: actions — equal-width on mobile, inline on desktop -->
-        <div class="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto">
-          <TangoButton @click="exportICS" variant="surface" size="md" class="w-full sm:w-auto" aria-label="Export ICS">
+        <!-- Row 2: actions — wrap to fit narrow screens instead of truncating -->
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+          <TangoButton @click="exportICS" variant="surface" size="md" aria-label="Export ICS">
             <span class="material-symbols-outlined text-[16px]">download</span>
             .ics
           </TangoButton>
-          <TangoButton @click="showDatePlanner = true" variant="surface" size="md" class="w-full sm:w-auto" aria-label="Plan Date Night">
+          <TangoButton @click="showDatePlanner = true" variant="surface" size="md" aria-label="Plan Date Night">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
-            <span class="truncate">Date Night</span>
+            Date Night
           </TangoButton>
-          <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="w-full sm:w-auto" aria-label="New Event">
+          <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="flex-1 sm:flex-none" aria-label="New Event">
             <span class="material-symbols-outlined">add</span>
-            <span class="truncate">New Event</span>
+            New Event
           </TangoButton>
         </div>
       </div>

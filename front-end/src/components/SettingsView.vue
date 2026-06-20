@@ -2,7 +2,7 @@
 import { useConfirm } from '../composables/useConfirm';
 
 const { confirm } = useConfirm();
-import { ref, computed, watch, inject, onMounted } from 'vue';
+import { ref, computed, watch, inject, onMounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAppStore } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -45,12 +45,42 @@ const syncTabFromQuery = () => {
     }
 };
 syncTabFromQuery();
-watch(() => route.query.tab, syncTabFromQuery);
+watch(() => route.query.tab, () => { syncTabFromQuery(); scrollActiveTabIntoView(); });
+
+// Keep the active tab visible in the horizontally-scrollable strip, otherwise a
+// later tab (e.g. ?tab=account) stays clipped off the right edge on mobile.
+const scrollActiveTabIntoView = () => {
+    nextTick(() => {
+        const idx = TABS.findIndex((t) => t.id === activeTab.value);
+        const buttons = tablistEl.value?.querySelectorAll<HTMLElement>('[role="tab"]');
+        buttons?.[idx]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+};
 
 const setTab = (id: SettingsTab) => {
     activeTab.value = id;
     // replace (not push) so the back button still leaves Settings in one step
     router.replace({ query: { ...route.query, tab: id } });
+    scrollActiveTabIntoView();
+};
+
+// Keyboard support for the tablist (WAI-ARIA "tabs" pattern, automatic activation):
+// Left/Right move between tabs, Home/End jump to the first/last, and focus follows
+// selection so the matching panel is shown immediately. Mirrors native tab widgets.
+const tablistEl = ref<HTMLElement | null>(null);
+const onTabKeydown = (e: KeyboardEvent) => {
+    const handledKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if (!handledKeys.includes(e.key)) return;
+    e.preventDefault();
+    const current = TABS.findIndex((t) => t.id === activeTab.value);
+    let next = current;
+    if (e.key === 'ArrowLeft') next = (current - 1 + TABS.length) % TABS.length;
+    else if (e.key === 'ArrowRight') next = (current + 1) % TABS.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TABS.length - 1;
+    setTab(TABS[next].id);
+    const buttons = tablistEl.value?.querySelectorAll<HTMLElement>('[role="tab"]');
+    buttons?.[next]?.focus();
 };
 const auth = useAuthStore();
 const household = useHouseholdStore();
@@ -357,6 +387,7 @@ const togglePush = async () => {
 
 onMounted(() => {
     push.checkSubscription();
+    scrollActiveTabIntoView();
 });
 </script>
 
@@ -368,27 +399,37 @@ onMounted(() => {
 
     <!-- Section tabs — horizontally scrollable on mobile so groups stay one tap away -->
     <nav
+      ref="tablistEl"
       class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1"
       role="tablist"
       aria-label="Settings sections"
+      @keydown="onTabKeydown"
     >
       <button
         v-for="t in TABS"
+        :id="'settings-tab-' + t.id"
         :key="t.id"
-        @click="setTab(t.id)"
         role="tab"
         :aria-selected="activeTab === t.id"
+        aria-controls="settings-tabpanel"
+        :tabindex="activeTab === t.id ? 0 : -1"
         class="shrink-0 flex items-center gap-2 px-4 py-2 min-h-11 pixel-border-sm text-label-sm uppercase font-bold transition-colors whitespace-nowrap"
         :class="activeTab === t.id
           ? 'bg-primary text-on-primary hard-shadow-dark'
           : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+        @click="setTab(t.id)"
       >
         <span class="material-symbols-outlined text-[18px]">{{ t.icon }}</span>
         {{ t.label }}
       </button>
     </nav>
 
-    <div class="space-y-8">
+    <div
+      id="settings-tabpanel"
+      class="space-y-8"
+      role="tabpanel"
+      :aria-labelledby="'settings-tab-' + activeTab"
+    >
       <TangoCard v-show="activeTab === 'profile'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Profile</h3>
         <div class="space-y-4">
@@ -809,7 +850,7 @@ onMounted(() => {
         <div class="flex flex-col items-center text-center gap-3 py-6">
           <span class="material-symbols-outlined text-secondary text-5xl" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
           <p class="text-body-md font-bold text-on-surface">Everything is synced</p>
-          <p class="text-label-sm text-on-surface-variant max-w-sm">
+          <p class="text-label-sm text-on-surface-variant w-full max-w-[24rem]">
             Changes you make are saved to the server right away. If you ever go offline, queued and
             failed changes will show up here so you can retry them.
           </p>

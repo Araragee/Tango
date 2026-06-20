@@ -15,17 +15,22 @@ const isActive = (path: string) => route.path === path;
 </script>
 
 <template>
-  <nav class="hidden max-md:flex bg-surface border-t-2 border-black dark:border-white fixed bottom-0 left-0 w-full z-50 justify-around items-center px-2 sm:px-4 py-2">
+  <nav
+    class="pb-safe hidden max-md:flex bg-surface border-t-2 border-black dark:border-white fixed bottom-0 left-0 w-full z-50 justify-around items-center px-2 sm:px-4 py-2"
+    aria-label="Primary"
+  >
     <button
       v-for="item in navItems"
       :key="item.path"
-      @click="router.push(item.path)"
+      :aria-current="isActive(item.path) ? 'page' : undefined"
+      :aria-label="item.name"
       class="flex flex-col items-center justify-center p-2 min-w-[48px] min-h-[48px] active:scale-95 transition-transform"
       :class="[
         isActive(item.path)
           ? 'bg-primary text-on-primary pixel-border hard-shadow-dark'
           : 'text-on-surface-variant hover:bg-primary-container'
       ]"
+      @click="router.push(item.path)"
     >
       <span class="material-symbols-outlined mb-1" :style="isActive(item.path) ? 'font-variation-settings: \'FILL\' 1;' : ''">
         {{ item.icon }}

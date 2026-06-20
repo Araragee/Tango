@@ -103,7 +103,7 @@ onUnmounted(() => {
     <div v-if="show" class="fixed inset-0 z-50 flex">
       <div class="flex-1 bg-black/40" @click="$emit('close')" aria-hidden="true"></div>
 
-      <aside class="w-full max-w-sm bg-surface pixel-border-l hard-shadow flex flex-col">
+      <aside class="w-full max-w-[24rem] bg-surface pixel-border-l hard-shadow flex flex-col">
         <header class="flex items-center justify-between p-4 border-b-2 border-on-surface">
           <h3 class="text-headline-md">Activity</h3>
           <button

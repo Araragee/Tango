@@ -35,10 +35,11 @@ const handleClick = () => {
 
 <template>
   <div
-    class="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold transition-all border border-black/10 dark:border-white/10"
+    class="flex items-center gap-1.5 px-1.5 xs:px-2 py-0.5 rounded-full text-[10px] uppercase font-bold transition-all border border-black/10 dark:border-white/10"
     :class="pillClass"
     @click="handleClick"
     :title="statusText"
+    :aria-label="statusText"
   >
     <div
       class="w-1.5 h-1.5 rounded-full"
@@ -47,6 +48,8 @@ const handleClick = () => {
         'animate-ping': queue.flushing
       }"
     ></div>
-    <span class="whitespace-nowrap">{{ statusText }}</span>
+    <!-- Label hidden on the narrowest screens to prevent header overflow; the
+         colour-coded dot + title/aria-label still convey status. -->
+    <span class="whitespace-nowrap hidden xs:inline">{{ statusText }}</span>
   </div>
 </template>

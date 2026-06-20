@@ -205,7 +205,7 @@ onErrorCaptured((err: any) => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <header class="fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 h-16 bg-surface border-b-2 border-black dark:border-white">
+    <header class="app-header fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 bg-surface border-b-2 border-black dark:border-white">
       <!-- Logo / Home -->
       <button
         @click="goHome()"
@@ -323,7 +323,7 @@ onErrorCaptured((err: any) => {
 
     <main :class="[
       'min-h-screen transition-all duration-300',
-      showNav ? 'pt-20 max-md:pb-28 md:pb-8 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
+      showNav ? 'with-header-offset max-md:pb-32 md:pb-8 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
     ]">
       <router-view v-slot="{ Component }">
         <transition name="slide-fade" mode="out-in">
@@ -349,7 +349,7 @@ onErrorCaptured((err: any) => {
     <Transition name="slide-fade">
       <div
         v-if="pwa.needRefresh.value && showNav"
-        class="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 w-[80vw] p-3 pixel-border bg-primary-container text-on-primary-container flex items-center gap-3"
+        class="bottom-above-nav fixed left-1/2 -translate-x-1/2 z-50 w-[80vw] max-w-[28rem] p-3 pixel-border bg-primary-container text-on-primary-container flex items-center gap-3"
         role="alert"
       >
         <span class="material-symbols-outlined">system_update</span>

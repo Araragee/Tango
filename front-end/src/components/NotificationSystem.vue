@@ -26,7 +26,7 @@ defineExpose({ add });
 </script>
 
 <template>
-  <div class="fixed top-4 left-0 right-0 z-[100] pointer-events-none flex flex-col items-center gap-2 px-4">
+  <div class="top-safe fixed left-0 right-0 z-[100] pointer-events-none flex flex-col items-center gap-2 px-4">
     <TransitionGroup name="toast">
         <div
             v-for="n in notifications"

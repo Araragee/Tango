@@ -126,9 +126,14 @@ watch(() => [props.emotion, props.animate], () => {
 
 onUnmounted(() => stopAnimation());
 
+// If the standalone idle PNG fails to load (missing/placeholder URL), fall back
+// to cropping the idle frame from the sprite sheet instead of showing a broken img.
+const idleFailed = ref(false);
+watch(() => props.idle, () => { idleFailed.value = false; });
+
 // Whether we show the standalone idle image or the sheet
 const showIdleImage = computed(() =>
-  props.emotion === 'idle' && !!props.idle
+  props.emotion === 'idle' && !!props.idle && !idleFailed.value
 );
 
 // Current frame coordinates
@@ -166,6 +171,7 @@ const bgPosition = computed(() => {
       :alt="label"
       class="w-full h-full object-contain"
       style="image-rendering: pixelated;"
+      @error="idleFailed = true"
     />
 
     <!-- Emotion: crop from sprite sheet -->

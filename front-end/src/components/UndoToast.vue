@@ -8,7 +8,7 @@ const { isVisible, currentOptions, handleUndo, hide } = useUndoToast()
   <Transition name="toast">
     <div
       v-if="isVisible && currentOptions"
-      class="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-4 py-3 bg-surface pixel-border hard-shadow-dark min-w-[300px] max-w-[90vw]"
+      class="bottom-above-nav fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 px-4 py-3 bg-surface pixel-border hard-shadow-dark min-w-[300px] max-w-[90vw]"
       role="alert"
       aria-live="assertive"
     >
