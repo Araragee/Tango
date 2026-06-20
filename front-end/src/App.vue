@@ -205,7 +205,7 @@ onErrorCaptured((err: any) => {
 
 <template>
   <div class="min-h-screen bg-background text-on-background bg-dither selection:bg-primary-container selection:text-on-primary-container">
-    <header class="app-header fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 bg-surface border-b-2 border-black dark:border-white">
+    <header v-if="showNav" class="app-header fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 bg-surface border-b-2 border-black dark:border-white">
       <!-- Logo / Home -->
       <button
         @click="goHome()"
@@ -234,9 +234,10 @@ onErrorCaptured((err: any) => {
 
       <!-- Right-side actions -->
       <div v-if="showNav" class="flex items-center gap-1 sm:gap-2 shrink-0">
+        <!-- Search — inline from md up; folded into the mobile menu below. -->
         <button
           @click="showSearch = true"
-          class="flex items-center gap-2 px-2.5 py-1.5 min-h-9 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
+          class="hidden md:flex items-center gap-2 px-2.5 py-1.5 min-h-9 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
           aria-label="Search (Cmd+K)"
         >
           <span class="material-symbols-outlined text-[18px]">search</span>
@@ -250,29 +251,30 @@ onErrorCaptured((err: any) => {
         <!-- Secondary actions — inline on desktop -->
         <button
           @click="showHelp = true"
-          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Help"
         >help</button>
         <button
           @click="showActivity = true"
-          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Activity"
         >timeline</button>
         <button
           @click="router.push('/app/archive')"
-          class="hidden md:inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
+          class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Archive"
         >history</button>
 
-        <!-- Secondary actions — overflow menu on mobile -->
+        <!-- Mobile hamburger — holds search + secondary actions to keep the bar
+             uncluttered. Important controls (notifications, avatar) stay inline. -->
         <div class="relative md:hidden">
           <button
             @click="showMoreMenu = !showMoreMenu"
             class="tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
-            aria-label="More actions"
+            aria-label="Menu"
             aria-haspopup="true"
             :aria-expanded="showMoreMenu"
-          >more_vert</button>
+          >menu</button>
           <div v-if="showMoreMenu" class="fixed inset-0 z-40" @click="showMoreMenu = false"></div>
           <div
             v-if="showMoreMenu"
@@ -281,6 +283,7 @@ onErrorCaptured((err: any) => {
           >
             <button
               v-for="m in [
+                { icon: 'search', label: 'Search', act: () => { showSearch = true; } },
                 { icon: 'help', label: 'How it works', act: () => { showHelp = true; } },
                 { icon: 'timeline', label: 'Activity', act: () => { showActivity = true; } },
                 { icon: 'history', label: 'Archive', act: () => { router.push('/app/archive'); } },
