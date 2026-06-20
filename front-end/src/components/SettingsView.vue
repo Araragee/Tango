@@ -730,6 +730,23 @@ onMounted(() => {
       </TangoCard>
 
       <TangoCard v-show="activeTab === 'budget'" padding="lg">
+        <h3 class="text-headline-md mb-2 border-b border-on-surface pb-2">Currency</h3>
+        <p class="text-body-md text-on-surface-variant mb-4">Symbol shown next to amounts. Amounts themselves are unchanged.</p>
+        <div class="flex pixel-border-sm overflow-hidden w-full max-w-[20rem]" role="group" aria-label="Currency">
+          <button
+            v-for="c in [['USD', '$ Dollar'], ['PHP', '₱ Peso']] as const"
+            :key="c[0]"
+            @click="prefs.setCurrency(c[0])"
+            class="flex-1 px-4 py-2 min-h-11 text-label-sm uppercase font-bold transition-colors"
+            :aria-pressed="prefs.currency === c[0]"
+            :class="prefs.currency === c[0]
+              ? 'bg-primary text-on-primary'
+              : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+          >{{ c[1] }}</button>
+        </div>
+      </TangoCard>
+
+      <TangoCard v-show="activeTab === 'budget'" padding="lg">
         <h3 class="text-headline-md mb-6 border-b border-on-surface pb-2">Income Auto-Allocate</h3>
         <p class="text-body-md text-on-surface-variant mb-4">When income is added, automatically contribute a % to a goal.</p>
         <div v-if="store.plans.goals.filter(g => g.status !== 'Completed').length === 0" class="text-body-md text-on-surface-variant">

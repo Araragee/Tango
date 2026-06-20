@@ -5,6 +5,7 @@ const { confirm } = useConfirm();
 import { ref, inject, computed } from 'vue';
 import { localDateISO } from '../utils/dateUtils';
 import { useAppStore } from '../stores/useStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import EditGoalModal from './EditGoalModal.vue';
@@ -16,6 +17,7 @@ import EmptyState from './EmptyState.vue';
 const PRIORITY_ORDER: Record<string, number> = { High: 0, Normal: 1, Low: 2 };
 
 const store = useAppStore();
+const prefs = usePreferencesStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const showEditModal = ref(false);
@@ -167,7 +169,7 @@ const confirmDelete = async (id: string, title: string) => {
                 <h4 class="text-headline-md text-on-surface pr-4">{{ goal.title }}</h4>
             </div>
             <span class="text-body-md font-bold text-primary-container whitespace-nowrap">
-              ${{ goal.saved.toLocaleString() }} / ${{ goal.target.toLocaleString() }}
+              {{ prefs.currencySymbol }}{{ goal.saved.toLocaleString() }} / {{ prefs.currencySymbol }}{{ goal.target.toLocaleString() }}
             </span>
           </div>
           <p class="text-body-md text-on-surface-variant mt-2">{{ goal.description }}</p>

@@ -10,6 +10,7 @@ import { ref, computed, watch } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import { useAppStore } from '../stores/useStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { iconForCategory } from '../utils/categoryIcons';
 import { localDateISO } from '../utils/dateUtils';
 
@@ -17,6 +18,7 @@ defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
 
 const store = useAppStore();
+const prefs = usePreferencesStore();
 
 // ── Step machine: upload → map → preview → done ────────────────────────────
 
@@ -359,7 +361,7 @@ function reset() {
               <td class="px-2 py-1 truncate max-w-[140px]">{{ r.title }}</td>
               <td class="px-2 py-1 text-right font-bold"
                 :class="r.amount < 0 ? 'text-error' : 'text-secondary'">
-                {{ r.amount < 0 ? '-' : '+' }}${{ Math.abs(r.amount).toFixed(2) }}
+                {{ r.amount < 0 ? '-' : '+' }}{{ prefs.currencySymbol }}{{ Math.abs(r.amount).toFixed(2) }}
               </td>
               <td class="px-2 py-1">{{ r.date }}</td>
               <td class="px-2 py-1">{{ r.category }}</td>
@@ -395,7 +397,7 @@ function reset() {
               <td class="px-2 py-1 truncate max-w-[160px]">{{ r.title }}</td>
               <td class="px-2 py-1 text-right font-bold"
                 :class="r.amount < 0 ? 'text-error' : 'text-secondary'">
-                {{ r.amount < 0 ? '-' : '+' }}${{ Math.abs(r.amount).toFixed(2) }}
+                {{ r.amount < 0 ? '-' : '+' }}{{ prefs.currencySymbol }}{{ Math.abs(r.amount).toFixed(2) }}
               </td>
               <td class="px-2 py-1">{{ r.date }}</td>
               <td class="px-2 py-1">{{ r.category }}</td>

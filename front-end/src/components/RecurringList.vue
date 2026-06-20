@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, inject } from 'vue';
 import { useRecurringStore, type RecurringTransaction } from '../stores/useRecurringStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoButton from './TangoButton.vue';
 import TangoCard from './TangoCard.vue';
 import RecurringTransactionModal from './RecurringTransactionModal.vue';
@@ -9,6 +10,7 @@ import { localDateISO } from '../utils/dateUtils';
 
 const recurring = useRecurringStore();
 const household = useHouseholdStore();
+const prefs = usePreferencesStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const showModal = ref(false);
@@ -110,7 +112,7 @@ onMounted(async () => {
         </div>
         <div class="flex items-center gap-2 shrink-0">
           <span class="text-body-md font-bold" :class="r.type === 'expense' ? 'text-error' : 'text-secondary'">
-            {{ r.type === 'expense' ? '-' : '+' }}${{ r.amount.toFixed(0) }}
+            {{ r.type === 'expense' ? '-' : '+' }}{{ prefs.currencySymbol }}{{ r.amount.toFixed(0) }}
           </span>
           <button
             @click.stop="togglePause(r)"

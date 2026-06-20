@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useAppStore } from '../stores/useStore';
 import { useHouseholdStore } from '../stores/useHouseholdStore';
 import { useContributionsStore } from '../stores/useContributionsStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 
 interface Props {
     goalId: string;
@@ -16,6 +17,7 @@ const auth = useAuthStore();
 const store = useAppStore();
 const household = useHouseholdStore();
 const contributions = useContributionsStore();
+const prefs = usePreferencesStore();
 
 const totals = computed(() => contributions.totalsByUser(props.goalId).value);
 
@@ -39,7 +41,7 @@ const myPct      = computed(() => pct(myAmount.value));
 const partnerPct = computed(() => pct(partnerAmount.value));
 const otherPct   = computed(() => pct(otherAmount.value));
 
-const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const fmt = (n: number) => `${prefs.currencySymbol}${Math.round(n).toLocaleString()}`;
 </script>
 
 <template>

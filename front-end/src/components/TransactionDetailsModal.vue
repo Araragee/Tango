@@ -11,6 +11,7 @@ import TangoInput from './TangoInput.vue';
 import { type Transaction, useAppStore } from '../stores/useStore';
 import { supabase, isConfigured, RECEIPTS_BUCKET } from '../lib/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { iconForCategory } from '../utils/categoryIcons';
 import CategoryIcon from './CategoryIcon.vue';
 
@@ -20,6 +21,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(['close']);
 const store = useAppStore();
+const prefs = usePreferencesStore();
 const auth = useAuthStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
@@ -218,7 +220,7 @@ const saveEdit = async () => {
                 class="text-headline-xl"
                 :class="transaction.amount < 0 ? 'text-error' : 'text-secondary'"
             >
-                {{ transaction.amount < 0 ? '-' : '+' }}${{ Math.abs(transaction.amount).toFixed(2) }}
+                {{ transaction.amount < 0 ? '-' : '+' }}{{ prefs.currencySymbol }}{{ Math.abs(transaction.amount).toFixed(2) }}
             </div>
         </div>
 

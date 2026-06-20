@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useAppStore, type Goal, type Transaction } from '../stores/useStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoCard from './TangoCard.vue';
 
 const store = useAppStore();
+const prefs = usePreferencesStore();
 
 const completedGoals = computed(() => store.plans.goals.filter((g: Goal) => g.status === 'Completed'));
 const archivedTransactions = computed(() =>
@@ -44,7 +46,7 @@ function formatReached(iso: string | null | undefined): string {
             <span class="material-symbols-outlined text-secondary text-4xl">verified</span>
           </div>
           <div class="mt-4 text-body-lg font-bold text-secondary">
-            ${{ goal.target.toLocaleString() }}
+            {{ prefs.currencySymbol }}{{ goal.target.toLocaleString() }}
           </div>
         </TangoCard>
       </div>
@@ -61,7 +63,7 @@ function formatReached(iso: string | null | undefined): string {
             <div class="text-label-sm text-outline uppercase">{{ tx.date }} • {{ tx.category }}</div>
           </div>
           <div class="text-body-lg font-bold text-error">
-            -${{ Math.abs(tx.amount).toLocaleString() }}
+            -{{ prefs.currencySymbol }}{{ Math.abs(tx.amount).toLocaleString() }}
           </div>
         </div>
       </div>

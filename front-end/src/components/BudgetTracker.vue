@@ -180,37 +180,40 @@ const exportCSV = () => {
     <main class="w-full grid grid-cols-1 md:grid-cols-12 gap-8">
       <!-- Left Column -->
       <div class="md:col-span-7 flex flex-col gap-8 w-full">
-        <!-- Balance Card with Sprites -->
-        <TangoCard padding="none" shadow="default" class="flex flex-row items-stretch relative w-full overflow-hidden min-h-44">
+        <!-- I23: month-to-date income / expense split so the user sees where money
+             is coming from and going to, not just the running balance total.
+             Stacks vertically on mobile, side-by-side from sm up. -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-px border-2 border-black dark:border-white bg-black dark:bg-white">
+          <div class="flex flex-col items-center py-2 px-3 bg-secondary-container">
+            <span class="text-label-sm uppercase text-on-secondary-container">Income this month</span>
+            <span class="text-body-lg font-bold text-on-secondary-container tabular-nums">+{{ prefs.money(monthSummary.income) }}</span>
+          </div>
+          <div class="flex flex-col items-center py-2 px-3 bg-error-container">
+            <span class="text-label-sm uppercase text-on-error-container">Spent this month</span>
+            <span class="text-body-lg font-bold text-on-error-container tabular-nums">-{{ prefs.money(monthSummary.expense) }}</span>
+          </div>
+        </div>
+
+        <!-- Balance Card with Sprites. Stacks vertically on mobile so the
+             balance figure gets the full width and never clips; row layout
+             from sm up. -->
+        <TangoCard padding="none" shadow="default" class="flex flex-col sm:flex-row items-stretch relative w-full overflow-hidden sm:min-h-44">
           <!-- Sprite Widget Panel -->
-          <div class="flex flex-col items-center justify-end gap-2 px-3 sm:px-4 pt-4 pb-3 bg-surface-variant border-r-2 border-black dark:border-white shrink-0 min-w-[100px] sm:min-w-[140px]">
+          <div class="flex flex-col items-center justify-end gap-2 px-3 sm:px-4 pt-4 pb-3 bg-surface-variant border-b-2 sm:border-b-0 sm:border-r-2 border-black dark:border-white shrink-0 sm:min-w-[140px]">
             <TangoSprites :size="64" />
           </div>
 
           <!-- Balance info -->
-          <div class="flex flex-col justify-center items-start px-6 py-4 flex-1 relative">
+          <div class="flex flex-col justify-center items-start px-6 py-4 flex-1 min-w-0 relative">
             <div class="px-3 py-1 bg-primary text-on-primary text-label-sm uppercase pixel-border-sm select-none mb-2">
               Joint Balance
             </div>
-            <h2 class="text-headline-xl text-on-surface">
-              ${{ store.budget.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
+            <h2 class="text-headline-lg sm:text-headline-xl text-on-surface tabular-nums break-words max-w-full">
+              {{ prefs.money(store.budget.balance) }}
             </h2>
             <p class="text-body-md text-on-surface-variant mt-1">{{ lastUpdatedLabel }}</p>
           </div>
         </TangoCard>
-
-        <!-- I23: month-to-date income / expense split so the user sees where money
-             is coming from and going to, not just the running balance total. -->
-        <div class="grid grid-cols-2 gap-px border-2 border-black dark:border-white bg-black dark:bg-white">
-          <div class="flex flex-col items-center py-2 px-3 bg-secondary-container">
-            <span class="text-label-sm uppercase text-on-secondary-container">Income this month</span>
-            <span class="text-body-lg font-bold text-on-secondary-container">+${{ monthSummary.income.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span>
-          </div>
-          <div class="flex flex-col items-center py-2 px-3 bg-error-container">
-            <span class="text-label-sm uppercase text-on-error-container">Spent this month</span>
-            <span class="text-body-lg font-bold text-on-error-container">-${{ monthSummary.expense.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}</span>
-          </div>
-        </div>
 
         <VibeCheckCard />
 
@@ -223,19 +226,19 @@ const exportCSV = () => {
           <div class="flex gap-4 mb-4">
             <div class="flex-1 text-center p-3 pixel-border-sm bg-surface-variant">
               <p class="text-label-sm uppercase text-on-surface-variant mb-1">You paid</p>
-              <p class="text-headline-md font-black">${{ settleUp.myPaid.toFixed(2) }}</p>
+              <p class="text-headline-md font-black tabular-nums">{{ prefs.money(settleUp.myPaid) }}</p>
             </div>
             <div class="flex-1 text-center p-3 pixel-border-sm bg-surface-variant">
               <p class="text-label-sm uppercase text-on-surface-variant mb-1">{{ store.partnerName }} paid</p>
-              <p class="text-headline-md font-black">${{ settleUp.partnerPaid.toFixed(2) }}</p>
+              <p class="text-headline-md font-black tabular-nums">{{ prefs.money(settleUp.partnerPaid) }}</p>
             </div>
           </div>
           <div class="px-4 py-3 pixel-border-sm text-center"
                :class="settleUp.owedBy === 'settled' ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary-container text-on-primary-container'">
             <p class="text-label-sm uppercase font-bold">
               <span v-if="settleUp.owedBy === 'settled'">All settled!</span>
-              <span v-else-if="settleUp.owedBy === 'partner'">{{ store.partnerName }} owes you ${{ settleUp.balance.toFixed(2) }}</span>
-              <span v-else>You owe {{ store.partnerName }} ${{ settleUp.balance.toFixed(2) }}</span>
+              <span v-else-if="settleUp.owedBy === 'partner'">{{ store.partnerName }} owes you {{ prefs.money(settleUp.balance) }}</span>
+              <span v-else>You owe {{ store.partnerName }} {{ prefs.money(settleUp.balance) }}</span>
             </p>
           </div>
         </TangoCard>
@@ -269,13 +272,13 @@ const exportCSV = () => {
                   <span v-if="isOverBudget(cat.spent, cat.category)" class="material-symbols-outlined text-[12px] align-middle">warning</span>
                 </span>
                 <span class="flex items-center gap-2">
-                  ${{ cat.spent.toFixed(0) }} /
+                  {{ prefs.currencySymbol }}{{ cat.spent.toFixed(0) }} /
                   <!-- Inline limit editor -->
                   <span v-if="editingLimit !== cat.category"
                     @click="startEditLimit(cat.category)"
                     class="cursor-pointer underline decoration-dotted hover:text-primary transition-colors"
                     title="Click to edit limit"
-                  >${{ getLimit(cat.category) }}</span>
+                  >{{ prefs.currencySymbol }}{{ getLimit(cat.category) }}</span>
                   <span v-else class="flex items-center gap-1">
                     <input
                       :ref="(el) => setLimitInputRef(el as Element | null, cat.category)"
@@ -384,8 +387,8 @@ const exportCSV = () => {
                   <div class="text-label-sm text-outline mt-1 uppercase">{{ tx.date }}</div>
                 </div>
               </div>
-              <div class="text-body-lg font-bold" :class="tx.amount < 0 ? 'text-error' : 'text-secondary'">
-                {{ tx.amount < 0 ? '-' : '+' }}${{ Math.abs(tx.amount).toFixed(2) }}
+              <div class="text-body-lg font-bold tabular-nums" :class="tx.amount < 0 ? 'text-error' : 'text-secondary'">
+                {{ tx.amount < 0 ? '-' : '+' }}{{ prefs.money(Math.abs(tx.amount)) }}
               </div>
             </div>
           </div>

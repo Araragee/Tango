@@ -14,6 +14,7 @@ import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import { useAppStore } from '../stores/useStore';
 import { useContributionsStore } from '../stores/useContributionsStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { buildMonthlyReport } from '../utils/monthlyReport';
 
 defineProps<{ show: boolean }>();
@@ -21,6 +22,7 @@ const emit = defineEmits(['close']);
 
 const store = useAppStore();
 const contributions = useContributionsStore();
+const prefs = usePreferencesStore();
 
 const now = new Date();
 const selectedMonth = ref(
@@ -53,7 +55,7 @@ const moodEmoji = computed(() => {
 });
 
 function fmt(n: number) {
-  return n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+  return n.toLocaleString(undefined, { style: 'currency', currency: prefs.currency, minimumFractionDigits: 0 });
 }
 
 function printReport() {

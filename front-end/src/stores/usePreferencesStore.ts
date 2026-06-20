@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
+export type CurrencyCode = 'USD' | 'PHP'
+export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { USD: '$', PHP: '₱' }
 
 const DEFAULT_TODO_CATEGORIES = ['General', 'Grocery', 'Home', 'Work', 'Health', 'Finance']
 const DEFAULT_TRANSACTION_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Health', 'Entertainment', 'Salary']
@@ -11,6 +14,24 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const eventCategories = ref<string[]>([...DEFAULT_EVENT_CATEGORIES])
   const budgetLimits = ref<Record<string, number>>({})
   const notificationsEnabled = ref<boolean>(true)
+
+  // Display currency. Amounts are stored as plain numbers; this only controls
+  // the symbol shown. 'for now dollar and peso'.
+  const currency = ref<CurrencyCode>('USD')
+  const currencySymbol = computed(() => CURRENCY_SYMBOLS[currency.value])
+
+  function setCurrency(c: CurrencyCode) {
+    currency.value = c
+  }
+
+  /** Format a number as money in the selected currency, e.g. "$1,234.00". */
+  function money(amount: number | null | undefined): string {
+    const n = Number(amount) || 0
+    return currencySymbol.value + n.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
 
   // F10: per-category emoji overrides. Keyed by lowercased category name so
   // "Food", "food", and "FOOD" share the same emoji. When unset, the renderer
@@ -150,6 +171,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
     eventCategories,
     budgetLimits,
     notificationsEnabled,
+    currency,
+    currencySymbol,
+    setCurrency,
+    money,
     categoryEmojis,
     mutedNotifCategories,
     incomeAllocations,

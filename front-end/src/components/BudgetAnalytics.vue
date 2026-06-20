@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 import TangoCard from './TangoCard.vue';
 
 const store = useAppStore();
+const prefs = usePreferencesStore();
 const activeTab = ref<'overview' | 'trends' | 'categories'>('overview');
 
 // ── Last 6 months data ──────────────────────────────────────────────────────
@@ -129,19 +131,19 @@ const savingsRate = computed(() => {
         <div class="flex flex-col gap-1 p-3 pixel-border-sm bg-primary-container">
           <span class="text-label-sm uppercase text-on-primary-container opacity-70">Income</span>
           <span class="text-headline-md font-black text-on-primary-container">
-            ${{ currentMonth.income.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
+            {{ prefs.currencySymbol }}{{ currentMonth.income.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
           </span>
         </div>
         <div class="flex flex-col gap-1 p-3 pixel-border-sm bg-error-container">
           <span class="text-label-sm uppercase text-on-error-container opacity-70">Expenses</span>
           <span class="text-headline-md font-black text-on-error-container">
-            ${{ currentMonth.expense.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
+            {{ prefs.currencySymbol }}{{ currentMonth.expense.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
           </span>
         </div>
         <div class="flex flex-col gap-1 p-3 pixel-border-sm bg-secondary-container">
           <span class="text-label-sm uppercase text-on-secondary-container opacity-70">Avg/Day</span>
           <span class="text-headline-md font-black text-on-secondary-container">
-            ${{ avgDailySpend.toFixed(0) }}
+            {{ prefs.currencySymbol }}{{ avgDailySpend.toFixed(0) }}
           </span>
         </div>
         <div class="flex flex-col gap-1 p-3 pixel-border-sm bg-surface-container-highest">
@@ -199,7 +201,7 @@ const savingsRate = computed(() => {
           </div>
         </div>
         <span class="text-headline-md font-black text-error">
-          ${{ topCategory.spent.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
+          {{ prefs.currencySymbol }}{{ topCategory.spent.toLocaleString(undefined, { maximumFractionDigits: 0 }) }}
         </span>
       </div>
     </div>
@@ -216,8 +218,8 @@ const savingsRate = computed(() => {
         <div class="flex gap-2 flex-wrap sm:gap-4 items-end">
           <!-- Y labels -->
           <div class="flex flex-col justify-between text-right pr-1 sm:pr-2 shrink-0 h-24 sm:h-[128px]">
-            <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly).toLocaleString() }}</span>
-            <span class="text-[10px] text-on-surface-variant">${{ Math.round(maxMonthly / 2).toLocaleString() }}</span>
+            <span class="text-[10px] text-on-surface-variant">{{ prefs.currencySymbol }}{{ Math.round(maxMonthly).toLocaleString() }}</span>
+            <span class="text-[10px] text-on-surface-variant">{{ prefs.currencySymbol }}{{ Math.round(maxMonthly / 2).toLocaleString() }}</span>
             <span class="text-[10px] text-on-surface-variant">$0</span>
           </div>
 
@@ -273,8 +275,8 @@ const savingsRate = computed(() => {
             class="grid grid-cols-3 text-label-sm py-1.5 px-2 pixel-border-sm bg-surface"
           >
             <span class="uppercase font-bold text-on-surface">{{ m.label }}</span>
-            <span class="text-primary font-bold text-right">+${{ m.income.toFixed(0) }}</span>
-            <span class="text-error font-bold text-right">-${{ m.expense.toFixed(0) }}</span>
+            <span class="text-primary font-bold text-right">+{{ prefs.currencySymbol }}{{ m.income.toFixed(0) }}</span>
+            <span class="text-error font-bold text-right">-{{ prefs.currencySymbol }}{{ m.expense.toFixed(0) }}</span>
           </div>
         </div>
       </div>
@@ -312,7 +314,7 @@ const savingsRate = computed(() => {
             />
             <!-- Center total -->
             <text :x="CX" :y="CY - 6" text-anchor="middle" class="fill-on-surface font-black" font-size="13" font-weight="900">
-              ${{ categoryData.reduce((s, c) => s + c.spent, 0).toFixed(0) }}
+              {{ prefs.currencySymbol }}{{ categoryData.reduce((s, c) => s + c.spent, 0).toFixed(0) }}
             </text>
             <text :x="CX" :y="CY + 10" text-anchor="middle" font-size="9" class="fill-on-surface-variant" letter-spacing="1">
               THIS MONTH
@@ -336,7 +338,7 @@ const savingsRate = computed(() => {
                 <span class="font-bold text-on-surface uppercase">{{ cat.category }}</span>
               </div>
               <span class="text-on-surface-variant">
-                ${{ cat.spent.toFixed(0) }}
+                {{ prefs.currencySymbol }}{{ cat.spent.toFixed(0) }}
                 <span class="opacity-60">({{ cat.pct.toFixed(0) }}%)</span>
               </span>
             </div>

@@ -12,6 +12,7 @@ import DuoBar from './DuoBar.vue';
 import { useAppStore, type Goal } from '../stores/useStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useContributionsStore } from '../stores/useContributionsStore';
+import { usePreferencesStore } from '../stores/usePreferencesStore';
 
 const props = defineProps<{
     show: boolean;
@@ -21,6 +22,7 @@ const emit = defineEmits(['close']);
 const store = useAppStore();
 const auth = useAuthStore();
 const contributions = useContributionsStore();
+const prefs = usePreferencesStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const GOAL_CATEGORIES = ['General', 'Travel', 'Home', 'Emergency', 'Vehicle', 'Education', 'Wedding', 'Health', 'Other'] as const;
@@ -294,7 +296,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
         <div v-if="isEditing && currentGoal" class="border-t-2 border-on-surface pt-4 space-y-4">
             <div class="flex items-center justify-between">
                 <h4 class="text-label-md uppercase font-bold">Contributions</h4>
-                <span class="text-label-sm text-on-surface-variant">${{ Math.round(currentGoal.saved).toLocaleString() }} / ${{ currentGoal.target.toLocaleString() }}</span>
+                <span class="text-label-sm text-on-surface-variant">{{ prefs.currencySymbol }}{{ Math.round(currentGoal.saved).toLocaleString() }} / {{ prefs.currencySymbol }}{{ currentGoal.target.toLocaleString() }}</span>
             </div>
 
             <DuoBar :goal-id="currentGoal.id" :target="currentGoal.target" />
@@ -319,7 +321,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 >
                     <div class="flex flex-col">
                         <span class="font-bold">
-                            {{ whoIs(c.user_id) }} · ${{ Math.round(c.amount).toLocaleString() }}
+                            {{ whoIs(c.user_id) }} · {{ prefs.currencySymbol }}{{ Math.round(c.amount).toLocaleString() }}
                         </span>
                         <span v-if="c.note" class="text-on-surface-variant truncate">{{ c.note }}</span>
                         <span class="text-[10px] text-outline uppercase">{{ fmtDate(c.created_at) }}</span>
