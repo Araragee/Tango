@@ -95,9 +95,8 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   async function createHousehold() {
-    const auth = useAuthStore()
-    if (!auth.user) throw new Error('Not authenticated')
-
+    // Guest/demo mode has no auth, so handle it before the auth check —
+    // otherwise this branch is unreachable and demo onboarding throws.
     if (!isConfigured) {
       householdId.value = 'demo-household'
       inviteCode.value = 'DEMO01'
@@ -105,6 +104,9 @@ export const useHouseholdStore = defineStore('household', () => {
       await _afterLoad()
       return
     }
+
+    const auth = useAuthStore()
+    if (!auth.user) throw new Error('Not authenticated')
 
     // Use crypto.randomUUID() instead of Math.random().toString(36).substring(2,8)
     // which can produce codes shorter than 6 chars (e.g. Math.random()=0.5 →
@@ -147,15 +149,16 @@ export const useHouseholdStore = defineStore('household', () => {
   }
 
   async function joinHousehold(code: string) {
-    const auth = useAuthStore()
-    if (!auth.user) throw new Error('Not authenticated')
-
+    // Guest/demo mode first — see createHousehold for why this precedes auth.
     if (!isConfigured) {
       householdId.value = 'demo-household'
       inviteCode.value = code.toUpperCase()
       await _afterLoad()
       return
     }
+
+    const auth = useAuthStore()
+    if (!auth.user) throw new Error('Not authenticated')
 
     const trimmed = code.trim().toUpperCase()
 

@@ -158,8 +158,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col items-center justify-center p-4 pt-16">
-    <div class="w-[90%] max-w-[448px] min-w-[300px] bg-surface pixel-border hard-shadow p-6 flex flex-col items-center">
+  <div class="min-h-screen flex flex-col items-center justify-center sm:p-4">
+    <div class="w-full min-h-screen sm:min-h-0 sm:w-[90%] max-w-[448px] min-w-[300px] bg-surface sm:pixel-border sm:hard-shadow p-6 flex flex-col items-center justify-center sm:justify-start">
       <div class="mb-xl text-center flex flex-col items-center gap-sm mt-lg">
         <span class="material-symbols-outlined text-primary text-6xl" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <h1 class="text-headline-xl text-primary tracking-tighter italic uppercase">Tango</h1>
