@@ -172,6 +172,7 @@ export const useHouseholdStore = defineStore('household', () => {
       throw error
     }
 
+    if (id == null) throw new Error('Invalid invite code')
     householdId.value = id as string
     inviteCode.value = trimmed
     await loadMembers()

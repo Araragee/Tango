@@ -16,7 +16,7 @@
  *   router.push(validateRedirect(route.query.redirect, '/app/budget'))
  */
 
-const SAFE_PATH_RE    = /^\/[^/].*$/              // starts with exactly one "/"
+const SAFE_PATH_RE    = /^\/([^/].*)?$/            // starts with exactly one "/" (allows root "/")
 const PROTO_RE        = /[a-zA-Z][a-zA-Z0-9+\-.]*:/  // any URI scheme
 const CRLF_RE         = /[\r\n]/
 const TRAVERSAL_RE    = /(^|\/)\.\.(\/|$)/         // /../ path-traversal segments

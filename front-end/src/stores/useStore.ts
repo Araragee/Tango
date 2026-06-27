@@ -182,7 +182,12 @@ function nextDueFor(fromDate: string, recurrence: string): string {
   if (recurrence === 'daily') d.setDate(d.getDate() + 1)
   else if (recurrence === 'weekly') d.setDate(d.getDate() + 7)
   else if (recurrence === 'biweekly') d.setDate(d.getDate() + 14)
-  else if (recurrence === 'monthly') d.setMonth(d.getMonth() + 1)
+  else if (recurrence === 'monthly') {
+    const origDay = d.getDate()
+    const nextMonth = d.getMonth() + 1
+    const lastDayOfNextMonth = new Date(d.getFullYear(), nextMonth + 1, 0).getDate()
+    d.setMonth(nextMonth, Math.min(origDay, lastDayOfNextMonth))
+  }
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
