@@ -23,11 +23,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- display=block: hide the icon glyphs (blank) until the font loads instead
-         of flashing the ligature names ("favorite", "home", …) as raw text. The
-         font is also runtime-cached by the service worker, so it's instant after
-         the first visit. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" />
+    <!-- Icon font is subset to the icons we use (~20 KB instead of ~4 MB).
+         Regenerate with `npm run icons` after using a new icon.
+         display=block: hide the glyphs until the font loads instead of flashing
+         the ligature names ("favorite", "home", …) as raw text. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&icon_names=account_balance,account_balance_wallet,add,add_home,alarm,arrow_forward,attach_money,auto_awesome,bar_chart,bathtub,block,bolt,cadence,calendar_month,cancel,card_giftcard,casino,category,celebration,check,check_box,check_box_outline_blank,check_circle,checklist,checklist_rtl,chevron_left,chevron_right,class,close,cloud_done,commute,content_copy,create,delete,description,directions_bike,directions_car,diversity_1,done,download,eco,edit,email,emoji_events,error,event,event_repeat,expand_less,expand_more,extension,favorite,fitness_center,flag,flight_takeoff,group,group_add,health_and_safety,help,hide,hiking,history,home,home_heart,hourglass_empty,hourglass_top,image,info,input,ios_share,iso,join,kayaking,key,label,local_cafe,local_fire_department,local_florist,local_grocery_store,local_library,lock,lock_reset,login,mail,map,mark_email_read,menu,menu_book,message,military_tech,mood,more,movie,museum,music_note,nightlife,note,notes,notifications,notifications_active,overview,paid,palette,park,password,pause,payments,pending,person,person_add,pets,photo_camera,picture_as_pdf,pie_chart,play_arrow,preview,priority,public,radio,radio_button_unchecked,receipt,receipt_long,redeem,refresh,repeat,restaurant,restaurant_menu,save,savings,school,search,shopping_bag,shopping_cart,snooze,star,stars,storefront,subscriptions,summarize,swap_horiz,switch,sync,system_update,tab,tabs,target,task_alt,theaters,timeline,title,toast,today,trending_up,tune,update,upload,upload_file,uppercase,verified,visibility,visibility_off,warning,wb_twilight,whatshot,wifi_off,window&display=block" />
   </head>
   <body class="bg-background text-on-background antialiased">
     <div id="app"></div>

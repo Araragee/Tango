@@ -229,6 +229,18 @@ export const useAppStore = defineStore('app', () => {
   let _reconnectDelay = 2_000 // ms; doubles on each retry, capped at 30s
   const loading = ref(false)
 
+  // Realtime events arrive one per row, so a bulk write (CSV import, partner
+  // ticking off several todos) used to trigger N back-to-back full-table
+  // refetches. Coalesce bursts into a single trailing refetch per table.
+  const _coalesceTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  function coalesced(key: string, fn: () => unknown, ms = 250) {
+    return () => {
+      const prev = _coalesceTimers.get(key)
+      if (prev) clearTimeout(prev)
+      _coalesceTimers.set(key, setTimeout(() => { _coalesceTimers.delete(key); fn() }, ms))
+    }
+  }
+
   // ── Profiles ──────────────────────────────────────────────────────────────
 
   async function fetchProfiles() {
@@ -364,14 +376,16 @@ export const useAppStore = defineStore('app', () => {
 
   // ── Fetch helpers ────────────────────────────────────────────────────────
 
-  async function fetchBudget() {
+  async function fetchBudget(opts: { fromCache?: boolean } = {}) {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
 
     const cacheKey = `${household.householdId}:transactions`
-    const cached = await loadReadCache<Transaction>(cacheKey)
-    if (cached) { recentActivity.value = cached; recalculateBudget() }
-    else { recentActivity.value = []; recalculateBudget() }
+    if (opts.fromCache !== false) {
+      const cached = await loadReadCache<Transaction>(cacheKey)
+      recentActivity.value = cached ?? []
+      recalculateBudget()
+    }
 
     const { data, error } = await supabase
       .from('transactions')
@@ -386,12 +400,12 @@ export const useAppStore = defineStore('app', () => {
     saveReadCache(cacheKey, recentActivity.value)
   }
 
-  async function fetchGoals() {
+  async function fetchGoals(opts: { fromCache?: boolean } = {}) {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
 
     const cacheKey = `${household.householdId}:goals`
-    const cached = await loadReadCache<Goal>(cacheKey)
+    const cached = opts.fromCache === false ? null : await loadReadCache<Goal>(cacheKey)
     if (cached) goals.value = cached
 
     const { data, error } = await supabase
@@ -405,12 +419,12 @@ export const useAppStore = defineStore('app', () => {
     saveReadCache(cacheKey, goals.value)
   }
 
-  async function fetchTodos() {
+  async function fetchTodos(opts: { fromCache?: boolean } = {}) {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
 
     const cacheKey = `${household.householdId}:todos`
-    const cached = await loadReadCache<Todo>(cacheKey)
+    const cached = opts.fromCache === false ? null : await loadReadCache<Todo>(cacheKey)
     if (cached) todos.value = cached
 
     const { data, error } = await supabase
@@ -424,14 +438,14 @@ export const useAppStore = defineStore('app', () => {
     saveReadCache(cacheKey, todos.value)
   }
 
-  async function fetchCalendar() {
+  async function fetchCalendar(opts: { fromCache?: boolean } = {}) {
     const household = useHouseholdStore()
     if (!isConfigured || !household.householdId) return
 
     const cacheKey = `${household.householdId}:calendar_events`
-    const cached = await loadReadCache<CalendarEvent>(cacheKey)
-    if (cached) events.value = cached
-    else events.value = []
+    if (opts.fromCache !== false) {
+      events.value = (await loadReadCache<CalendarEvent>(cacheKey)) ?? []
+    }
 
     const { data, error } = await supabase
       .from('calendar_events')
@@ -484,19 +498,19 @@ export const useAppStore = defineStore('app', () => {
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'transactions',
         filter: `household_id=eq.${householdId}`,
-      }, () => fetchBudget())
+      }, coalesced('transactions', () => fetchBudget({ fromCache: false })))
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'goals',
         filter: `household_id=eq.${householdId}`,
-      }, () => fetchGoals())
+      }, coalesced('goals', () => fetchGoals({ fromCache: false })))
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'todos',
         filter: `household_id=eq.${householdId}`,
-      }, () => fetchTodos())
+      }, coalesced('todos', () => fetchTodos({ fromCache: false })))
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'calendar_events',
         filter: `household_id=eq.${householdId}`,
-      }, () => fetchCalendar())
+      }, coalesced('calendar_events', () => fetchCalendar({ fromCache: false })))
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'household_members',
         filter: `household_id=eq.${householdId}`,
@@ -520,7 +534,7 @@ export const useAppStore = defineStore('app', () => {
       channel = channel.on('postgres_changes', {
         event: '*', schema: 'public', table: 'profiles',
         filter: `id=in.(${memberIds.join(',')})`,
-      }, () => fetchProfiles())
+      }, coalesced('profiles', () => fetchProfiles()))
     }
 
     _channel = channel.subscribe((status: string) => {

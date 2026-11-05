@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, provide, onMounted, onUnmounted, watch, onErrorCaptured } from 'vue';
+import { computed, ref, provide, onMounted, onUnmounted, watch, onErrorCaptured, defineAsyncComponent, type Ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import NotificationSystem from './components/NotificationSystem.vue'
-import ConfirmDialog from './components/ConfirmDialog.vue'
 import UndoToast from './components/UndoToast.vue';
-import GlobalSearch from './components/GlobalSearch.vue';
 import NotificationsBell from './components/NotificationsBell.vue'
-import HelpDialog from './components/HelpDialog.vue'
 import SyncStatusPill from './components/SyncStatusPill.vue';
-import ActivityFeed from './components/ActivityFeed.vue';
 import PresenceBadge from './components/PresenceBadge.vue';
 import PushPromptBanner from './components/PushPromptBanner.vue';
 import IosInstallHint from './components/IosInstallHint.vue';
@@ -28,6 +24,22 @@ import { useRecurringStore } from './stores/useRecurringStore';
 import { useAchievementsStore } from './stores/useAchievementsStore';
 import { useAppStore } from './stores/useStore';
 import { isConfigured } from './lib/supabase';
+import { useConfirm } from './composables/useConfirm';
+
+// On-demand overlays are code-split and only mounted the first time they open,
+// keeping them (and focus-trap, via BaseModal) out of the initial bundle —
+// noticeably faster first load on mobile.
+const ConfirmDialog = defineAsyncComponent(() => import('./components/ConfirmDialog.vue'));
+const GlobalSearch = defineAsyncComponent(() => import('./components/GlobalSearch.vue'));
+const ActivityFeed = defineAsyncComponent(() => import('./components/ActivityFeed.vue'));
+const HelpDialog = defineAsyncComponent(() => import('./components/HelpDialog.vue'));
+
+/** Latches to true the first time `source` is true (mount-on-first-use). */
+function openedOnce(source: Ref<boolean>) {
+  const opened = ref(source.value);
+  const stop = watch(source, (v) => { if (v) { opened.value = true; stop(); } });
+  return opened;
+}
 
 const router = useRouter();
 const route = useRoute();
@@ -36,6 +48,11 @@ const showSearch = ref(false);
 const showActivity = ref(false);
 const showHelp = ref(false);
 const showMoreMenu = ref(false);
+const { isOpen: confirmOpen } = useConfirm();
+const confirmMounted = openedOnce(confirmOpen);
+const searchMounted = openedOnce(showSearch);
+const activityMounted = openedOnce(showActivity);
+const helpMounted = openedOnce(showHelp);
 
 const auth = useAuthStore();
 const household = useHouseholdStore();
@@ -338,13 +355,13 @@ onErrorCaptured((err: any) => {
     <BottomNav v-if="showNav" />
 
     <NotificationSystem ref="notificationRef" />
-    <ConfirmDialog />
+    <ConfirmDialog v-if="confirmMounted" />
     <UndoToast />
 
-    <GlobalSearch :show="showSearch" @close="showSearch = false" />
+    <GlobalSearch v-if="searchMounted" :show="showSearch" @close="showSearch = false" />
 
-    <ActivityFeed :show="showActivity" @close="showActivity = false" />
-    <HelpDialog :show="showHelp" @close="showHelp = false" />
+    <ActivityFeed v-if="activityMounted" :show="showActivity" @close="showActivity = false" />
+    <HelpDialog v-if="helpMounted" :show="showHelp" @close="showHelp = false" />
 
     <PushPromptBanner />
     <IosInstallHint />

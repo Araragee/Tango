@@ -40,6 +40,19 @@ export default defineConfig({
       },
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        // Long-lived vendor chunks: an app-code deploy no longer invalidates
+        // the ~300 KB of framework/SDK code users already have cached.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (/node_modules\/(@supabase|iceberg-js|tslib)\//.test(id)) return 'supabase'
+          if (/node_modules\/(@vue|vue|vue-router|pinia|pinia-plugin-persistedstate)\//.test(id)) return 'vue'
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
