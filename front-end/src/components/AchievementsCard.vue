@@ -14,7 +14,7 @@ function dailyStreak(txns: Transaction[]): number {
     if (txns.length === 0) return 0;
     const set = new Set(txns.map(t => t.date));
     let streak = 0;
-    let cursor = new Date();
+    const cursor = new Date();
     cursor.setHours(0, 0, 0, 0);
     while (true) {
         // Use localDateISO so the date matches the local calendar day, not UTC.
@@ -66,7 +66,8 @@ const unlockedCount = computed(() => achievements.unlocked.length);
           :class="unlockedCodes.has(def.code) ? 'text-on-secondary-container' : 'text-outline'"
           :style="unlockedCodes.has(def.code) ? `font-variation-settings: 'FILL' 1;` : ''"
         >{{ unlockedCodes.has(def.code) ? def.icon : 'lock' }}</span>
-        <div class="w-full text-label-sm font-bold leading-tight break-words"
+        <div
+class="w-full text-label-sm font-bold leading-tight break-words"
              :class="unlockedCodes.has(def.code) ? 'text-on-secondary-container' : 'text-on-surface-variant'">
           {{ def.title }}
         </div>

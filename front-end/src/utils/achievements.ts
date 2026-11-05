@@ -37,7 +37,7 @@ function dailyStreak(txns: Transaction[]): number {
   if (txns.length === 0) return 0
   const set = distinctDates(txns)
   let streak = 0
-  let cursor = new Date()
+  const cursor = new Date()
   cursor.setHours(0, 0, 0, 0)
   while (true) {
     const ds = localDate(cursor)

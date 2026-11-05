@@ -2,8 +2,8 @@
 
 > Caveman-ultra doc. Fragments OK. Story cores kept readable.
 > Status: ✅ done · 🟡 partial · ⬜ missing
-> Source: code + `front-end/src/Tango System Audit.md` (bug/feat changelog, NOT stories).
-> Last sync: 2026-06-01. P0 + P1 complete.
+> Source: code. Bug-level history lives in git log, NOT here.
+> Last sync: 2026-11-05. P0 + P1 complete.
 
 ---
 
@@ -162,10 +162,10 @@ Gaps: ⬜ profile display name edit surfaced. ⬜ data export/download (GDPR). �
 | P3 | As duo, realtime sync both screens; auto-reconnect. | ✅ backoff |
 | P4 | As user, concurrent edits guarded (optimistic lock). | ✅ |
 | P5 | As user, install as PWA + install hint. | ✅ |
-| P6 | As user, app safe (CSP, open-redirect guard). | ✅ |
+| P6 | As user, app safe (CSP, open-redirect guard, private receipts, CSV-injection guard). | ✅ |
 | P7 | As user, audit log of sensitive actions. | ✅ `005` |
 
-Gaps: ⬜ E2E tests (only unit, 75). ⬜ i18n. ⬜ a11y audit. ⬜ error telemetry/monitoring. ⬜ rate-limit on writes.
+Gaps: ⬜ E2E tests (unit only, ~330). ⬜ i18n. ⬜ a11y audit. ⬜ error telemetry/monitoring. ⬜ rate-limit on writes.
 
 ---
 
@@ -197,6 +197,6 @@ Prioritized. P0 = needed for "complete couples app". P1 = strong value. P2 = nic
 
 ## Maintenance notes
 
-- Status reflects 2026-06-01 code. Re-sync on feature merge.
-- Bug-level history → `front-end/src/Tango System Audit.md`. This doc = product, not bugs.
+- Status reflects 2026-11-05 code. Re-sync on feature merge.
+- Bug-level history → git log. This doc = product, not bugs.
 - F13/F14 (audit numbering) never built — slots skipped, not tracked here.

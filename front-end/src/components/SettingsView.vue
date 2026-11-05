@@ -444,20 +444,20 @@ onMounted(() => {
               <span v-else class="material-symbols-outlined text-on-surface-variant text-4xl">person</span>
             </div>
             <div class="flex flex-col gap-2">
-              <TangoButton @click="triggerAvatarPick" :disabled="avatarBusy" size="sm" shadow="dark">
+              <TangoButton :disabled="avatarBusy" size="sm" shadow="dark" @click="triggerAvatarPick">
                 {{ avatarBusy ? 'Uploading…' : (store.avatarUrl ? 'Change Photo' : 'Upload Photo') }}
               </TangoButton>
               <button
                 v-if="store.avatarUrl"
-                @click="removeAvatar"
                 type="button"
                 class="text-label-sm uppercase text-error hover:underline self-start"
+                @click="removeAvatar"
               >Remove</button>
               <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onAvatarChosen" />
             </div>
           </div>
 
-          <TangoInput label="Your Name" v-model="userName" />
+          <TangoInput v-model="userName" label="Your Name" />
           <div class="flex flex-col gap-1">
             <label class="text-label-sm text-on-surface-variant uppercase font-bold">Partner</label>
             <div class="px-4 py-3 sunken-input pixel-border-sm bg-surface-variant text-on-surface-variant opacity-70">
@@ -465,7 +465,7 @@ onMounted(() => {
             </div>
             <p class="text-[10px] text-on-surface-variant uppercase mt-1">Managed by partner</p>
           </div>
-          <TangoButton @click="updateProfile" shadow="dark" class="mt-4">Update Profile</TangoButton>
+          <TangoButton shadow="dark" class="mt-4" @click="updateProfile">Update Profile</TangoButton>
         </div>
       </TangoCard>
 
@@ -478,11 +478,13 @@ onMounted(() => {
               <span class="text-body-md font-bold uppercase">Follow System Theme</span>
               <p class="text-label-sm text-on-surface-variant">Auto dark/light based on OS setting</p>
             </div>
-            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+            <div
+class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
                  :class="themeStore.followSystem ? 'bg-primary' : 'bg-surface-variant'"
-                 @click="themeStore.setFollowSystem(!themeStore.followSystem)"
-                 role="switch" :aria-checked="themeStore.followSystem">
-              <div class="absolute top-1 w-4 h-4 transition-all"
+                 role="switch"
+                 :aria-checked="themeStore.followSystem" @click="themeStore.setFollowSystem(!themeStore.followSystem)">
+              <div
+class="absolute top-1 w-4 h-4 transition-all"
                    :class="themeStore.followSystem ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
@@ -490,11 +492,13 @@ onMounted(() => {
           <!-- Manual dark mode toggle — hidden when following system -->
           <div v-if="!themeStore.followSystem" class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">Dark Mode</span>
-            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+            <div
+class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
                  :class="themeStore.isDark ? 'bg-primary' : 'bg-surface-variant'"
-                 @click="themeStore.toggleDark()"
-                 role="switch" :aria-checked="themeStore.isDark">
-              <div class="absolute top-1 w-4 h-4 transition-all"
+                 role="switch"
+                 :aria-checked="themeStore.isDark" @click="themeStore.toggleDark()">
+              <div
+class="absolute top-1 w-4 h-4 transition-all"
                    :class="themeStore.isDark ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
@@ -505,10 +509,10 @@ onMounted(() => {
                 <button
                     v-for="t in themes"
                     :key="t.color"
-                    @click="themeStore.setAccent(t.color)"
                     class="w-10 h-10 pixel-border transition-all flex items-center justify-center relative"
                     :class="[t.bg, themeStore.accentColor === t.color ? 'scale-110 hard-shadow-dark z-10' : 'hover:scale-105']"
                     :title="t.name"
+                    @click="themeStore.setAccent(t.color)"
                 >
                     <span v-if="themeStore.accentColor === t.color" class="material-symbols-outlined text-white text-sm">check</span>
                 </button>
@@ -525,11 +529,13 @@ onMounted(() => {
         <div class="space-y-6">
           <div class="flex items-center justify-between">
             <span class="text-body-md font-bold uppercase">In-App Notifications</span>
-            <div class="w-12 h-6 pixel-border-sm cursor-pointer relative"
+            <div
+class="w-12 h-6 pixel-border-sm cursor-pointer relative"
                  :class="prefs.notificationsEnabled ? 'bg-primary' : 'bg-surface-variant'"
-                 @click="prefs.setNotificationsEnabled(!prefs.notificationsEnabled)"
-                 role="switch" :aria-checked="prefs.notificationsEnabled">
-              <div class="absolute top-1 w-4 h-4 transition-all"
+                 role="switch"
+                 :aria-checked="prefs.notificationsEnabled" @click="prefs.setNotificationsEnabled(!prefs.notificationsEnabled)">
+              <div
+class="absolute top-1 w-4 h-4 transition-all"
                    :class="prefs.notificationsEnabled ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
             </div>
           </div>
@@ -537,7 +543,8 @@ onMounted(() => {
           <!-- Notification category muting — only relevant when notifications are on -->
           <div v-if="prefs.notificationsEnabled" class="space-y-2 pl-2 border-l-2 border-on-surface/20">
             <p class="text-label-sm uppercase text-on-surface-variant font-bold">Mute by category</p>
-            <div v-for="cat in [
+            <div
+v-for="cat in [
               { key: 'transaction', label: 'Budget / Transactions', icon: 'receipt_long' },
               { key: 'goal',        label: 'Goals',                 icon: 'flag' },
               { key: 'todo',        label: 'Todos',                 icon: 'task_alt' },
@@ -548,11 +555,13 @@ onMounted(() => {
                 <span class="material-symbols-outlined text-[16px] text-on-surface-variant">{{ cat.icon }}</span>
                 <span class="text-label-sm uppercase">{{ cat.label }}</span>
               </div>
-              <div class="w-10 h-5 pixel-border-sm cursor-pointer relative transition-colors"
+              <div
+class="w-10 h-5 pixel-border-sm cursor-pointer relative transition-colors"
                    :class="prefs.isNotifCategoryMuted(cat.key) ? 'bg-surface-variant' : 'bg-primary'"
-                   @click="prefs.toggleNotifCategory(cat.key)"
-                   role="switch" :aria-checked="!prefs.isNotifCategoryMuted(cat.key)">
-                <div class="absolute top-0.5 w-3.5 h-3.5 transition-all"
+                   role="switch"
+                   :aria-checked="!prefs.isNotifCategoryMuted(cat.key)" @click="prefs.toggleNotifCategory(cat.key)">
+                <div
+class="absolute top-0.5 w-3.5 h-3.5 transition-all"
                      :class="prefs.isNotifCategoryMuted(cat.key) ? 'left-0.5 bg-outline' : 'right-0.5 bg-on-primary'"></div>
               </div>
             </div>
@@ -565,11 +574,13 @@ onMounted(() => {
                 <span class="text-body-md font-bold uppercase">Quiet Hours</span>
                 <p class="text-label-sm text-on-surface-variant">Suppress in-app toasts during this window</p>
               </div>
-              <div class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
+              <div
+class="w-12 h-6 pixel-border-sm cursor-pointer relative transition-colors"
                    :class="prefs.quietHoursEnabled ? 'bg-primary' : 'bg-surface-variant'"
-                   @click="prefs.setQuietHours(!prefs.quietHoursEnabled)"
-                   role="switch" :aria-checked="prefs.quietHoursEnabled">
-                <div class="absolute top-1 w-4 h-4 transition-all"
+                   role="switch"
+                   :aria-checked="prefs.quietHoursEnabled" @click="prefs.setQuietHours(!prefs.quietHoursEnabled)">
+                <div
+class="absolute top-1 w-4 h-4 transition-all"
                      :class="prefs.quietHoursEnabled ? 'right-1 bg-on-primary' : 'left-1 bg-primary'"></div>
               </div>
             </div>
@@ -579,8 +590,8 @@ onMounted(() => {
                 <input
                   type="time"
                   :value="prefs.quietHoursStart"
-                  @change="(e) => prefs.setQuietHours(true, (e.target as HTMLInputElement).value)"
                   class="px-2 py-1 sunken-input pixel-border-sm text-body-md"
+                  @change="(e) => prefs.setQuietHours(true, (e.target as HTMLInputElement).value)"
                 />
               </div>
               <div class="flex flex-col gap-1">
@@ -588,8 +599,8 @@ onMounted(() => {
                 <input
                   type="time"
                   :value="prefs.quietHoursEnd"
-                  @change="(e) => prefs.setQuietHours(true, undefined, (e.target as HTMLInputElement).value)"
                   class="px-2 py-1 sunken-input pixel-border-sm text-body-md"
+                  @change="(e) => prefs.setQuietHours(true, undefined, (e.target as HTMLInputElement).value)"
                 />
               </div>
               <p class="text-[10px] uppercase text-on-surface-variant pb-1">Errors always show</p>
@@ -608,10 +619,10 @@ onMounted(() => {
                 push.supported ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed',
                 push.subscribed ? 'bg-primary' : 'bg-surface-variant',
               ]"
-              @click="push.supported && !push.busy ? togglePush() : undefined"
               role="switch"
               :aria-checked="push.subscribed"
               :aria-disabled="!push.supported"
+              @click="push.supported && !push.busy ? togglePush() : undefined"
             >
               <div
                 class="absolute top-1 w-4 h-4 transition-all"
@@ -629,9 +640,9 @@ onMounted(() => {
           <!-- Household name -->
           <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div class="flex-1">
-              <TangoInput label="Household Name" v-model="householdNameInput" placeholder="e.g. The Smiths" />
+              <TangoInput v-model="householdNameInput" label="Household Name" placeholder="e.g. The Smiths" />
             </div>
-            <TangoButton @click="renameHousehold" variant="surface" :disabled="renameBusy || !householdNameInput.trim()">
+            <TangoButton variant="surface" :disabled="renameBusy || !householdNameInput.trim()" @click="renameHousehold">
               {{ renameBusy ? 'Saving…' : 'Save Name' }}
             </TangoButton>
           </div>
@@ -642,12 +653,12 @@ onMounted(() => {
                 <p class="text-body-md font-bold">Paired with {{ store.partnerName }}</p>
                 <p class="text-label-sm text-on-surface-variant uppercase">Role: {{ household.isCreator ? 'Creator' : 'Partner' }}</p>
               </div>
-              <TangoButton v-if="household.isCreator" @click="transferCreator" variant="surface" size="sm">
+              <TangoButton v-if="household.isCreator" variant="surface" size="sm" @click="transferCreator">
                 Transfer Creator
               </TangoButton>
             </div>
             <div v-if="household.isCreator" class="border-t border-on-surface/20 pt-3">
-              <TangoButton @click="removePartner" :disabled="removingPartner" variant="outline" size="sm" class="text-error border-error border-2 hover:bg-error-container">
+              <TangoButton :disabled="removingPartner" variant="outline" size="sm" class="text-error border-error border-2 hover:bg-error-container" @click="removePartner">
                 {{ removingPartner ? 'Removing…' : `Remove ${store.partnerName}` }}
               </TangoButton>
             </div>
@@ -661,27 +672,27 @@ onMounted(() => {
                 <span class="text-headline-md font-black tracking-widest text-on-primary-container">{{ household.activeInvite?.code ?? household.inviteCode }}</span>
                 <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
                 <div class="flex gap-3 mt-1">
-                  <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
-                  <button @click="regenerateInvite" :disabled="inviteBusy" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate">refresh</button>
+                  <button class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code" @click="copyCode">content_copy</button>
+                  <button :disabled="inviteBusy" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate" @click="regenerateInvite">refresh</button>
                 </div>
               </div>
 
               <div class="flex flex-col items-center gap-2">
                 <QrCode :value="inviteLink" :size="160" />
                 <div class="flex gap-2 flex-wrap">
-                  <button @click="copyLink" class="text-label-sm uppercase text-primary hover:underline">Copy link</button>
-                  <button @click="revokeInvites" class="text-label-sm uppercase text-error hover:underline">Revoke</button>
+                  <button class="text-label-sm uppercase text-primary hover:underline" @click="copyLink">Copy link</button>
+                  <button class="text-label-sm uppercase text-error hover:underline" @click="revokeInvites">Revoke</button>
                 </div>
               </div>
             </div>
 
-            <TangoButton v-else @click="regenerateInvite" shadow="dark" :disabled="inviteBusy">
+            <TangoButton v-else shadow="dark" :disabled="inviteBusy" @click="regenerateInvite">
               {{ inviteBusy ? 'Generating…' : 'Generate Invite' }}
             </TangoButton>
           </div>
 
           <div class="border-t border-on-surface pt-4">
-            <TangoButton @click="leaveHousehold" variant="outline" class="text-error border-error border-2 hover:bg-error-container">
+            <TangoButton variant="outline" class="text-error border-error border-2 hover:bg-error-container" @click="leaveHousehold">
               Leave Household
             </TangoButton>
           </div>
@@ -698,16 +709,16 @@ onMounted(() => {
 
           <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div class="flex-1">
-              <TangoInput label="Change Email" v-model="newEmail" placeholder="new@email.com" />
+              <TangoInput v-model="newEmail" label="Change Email" placeholder="new@email.com" />
             </div>
-            <TangoButton @click="changeEmail" variant="surface" :disabled="!newEmail.trim()">Update Email</TangoButton>
+            <TangoButton variant="surface" :disabled="!newEmail.trim()" @click="changeEmail">Update Email</TangoButton>
           </div>
 
           <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div class="flex-1">
-              <TangoInput label="Change Password" v-model="newPassword" type="password" placeholder="••••••••" />
+              <TangoInput v-model="newPassword" label="Change Password" type="password" placeholder="••••••••" />
             </div>
-            <TangoButton @click="changePassword" variant="surface" :disabled="newPassword.length < 8">Update Password</TangoButton>
+            <TangoButton variant="surface" :disabled="newPassword.length < 8" @click="changePassword">Update Password</TangoButton>
           </div>
 
           <div class="border-t border-on-surface pt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -715,14 +726,14 @@ onMounted(() => {
               <p class="text-body-md font-bold uppercase">Active Sessions</p>
               <p class="text-label-sm text-on-surface-variant">Sign out on all devices</p>
             </div>
-            <TangoButton @click="signOutAllDevices" variant="surface" :disabled="loggingOutAll">
+            <TangoButton variant="surface" :disabled="loggingOutAll" @click="signOutAllDevices">
               {{ loggingOutAll ? 'Signing out…' : 'Sign Out All Devices' }}
             </TangoButton>
           </div>
 
           <div class="border-t border-error/30 pt-4 space-y-2">
             <p class="text-label-sm uppercase text-error font-bold">Danger Zone</p>
-            <TangoButton @click="deleteAccount" variant="outline" class="text-error border-error border-2 hover:bg-error-container">
+            <TangoButton variant="outline" class="text-error border-error border-2 hover:bg-error-container" @click="deleteAccount">
               Delete Account
             </TangoButton>
           </div>
@@ -736,12 +747,12 @@ onMounted(() => {
           <button
             v-for="c in [['USD', '$ Dollar'], ['PHP', '₱ Peso']] as const"
             :key="c[0]"
-            @click="prefs.setCurrency(c[0])"
             class="flex-1 px-4 py-2 min-h-11 text-label-sm uppercase font-bold transition-colors"
             :aria-pressed="prefs.currency === c[0]"
             :class="prefs.currency === c[0]
               ? 'bg-primary text-on-primary'
               : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+            @click="prefs.setCurrency(c[0])"
           >{{ c[1] }}</button>
         </div>
       </TangoCard>
@@ -774,9 +785,9 @@ onMounted(() => {
               <span class="text-body-md text-on-surface-variant">%</span>
               <button
                 v-if="prefs.incomeAllocations.some(a => a.goalId === goal.id)"
-                @click="prefs.removeIncomeAllocation(goal.id)"
                 class="material-symbols-outlined text-outline hover:text-error text-[18px]"
                 aria-label="Remove allocation"
+                @click="prefs.removeIncomeAllocation(goal.id)"
               >close</button>
             </div>
           </div>
@@ -796,16 +807,16 @@ onMounted(() => {
               <button
                 v-for="opt in [['me', store.userName], ['partner', store.partnerName], ['both', 'Both']] as const"
                 :key="opt[0]"
-                @click="prefs.setDefaultTodoAssignee(opt[0])"
                 class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
                 :class="prefs.defaultTodoAssignee === opt[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+                @click="prefs.setDefaultTodoAssignee(opt[0])"
               >{{ opt[1] }}</button>
             </div>
           </div>
 
           <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-on-surface pt-4">
             <p class="text-body-md text-on-surface-variant">Reset categories, budget limits, and theme to defaults. Household data on the server is not affected.</p>
-            <TangoButton @click="resetPreferences" variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap">Reset Preferences</TangoButton>
+            <TangoButton variant="outline" class="text-error border-error border-2 hover:bg-error-container whitespace-nowrap" @click="resetPreferences">Reset Preferences</TangoButton>
           </div>
         </div>
       </TangoCard>
@@ -843,16 +854,16 @@ onMounted(() => {
                   <span class="text-[10px] opacity-70 block">Attempts: {{ item.attempts }} / 5</span>
                 </div>
                 <div class="flex gap-2">
-                  <button @click="offline.retryFailed(item.id)" class="px-2 py-0.5 pixel-border-sm bg-primary text-on-primary text-[10px] uppercase font-bold hover:opacity-90">Retry</button>
-                  <button @click="offline.clearFailed(item.id)" class="px-2 py-0.5 pixel-border-sm bg-surface text-on-surface text-[10px] uppercase font-bold hover:opacity-90">Dismiss</button>
+                  <button class="px-2 py-0.5 pixel-border-sm bg-primary text-on-primary text-[10px] uppercase font-bold hover:opacity-90" @click="offline.retryFailed(item.id)">Retry</button>
+                  <button class="px-2 py-0.5 pixel-border-sm bg-surface text-on-surface text-[10px] uppercase font-bold hover:opacity-90" @click="offline.clearFailed(item.id)">Dismiss</button>
                 </div>
               </div>
-              <p class="text-xs font-mono p-2 bg-black/10 rounded-sm border border-error/20 overflow-x-auto select-all" v-if="item.last_error">
+              <p v-if="item.last_error" class="text-xs font-mono p-2 bg-black/10 rounded-sm border border-error/20 overflow-x-auto select-all">
                 {{ item.last_error }}
               </p>
             </div>
           </div>
-          <TangoButton @click="offline.clearAllFailed()" variant="outline" class="text-error border-error border-2 hover:bg-error-container w-full mt-2" size="sm">
+          <TangoButton variant="outline" class="text-error border-error border-2 hover:bg-error-container w-full mt-2" size="sm" @click="offline.clearAllFailed()">
             Dismiss All Failures
           </TangoButton>
         </div>
@@ -876,7 +887,7 @@ onMounted(() => {
     </div>
 
     <div class="flex justify-center pt-8">
-        <TangoButton @click="signOut" variant="surface" shadow="dark">Sign Out</TangoButton>
+        <TangoButton variant="surface" shadow="dark" @click="signOut">Sign Out</TangoButton>
     </div>
   </div>
 </template>

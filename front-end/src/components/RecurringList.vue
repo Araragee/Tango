@@ -80,11 +80,11 @@ onMounted(async () => {
     <div class="flex justify-between items-center mb-4 border-b-2 border-on-background pb-2">
       <h3 class="text-headline-lg text-on-surface">Recurring & Bills</h3>
       <div class="flex gap-2 flex-wrap">
-        <TangoButton v-if="upcoming.length > 0" @click="runDue" :disabled="recurring.spawning" variant="surface" size="sm" aria-label="Run due now">
+        <TangoButton v-if="upcoming.length > 0" :disabled="recurring.spawning" variant="surface" size="sm" aria-label="Run due now" @click="runDue">
           <span class="material-symbols-outlined text-[16px]">play_arrow</span>
           {{ recurring.spawning ? 'Running…' : 'Run due' }}
         </TangoButton>
-        <TangoButton @click="openNew" shadow="dark" size="sm" aria-label="New recurring">
+        <TangoButton shadow="dark" size="sm" aria-label="New recurring" @click="openNew">
           <span class="material-symbols-outlined text-[16px]">add</span>
           New
         </TangoButton>
@@ -99,9 +99,9 @@ onMounted(async () => {
       <li
         v-for="r in upcoming"
         :key="r.id"
-        @click="openEdit(r.id)"
         class="flex items-center justify-between p-3 bg-surface pixel-border-sm hover:bg-surface-variant transition-colors cursor-pointer"
         :class="!r.active && 'opacity-50'"
+        @click="openEdit(r.id)"
       >
         <div class="flex items-center gap-3 min-w-0">
           <span class="material-symbols-outlined text-on-surface shrink-0">{{ r.icon }}</span>
@@ -115,9 +115,9 @@ onMounted(async () => {
             {{ r.type === 'expense' ? '-' : '+' }}{{ prefs.currencySymbol }}{{ r.amount.toFixed(0) }}
           </span>
           <button
-            @click.stop="togglePause(r)"
             class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-primary transition-colors"
             :aria-label="r.active ? 'Pause' : 'Resume'"
+            @click.stop="togglePause(r)"
           >{{ r.active ? 'pause' : 'play_arrow' }}</button>
         </div>
       </li>
@@ -126,8 +126,8 @@ onMounted(async () => {
     <!-- I25: show/hide toggle when there are more than 6 recurring items -->
     <button
       v-if="recurring.upcoming.length > 6"
-      @click="showAll = !showAll"
       class="mt-3 w-full text-center text-label-sm uppercase text-on-surface-variant hover:text-primary transition-colors"
+      @click="showAll = !showAll"
     >
       {{ showAll ? 'Show less' : `Show all ${recurring.upcoming.length}` }}
       <span class="material-symbols-outlined text-[14px] align-middle">{{ showAll ? 'expand_less' : 'expand_more' }}</span>

@@ -66,9 +66,9 @@ function dismiss() {
 
       <button
         type="button"
-        @click="dismiss"
         class="material-symbols-outlined text-on-surface-variant hover:text-on-surface"
         aria-label="Dismiss"
+        @click="dismiss"
       >close</button>
     </div>
   </Transition>

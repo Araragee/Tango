@@ -302,34 +302,35 @@ const upcomingGoalDeadlines = computed(() => {
         <!-- Row 1: view switcher + period navigation (wraps on narrow screens) -->
         <div class="flex flex-wrap items-center justify-between gap-2 w-full">
           <div class="flex pixel-border-sm overflow-hidden shrink-0">
-            <button v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"
-              @click="calendarView = v[0]"
+            <button
+v-for="v in [['month', 'Month'], ['week', 'Week'], ['day', 'Day']] as const" :key="v[0]"
               class="px-3 py-2 min-h-11 text-label-sm uppercase transition-colors"
-              :class="calendarView === v[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'">
+              :class="calendarView === v[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+              @click="calendarView = v[0]">
               {{ v[1] }}
             </button>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <TangoButton @click="prevPeriod" variant="surface" size="md" aria-label="Previous period">
+            <TangoButton variant="surface" size="md" aria-label="Previous period" @click="prevPeriod">
               <span class="material-symbols-outlined">chevron_left</span>
             </TangoButton>
-            <TangoButton @click="goToday" variant="surface" size="md" aria-label="Go to today">Today</TangoButton>
-            <TangoButton @click="nextPeriod" variant="surface" size="md" aria-label="Next period">
+            <TangoButton variant="surface" size="md" aria-label="Go to today" @click="goToday">Today</TangoButton>
+            <TangoButton variant="surface" size="md" aria-label="Next period" @click="nextPeriod">
               <span class="material-symbols-outlined">chevron_right</span>
             </TangoButton>
           </div>
         </div>
         <!-- Row 2: actions — wrap to fit narrow screens instead of truncating -->
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <TangoButton @click="exportICS" variant="surface" size="md" aria-label="Export ICS">
+          <TangoButton variant="surface" size="md" aria-label="Export ICS" @click="exportICS">
             <span class="material-symbols-outlined text-[16px]">download</span>
             .ics
           </TangoButton>
-          <TangoButton @click="showDatePlanner = true" variant="surface" size="md" aria-label="Plan Date Night">
+          <TangoButton variant="surface" size="md" aria-label="Plan Date Night" @click="showDatePlanner = true">
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">favorite</span>
             Date Night
           </TangoButton>
-          <TangoButton @click="showEventSheet = true" variant="primary" size="md" class="flex-1 sm:flex-none" aria-label="New Event">
+          <TangoButton variant="primary" size="md" class="flex-1 sm:flex-none" aria-label="New Event" @click="showEventSheet = true">
             <span class="material-symbols-outlined">add</span>
             New Event
           </TangoButton>
@@ -351,7 +352,7 @@ const upcomingGoalDeadlines = computed(() => {
           <p class="text-label-sm text-on-primary-container truncate">Tap to leave a quick mood + note</p>
         </div>
       </div>
-      <TangoButton @click="reviewOldestPending" size="sm" shadow="dark">Review</TangoButton>
+      <TangoButton size="sm" shadow="dark" @click="reviewOldestPending">Review</TangoButton>
     </div>
 
     <!-- Goal deadline nudge banner -->
@@ -386,9 +387,9 @@ const upcomingGoalDeadlines = computed(() => {
           <span class="text-label-sm font-bold" :class="isToday(day) ? 'text-on-primary-container' : 'text-on-surface'">{{ day }}</span>
           <div
             v-for="event in getEventsForDay(day)" :key="event.id"
-            @click.stop="openEventDetails(event)"
             class="mt-xs text-[10px] p-[2px] pixel-border-sm font-bold truncate leading-none flex items-center gap-[1px] hover:opacity-80 transition-opacity"
             :class="eventColorClass(event.category)"
+            @click.stop="openEventDetails(event)"
           >
             <span class="material-symbols-outlined text-[10px]">{{ event.icon }}</span>
             {{ event.title }}
@@ -423,9 +424,9 @@ const upcomingGoalDeadlines = computed(() => {
         >
           <div
             v-for="event in getEventsForDate(d)" :key="event.id"
-            @click.stop="openEventDetails(event)"
             class="text-[10px] px-1 py-0.5 pixel-border-sm truncate cursor-pointer hover:opacity-80 leading-tight"
             :class="eventColorClass(event.category)"
+            @click.stop="openEventDetails(event)"
           >
             <span v-if="event.time !== 'All Day'" class="font-bold">{{ event.time }} </span>{{ event.title }}
           </div>
@@ -439,7 +440,7 @@ const upcomingGoalDeadlines = computed(() => {
         <h3 class="text-headline-md text-on-surface">
           {{ currentDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) }}
         </h3>
-        <TangoButton @click="openNewEventForDate(dateStr(currentDate))" variant="outline" size="sm">
+        <TangoButton variant="outline" size="sm" @click="openNewEventForDate(dateStr(currentDate))">
           <span class="material-symbols-outlined text-[14px]">add</span> Add Event
         </TangoButton>
       </div>
@@ -462,10 +463,11 @@ const upcomingGoalDeadlines = computed(() => {
 
       <div v-else class="space-y-3">
         <!-- All Day -->
-        <div v-for="event in dayEvents.filter(e => e.time === 'All Day')" :key="event.id"
-          @click="openEventDetails(event)"
+        <div
+v-for="event in dayEvents.filter(e => e.time === 'All Day')" :key="event.id"
           class="p-3 pixel-border-sm flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
           :class="eventColorClass(event.category)"
+          @click="openEventDetails(event)"
         >
           <span class="material-symbols-outlined text-sm">{{ event.icon }}</span>
           <div>
@@ -474,9 +476,10 @@ const upcomingGoalDeadlines = computed(() => {
           </div>
         </div>
         <!-- Timed -->
-        <div v-for="event in dayEvents.filter(e => e.time !== 'All Day')" :key="event.id"
-          @click="openEventDetails(event)"
+        <div
+v-for="event in dayEvents.filter(e => e.time !== 'All Day')" :key="event.id"
           class="p-3 pixel-border bg-surface flex items-center gap-3 cursor-pointer hover:bg-surface-variant transition-colors"
+          @click="openEventDetails(event)"
         >
           <div class="w-14 text-label-sm font-bold text-primary shrink-0 text-right">{{ event.time }}</div>
           <div class="w-0.5 h-8 bg-primary shrink-0"></div>
@@ -504,8 +507,8 @@ const upcomingGoalDeadlines = computed(() => {
           </li>
           <li
             v-for="event in upcomingEvents" :key="event.id"
-            @click="openEventDetails(event)"
             class="flex items-center gap-4 bg-surface p-4 pixel-border-sm cursor-pointer hover:bg-surface-variant transition-colors"
+            @click="openEventDetails(event)"
           >
             <div class="w-8 h-8 bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-label-sm pixel-border-sm">
               {{ event.date.split('-').pop() }}
@@ -536,8 +539,8 @@ const upcomingGoalDeadlines = computed(() => {
 
     <NewEventSheet
       :show="showEventSheet"
-      :initialDate="selectedDate"
-      :initialEventId="selectedEventId"
+      :initial-date="selectedDate"
+      :initial-event-id="selectedEventId"
       @close="showEventSheet = false; selectedEventId = null"
     />
   </div>

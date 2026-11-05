@@ -169,25 +169,25 @@ onMounted(() => {
       <div class="w-full flex pixel-border-sm mb-lg">
         <button
           type="button"
-          @click="mode = 'password'; magicSent = false; error = ''"
           class="flex-1 py-2 text-label-sm uppercase font-bold transition-colors"
           :class="mode === 'password' ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'"
+          @click="mode = 'password'; magicSent = false; error = ''"
         >Password</button>
         <button
           type="button"
-          @click="mode = 'magic'; error = ''"
           class="flex-1 py-2 text-label-sm uppercase font-bold transition-colors"
           :class="mode === 'magic' ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'"
+          @click="mode = 'magic'; error = ''"
         >Magic Link</button>
       </div>
 
       <!-- Password tab -->
-      <form v-if="mode === 'password'" @submit.prevent="login" class="w-full flex flex-col gap-lg">
+      <form v-if="mode === 'password'" class="w-full flex flex-col gap-lg" @submit.prevent="login">
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm text-on-background uppercase" for="email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" id="email" placeholder="hello@tango.app" type="email" autocomplete="email"/>
+            <input id="email" v-model="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" placeholder="hello@tango.app" type="email" autocomplete="email"/>
           </div>
         </div>
 
@@ -195,18 +195,18 @@ onMounted(() => {
           <label class="text-label-sm text-on-background uppercase" for="password">Password</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">lock</span>
-            <input v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-10 py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" id="password" placeholder="••••••••" :type="showPassword ? 'text' : 'password'" autocomplete="current-password"/>
-            <button type="button" @click="showPassword = !showPassword" class="absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface" tabindex="-1">
+            <input id="password" v-model="password" class="w-full sunken-input pixel-border-sm pl-xl pr-10 py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" placeholder="••••••••" :type="showPassword ? 'text' : 'password'" autocomplete="current-password"/>
+            <button type="button" class="absolute right-sm top-1/2 -translate-y-1/2 text-outline hover:text-on-surface" tabindex="-1" @click="showPassword = !showPassword">
                 <span class="material-symbols-outlined text-[20px]">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
             </button>
           </div>
           <div class="flex justify-end mt-xs">
             <button
               type="button"
-              @click="forgotPassword"
               :disabled="resetCooldownRemaining > 0"
               class="text-label-sm transition-colors"
               :class="resetCooldownRemaining > 0 ? 'text-outline/50 cursor-not-allowed' : 'text-outline hover:text-primary'"
+              @click="forgotPassword"
             >
               {{ resetCooldownRemaining > 0 ? `Forgot password? (${resetCooldownRemaining}s)` : 'Forgot password?' }}
             </button>
@@ -235,8 +235,8 @@ onMounted(() => {
         <button
           v-if="showResendConfirm"
           type="button"
-          @click="resendConfirmation"
           class="text-label-sm text-secondary hover:text-secondary-fixed-dim transition-colors underline"
+          @click="resendConfirmation"
         >Resend confirmation email</button>
 
         <TangoButton type="submit" shadow="dark" class="w-full py-3" :disabled="loading">
@@ -246,12 +246,12 @@ onMounted(() => {
       </form>
 
       <!-- Magic link tab -->
-      <form v-else @submit.prevent="sendMagicLink" class="w-full flex flex-col gap-lg">
+      <form v-else class="w-full flex flex-col gap-lg" @submit.prevent="sendMagicLink">
         <div v-if="!magicSent" class="flex flex-col gap-xs">
           <label class="text-label-sm uppercase" for="ml-email">Email</label>
           <div class="relative">
             <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline" style="font-variation-settings: 'FILL' 1;">mail</span>
-            <input v-model="email" id="ml-email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"/>
+            <input id="ml-email" v-model="email" type="email" placeholder="hello@tango.app" autocomplete="email" class="w-full sunken-input pixel-border-sm pl-xl pr-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"/>
           </div>
           <p class="text-label-sm text-on-surface-variant mt-xs">We'll email you a one-tap sign-in link.</p>
         </div>
@@ -271,7 +271,7 @@ onMounted(() => {
 
 <div class="text-center mt-lg mb-sm">
         <p class="text-body-md text-on-surface-variant">Don't have an account?</p>
-        <button @click="router.push(`/signup${inviteCode ? '?invite=' + encodeURIComponent(inviteCode) : ''}`)" type="button" class="inline-block mt-xs text-body-md font-bold text-secondary hover:text-secondary-fixed-dim transition-colors border-b-2 border-transparent hover:border-secondary">Create an account</button>
+        <button type="button" class="inline-block mt-xs text-body-md font-bold text-secondary hover:text-secondary-fixed-dim transition-colors border-b-2 border-transparent hover:border-secondary" @click="router.push(`/signup${inviteCode ? '?invite=' + encodeURIComponent(inviteCode) : ''}`)">Create an account</button>
       </div>
     </div>
   </div>

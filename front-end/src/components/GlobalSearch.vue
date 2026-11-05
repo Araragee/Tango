@@ -148,11 +148,11 @@ const typeColors: Record<string, string> = {
           <input
             ref="inputRef"
             v-model="query"
-            @keydown="onKeydown"
             placeholder="Search tasks, events, transactions, goals..."
             class="flex-1 bg-transparent outline-none text-body-lg text-on-surface placeholder-on-surface-variant"
+            @keydown="onKeydown"
           />
-          <button @click="emit('close')" class="text-label-sm text-on-surface-variant uppercase px-2 py-1 pixel-border-sm hover:bg-surface-variant">
+          <button class="text-label-sm text-on-surface-variant uppercase px-2 py-1 pixel-border-sm hover:bg-surface-variant" @click="emit('close')">
             ESC
           </button>
         </div>
@@ -168,10 +168,10 @@ const typeColors: Record<string, string> = {
           <button
             v-for="(result, i) in results"
             :key="result.id + result.type"
-            @click="selectResult(result)"
-            @mouseenter="selectedIndex = i"
             class="w-full flex items-center gap-4 px-4 py-3 border-b border-surface-variant transition-colors text-left"
             :class="selectedIndex === i ? 'bg-primary-container' : 'hover:bg-surface-variant'"
+            @click="selectResult(result)"
+            @mouseenter="selectedIndex = i"
           >
             <span class="material-symbols-outlined text-primary shrink-0">{{ result.icon }}</span>
             <div class="flex-1 min-w-0">

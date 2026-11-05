@@ -73,15 +73,15 @@ watch(
           <button
             type="button"
             :disabled="push.busy.value"
-            @click="onEnable"
             class="px-3 py-1 pixel-border-sm bg-primary text-on-primary text-xs font-bold uppercase hover:opacity-90 disabled:opacity-50"
+            @click="onEnable"
           >
             {{ push.busy.value ? 'Enabling…' : 'Enable' }}
           </button>
           <button
             type="button"
-            @click="dismiss"
             class="px-3 py-1 pixel-border-sm bg-surface-variant text-on-surface-variant text-xs font-bold uppercase hover:bg-surface-container-high"
+            @click="dismiss"
           >
             Not now
           </button>
@@ -90,9 +90,9 @@ watch(
 
       <button
         type="button"
-        @click="dismiss"
         class="material-symbols-outlined text-on-surface-variant hover:text-on-surface"
         aria-label="Dismiss"
+        @click="dismiss"
       >close</button>
     </div>
   </Transition>

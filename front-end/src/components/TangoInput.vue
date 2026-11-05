@@ -28,9 +28,9 @@ const inputId = computed(() => props.id || `input-${Math.random().toString(36).s
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       class="sunken-input px-4 py-2 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none pixel-border-sm w-full"
       :class="{ 'border-error ring-error': error }"
+      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
     <span v-if="error" class="text-[10px] text-error font-bold uppercase">{{ error }}</span>
   </div>

@@ -181,9 +181,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
           <div
             v-for="event in dayEvents"
             :key="event.id"
-            @click="setEditEvent(event)"
             class="p-3 bg-surface-container-low pixel-border-sm flex justify-between items-center cursor-pointer hover:bg-surface-variant transition-colors"
             :class="{ 'ring-2 ring-primary': editingEventId === event.id }"
+            @click="setEditEvent(event)"
           >
             <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-primary text-sm">{{ event.icon }}</span>
@@ -193,9 +193,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
               <span class="text-label-sm text-outline">{{ event.time }}</span>
               <button
                 v-if="editingEventId === event.id"
-                @click.stop="cancelEdit"
                 aria-label="Cancel edit"
                 class="material-symbols-outlined tap-target-mobile text-[18px] text-primary hover:scale-125 transition-transform"
+                @click.stop="cancelEdit"
               >close</button>
               <span
                 v-else
@@ -227,17 +227,19 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
             <button
               v-for="cat in prefs.eventCategories"
               :key="cat"
-              @click="category = cat"
               class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
               :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+              @click="category = cat"
             >{{ cat }}</button>
           </div>
           <div class="flex justify-between gap-2 flex-wrap mt-1">
-            <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
+            <TangoInput
+v-model="newCategory" placeholder="Add category..." class="flex-1"
               @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
-            <TangoButton size="sm" variant="outline"
-              @click="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
-              aria-label="Add category">+</TangoButton>
+            <TangoButton
+size="sm" variant="outline"
+              aria-label="Add category"
+              @click="() => { if (!newCategory.trim()) return; prefs.addEventCategory(newCategory); category = newCategory.trim(); newCategory = ''; }">+</TangoButton>
           </div>
         </div>
 
@@ -253,9 +255,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
             <button
               v-for="m in MOOD_OPTIONS"
               :key="m.value"
-              @click="mood = m.value"
               class="flex-1 py-2 pixel-border-sm transition-all flex flex-col items-center gap-1"
               :class="mood === m.value ? 'bg-primary text-on-primary scale-110' : 'bg-surface hover:bg-surface-variant'"
+              @click="mood = m.value"
             >
               <span class="text-2xl">{{ m.emoji }}</span>
               <span class="text-[10px] uppercase">{{ m.label }}</span>
@@ -267,9 +269,9 @@ const MOOD_OPTIONS: { value: number; emoji: string; label: string }[] = [
     </div>
 
     <template #footer>
-      <TangoButton v-if="editingEventId" @click="deleteEvent" :disabled="saveBusy" variant="outline" class="text-error border-error mr-auto" size="sm">Delete</TangoButton>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="saveEvent" :disabled="saveBusy" shadow="dark" size="sm">
+      <TangoButton v-if="editingEventId" :disabled="saveBusy" variant="outline" class="text-error border-error mr-auto" size="sm" @click="deleteEvent">Delete</TangoButton>
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Cancel</TangoButton>
+      <TangoButton :disabled="saveBusy" shadow="dark" size="sm" @click="saveEvent">
         {{ saveBusy ? 'Saving…' : (editingEventId ? 'SAVE CHANGES' : 'ADD EVENT') }}
       </TangoButton>
     </template>

@@ -59,9 +59,8 @@ Tango is a premium, modern co-management web application designed for couples. I
 │   └── user-stories.md        # Active product roadmap, personas, and story checklists
 ├── front-end/                 # Vue 3 Application
 │   ├── public/                # PWA static assets & manifest configurations
-│   ├── scripts/               # Utility scripts (e.g. PWA icon generation)
+│   ├── scripts/               # Utility scripts (PWA icons, icon-font subset)
 │   ├── src/                   # Vue 3 source code
-│   │   ├── assets/            # Logos and stylesheets
 │   │   ├── components/        # Shared UI elements & view components
 │   │   ├── composables/       # Vue composables (theme, idle state, PWA updates)
 │   │   ├── lib/               # Third-party initializations (Supabase client)
@@ -73,7 +72,7 @@ Tango is a premium, modern co-management web application designed for couples. I
 │   └── vite.config.ts         # Vite configuration with PWA integration
 ├── supabase/                  # Backend configurations
 │   ├── functions/             # Edge Functions (e.g. dispatch_push notifications)
-│   ├── migrations/            # SQL migration scripts (001 to 021)
+│   ├── migrations/            # SQL migration scripts (001 to 022)
 │   └── schema.sql             # SQL database schema snapshot
 ├── netlify.toml               # Netlify build configurations and security headers
 └── README.md                  # Project overview (this file)
@@ -84,8 +83,8 @@ Tango is a premium, modern co-management web application designed for couples. I
 ## 🚀 Getting Started
 
 ### 📋 Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [npm](https://www.npmjs.com/) (v9 or higher)
+- [Node.js](https://nodejs.org/) (v22, matching Netlify)
+- [npm](https://www.npmjs.com/) (v10 or higher)
 
 ### 💻 Local Development Setup
 
@@ -115,12 +114,26 @@ Tango is a premium, modern co-management web application designed for couples. I
    ```
    The application will run locally at `http://localhost:5173`.
 
-### 🧪 Running Tests
-Unit tests for Pinia stores, helper utilities, date math, and the `App.vue` mounting lifecycle are written using **Vitest**.
-To run the test suite:
+### 🧪 Quality Checks
+Unit tests for Pinia stores, router guards, helper utilities, and the `App.vue` mounting lifecycle are written using **Vitest**.
 ```bash
-npm run test
+npm run test       # unit tests
+npm run typecheck  # vue-tsc
+npm run lint       # eslint
 ```
+
+### 🔣 Icons
+The Material Symbols font is subset to only the icons the app uses (~20 KB
+instead of ~4 MB). After using a new icon, regenerate the font URL in
+`index.html` — `src/iconFont.test.ts` fails until you do:
+```bash
+npm run icons
+```
+
+### 🗄️ Database Migrations
+Apply `supabase/migrations/*.sql` in order (Supabase CLI or SQL editor).
+`022_private_receipts_bucket.sql` must be applied **before** deploying a
+front-end that uploads receipts to the private `receipts` bucket.
 
 ### 📦 Production Build & PWA Testing
 Build and preview the production bundle to inspect PWA Service Worker caching and redirection logic:
@@ -133,4 +146,4 @@ npm run preview
 
 ## 📚 Documentation Links
 For deep technical insights and roadmap information, consult the `docs/` folder:
-- 🗺️ **[User Stories Roadmap](file:///Users/dex/Desktop/Essentials%20x%20Coding/Tango/docs/user-stories.md)**: Product epics, stories, and status checklist.
+- 🗺️ **[User Stories Roadmap](docs/user-stories.md)**: Product epics, stories, and status checklist.

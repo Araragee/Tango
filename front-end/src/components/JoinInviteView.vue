@@ -69,18 +69,18 @@ onMounted(async () => {
       <p v-if="error" class="text-error text-label-sm">{{ error }}</p>
 
       <div v-if="!auth.user && status !== 'success'" class="space-y-3">
-        <TangoButton @click="goSignUp" shadow="dark" class="w-full">
+        <TangoButton shadow="dark" class="w-full" @click="goSignUp">
           Create Account & Join
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_add</span>
         </TangoButton>
-        <TangoButton @click="goLogin" variant="surface" class="w-full">
+        <TangoButton variant="surface" class="w-full" @click="goLogin">
           Already have an account? Sign In
         </TangoButton>
       </div>
 
       <div v-else-if="auth.user && status === 'idle' && error" class="space-y-3">
-        <TangoButton @click="redeem" shadow="dark" class="w-full" :disabled="loading">Retry</TangoButton>
-        <TangoButton @click="router.push('/onboarding')" variant="surface" class="w-full">Cancel</TangoButton>
+        <TangoButton shadow="dark" class="w-full" :disabled="loading" @click="redeem">Retry</TangoButton>
+        <TangoButton variant="surface" class="w-full" @click="router.push('/onboarding')">Cancel</TangoButton>
       </div>
     </TangoCard>
   </div>

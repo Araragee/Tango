@@ -50,8 +50,8 @@ const handleKeydown = (e: KeyboardEvent) => {
           Type <strong>{{ options.requireTypedText }}</strong> below to confirm.
         </p>
         <TangoInput
-          v-model="typedText"
           ref="inputRef"
+          v-model="typedText"
           type="text"
           :placeholder="options.requireTypedText"
           class="w-full"
@@ -69,8 +69,8 @@ const handleKeydown = (e: KeyboardEvent) => {
         <TangoButton
           variant="primary"
           :class="options.isDestructive ? 'bg-error hover:bg-error/90 text-on-error' : ''"
-          @click="handleAccept"
           :disabled="options.requireTypedText ? typedText !== options.requireTypedText : false"
+          @click="handleAccept"
         >
           {{ options.confirmText || 'Confirm' }}
         </TangoButton>

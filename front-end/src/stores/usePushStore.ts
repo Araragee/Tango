@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase, isConfigured } from '@/lib/supabase'
 import { useAuthStore } from './useAuthStore'
-import { useHouseholdStore } from './useHouseholdStore'
 
 // ─── VAPID public key ────────────────────────────────────────────────────────
 // Set VITE_VAPID_PUBLIC_KEY in .env (base64url, from web-push CLI or openssl)
@@ -84,7 +83,6 @@ export const usePushStore = defineStore('push', () => {
   // ── Persist to Supabase ──────────────────────────────────────────────────
   async function persistSubscription(sub: PushSubscription) {
     const auth = useAuthStore()
-    const household = useHouseholdStore()
     if (!isConfigured || !auth.user) return
     const json = sub.toJSON()
     const p256dh = (json.keys as any)?.p256dh

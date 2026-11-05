@@ -99,7 +99,7 @@ function parseDate(raw: string): string {
   // Try ISO first
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) return raw.trim();
   // Try MM/DD/YYYY or DD/MM/YYYY or MM-DD-YYYY
-  const parts = raw.trim().split(/[\/\-\.]/).map(Number);
+  const parts = raw.trim().split(/[/.-]/).map(Number);
   if (parts.length === 3) {
     const [a, b, c] = parts;
     // If year-like in position 0 → YYYY-MM-DD
@@ -356,10 +356,12 @@ function reset() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(r, i) in parsedRows.slice(0, 3)" :key="i"
+            <tr
+v-for="(r, i) in parsedRows.slice(0, 3)" :key="i"
               :class="r.ok ? '' : 'bg-error-container text-on-error-container'">
               <td class="px-2 py-1 truncate max-w-[140px]">{{ r.title }}</td>
-              <td class="px-2 py-1 text-right font-bold"
+              <td
+class="px-2 py-1 text-right font-bold"
                 :class="r.amount < 0 ? 'text-error' : 'text-secondary'">
                 {{ r.amount < 0 ? '-' : '+' }}{{ prefs.currencySymbol }}{{ Math.abs(r.amount).toFixed(2) }}
               </td>
@@ -395,7 +397,8 @@ function reset() {
           <tbody>
             <tr v-for="(r, i) in validRows" :key="i" class="border-b border-surface-variant">
               <td class="px-2 py-1 truncate max-w-[160px]">{{ r.title }}</td>
-              <td class="px-2 py-1 text-right font-bold"
+              <td
+class="px-2 py-1 text-right font-bold"
                 :class="r.amount < 0 ? 'text-error' : 'text-secondary'">
                 {{ r.amount < 0 ? '-' : '+' }}{{ prefs.currencySymbol }}{{ Math.abs(r.amount).toFixed(2) }}
               </td>
@@ -435,32 +438,32 @@ function reset() {
     <template #footer>
       <!-- Upload step -->
       <template v-if="step === 'upload'">
-        <TangoButton @click="reset" variant="surface" size="sm">Cancel</TangoButton>
+        <TangoButton variant="surface" size="sm" @click="reset">Cancel</TangoButton>
       </template>
 
       <!-- Map step -->
       <template v-else-if="step === 'map'">
-        <TangoButton @click="step = 'upload'" variant="surface" size="sm">Back</TangoButton>
+        <TangoButton variant="surface" size="sm" @click="step = 'upload'">Back</TangoButton>
         <TangoButton
-          @click="step = 'preview'"
           :disabled="!mappingValid"
-          shadow="dark" size="sm"
+          shadow="dark"
+          size="sm" @click="step = 'preview'"
         >Preview Import</TangoButton>
       </template>
 
       <!-- Preview step -->
       <template v-else-if="step === 'preview'">
-        <TangoButton @click="step = 'map'" :disabled="importing" variant="surface" size="sm">Back</TangoButton>
+        <TangoButton :disabled="importing" variant="surface" size="sm" @click="step = 'map'">Back</TangoButton>
         <TangoButton
-          @click="runImport"
           :disabled="importing || validRows.length === 0"
-          shadow="dark" size="sm"
+          shadow="dark"
+          size="sm" @click="runImport"
         >{{ importing ? `Importing… ${importedCount}/${validRows.length}` : `Import ${validRows.length} rows` }}</TangoButton>
       </template>
 
       <!-- Done step -->
       <template v-else-if="step === 'done'">
-        <TangoButton @click="reset" shadow="dark" size="sm">Done</TangoButton>
+        <TangoButton shadow="dark" size="sm" @click="reset">Done</TangoButton>
       </template>
     </template>
   </BaseModal>

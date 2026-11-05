@@ -46,14 +46,14 @@ const submit = async () => {
         <p class="text-body-md text-on-surface-variant">Choose a new password for your account.</p>
       </div>
 
-      <form @submit.prevent="submit" class="space-y-4">
+      <form class="space-y-4" @submit.prevent="submit">
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm uppercase" for="new-pw">New Password</label>
-          <input v-model="password" id="new-pw" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" />
+          <input id="new-pw" v-model="password" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" />
         </div>
         <div class="flex flex-col gap-xs">
           <label class="text-label-sm uppercase" for="confirm-pw">Confirm Password</label>
-          <input v-model="confirm" id="confirm-pw" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" />
+          <input id="confirm-pw" v-model="confirm" type="password" placeholder="••••••••" class="sunken-input pixel-border-sm px-sm py-3 text-body-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none" />
         </div>
 
         <p v-if="error" class="text-error text-label-sm">{{ error }}</p>

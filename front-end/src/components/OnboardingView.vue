@@ -174,14 +174,14 @@ onMounted(() => {
 
           <div class="flex gap-2 flex-wrap">
             <button
-              @click="householdMode = 'create'; error = ''"
               class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
               :class="householdMode === 'create' ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'"
+              @click="householdMode = 'create'; error = ''"
             >Create</button>
             <button
-              @click="householdMode = 'join'; error = ''"
               class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
               :class="householdMode === 'join' ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant'"
+              @click="householdMode = 'join'; error = ''"
             >Join</button>
           </div>
         </div>
@@ -196,28 +196,28 @@ onMounted(() => {
                 <span v-if="expiresLabel" class="text-label-sm uppercase text-on-primary-container opacity-70">{{ expiresLabel }}</span>
               </div>
               <div class="flex gap-2 flex-wrap">
-                <button @click="copyCode" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code">content_copy</button>
-                <button @click="regenerateInvite" class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate">refresh</button>
+                <button class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Copy code" @click="copyCode">content_copy</button>
+                <button class="material-symbols-outlined text-on-primary-container hover:opacity-70 transition-opacity" aria-label="Regenerate" @click="regenerateInvite">refresh</button>
               </div>
             </div>
 
             <div class="flex flex-col items-center gap-2">
               <QrCode :value="inviteLink" :size="160" />
-              <button @click="copyLink" class="text-label-sm uppercase text-primary hover:underline">Copy invite link</button>
+              <button class="text-label-sm uppercase text-primary hover:underline" @click="copyLink">Copy invite link</button>
             </div>
 
             <p class="text-label-sm text-on-surface-variant text-center uppercase tracking-wider">Share code, link, or QR with your partner</p>
             <div class="flex gap-2 flex-wrap">
               <TangoInput v-model="emailInvite" placeholder="partner@email.com" class="flex-1" />
-              <TangoButton @click="sendEmailInvite" variant="surface" size="sm">Email</TangoButton>
+              <TangoButton variant="surface" size="sm" @click="sendEmailInvite">Email</TangoButton>
             </div>
-            <TangoButton @click="router.push('/app/budget')" shadow="dark" class="w-full">
+            <TangoButton shadow="dark" class="w-full" @click="router.push('/app/budget')">
               Let's Go!
               <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_forward</span>
             </TangoButton>
           </div>
 
-          <TangoButton v-else @click="createHousehold" shadow="dark" class="w-full" :disabled="loading">
+          <TangoButton v-else shadow="dark" class="w-full" :disabled="loading" @click="createHousehold">
             {{ loading ? 'Creating…' : 'Create Household' }}
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_home</span>
           </TangoButton>
@@ -226,7 +226,7 @@ onMounted(() => {
         <div v-if="householdMode === 'join'" class="space-y-4">
           <p class="text-body-md text-on-surface-variant">Enter the invite code your partner shared with you.</p>
           <TangoInput v-model="inviteInput" label="Invite Code" placeholder="ABC123" />
-          <TangoButton @click="joinHousehold" shadow="dark" class="w-full" :disabled="loading">
+          <TangoButton shadow="dark" class="w-full" :disabled="loading" @click="joinHousehold">
             {{ loading ? 'Joining…' : 'Join Household' }}
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group_add</span>
           </TangoButton>
@@ -236,10 +236,10 @@ onMounted(() => {
       </div>
 
       <div v-if="step < 4" class="mt-12 flex flex-col gap-4">
-        <TangoButton @click="next" size="lg" class="w-full">
+        <TangoButton size="lg" class="w-full" @click="next">
           {{ step === 3 ? "Set Up Duo" : "Next" }}
         </TangoButton>
-        <TangoButton v-if="step > 1" @click="step--" variant="surface" size="lg" class="w-full">Back</TangoButton>
+        <TangoButton v-if="step > 1" variant="surface" size="lg" class="w-full" @click="step--">Back</TangoButton>
         <div class="flex justify-center gap-2 mt-4">
           <div v-for="i in 3" :key="i" class="w-3 h-3 pixel-border-sm" :class="step === i ? 'bg-primary' : 'bg-surface-variant'"></div>
         </div>

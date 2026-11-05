@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 
-const props = defineProps<{
+defineProps<{
   show: boolean
 }>();
 
@@ -74,7 +74,7 @@ const helpContent = computed(() => getHelpContent());
         </div>
 
         <div class="pt-4 border-t-2 border-outline-variant flex justify-end">
-            <TangoButton @click="emit('close')" variant="primary">Got it</TangoButton>
+            <TangoButton variant="primary" @click="emit('close')">Got it</TangoButton>
         </div>
     </div>
   </BaseModal>

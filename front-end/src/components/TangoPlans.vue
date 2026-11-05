@@ -93,7 +93,7 @@ const confirmDelete = async (id: string, title: string) => {
         <h2 class="text-headline-xl text-on-surface">Joint Goals</h2>
         <p class="text-body-md text-on-surface-variant mt-sm">Keep tracking, you're doing great!</p>
       </div>
-      <TangoButton @click="openNewGoal" shadow="dark" size="md" class="uppercase" aria-label="New Goal">
+      <TangoButton shadow="dark" size="md" class="uppercase" aria-label="New Goal" @click="openNewGoal">
         <span class="material-symbols-outlined text-[16px]">add</span>
         New Goal
       </TangoButton>
@@ -121,9 +121,9 @@ const confirmDelete = async (id: string, title: string) => {
         <button
           v-for="cat in availableCategories"
           :key="cat"
-          @click="activeCategory = cat"
           class="px-3 py-1 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
           :class="activeCategory === cat ? 'bg-primary text-on-primary' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'"
+          @click="activeCategory = cat"
         >{{ cat }}</button>
       </div>
 
@@ -203,9 +203,9 @@ const confirmDelete = async (id: string, title: string) => {
               </span>
             </div>
             <button
-              @click.stop="confirmDelete(goal.id, goal.title)"
               class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error transition-colors"
               aria-label="Delete goal"
+              @click.stop="confirmDelete(goal.id, goal.title)"
             >
               delete
             </button>
@@ -218,7 +218,7 @@ const confirmDelete = async (id: string, title: string) => {
         title="No goals yet"
         description="Set your first joint goal and start tracking progress together."
       >
-        <TangoButton @click="openNewGoal" shadow="dark" size="sm" class="uppercase mt-2">
+        <TangoButton shadow="dark" size="sm" class="uppercase mt-2" @click="openNewGoal">
           <span class="material-symbols-outlined text-[16px]">add</span>
           New Goal
         </TangoButton>
@@ -230,7 +230,7 @@ const confirmDelete = async (id: string, title: string) => {
 
     <EditGoalModal
         :show="showEditModal"
-        :goalId="selectedGoalId"
+        :goal-id="selectedGoalId"
         @close="showEditModal = false"
     />
   </div>

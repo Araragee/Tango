@@ -128,10 +128,12 @@ const deleteRecurring = async () => {
   <BaseModal :show="show" :title="recurringId ? 'Edit Recurring' : 'New Recurring'" @close="emit('close')">
     <div class="flex flex-col gap-6">
       <div class="flex gap-4">
-        <button @click="type = 'expense'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-          :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'">Expense</button>
-        <button @click="type = 'income'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-          :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'">Income</button>
+        <button
+class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors" :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'"
+          @click="type = 'expense'">Expense</button>
+        <button
+class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors" :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'"
+          @click="type = 'income'">Income</button>
       </div>
 
       <TangoInput v-model="title" label="Title" placeholder="e.g. Rent" :error="errors.title" required />
@@ -156,9 +158,9 @@ const deleteRecurring = async () => {
         <div class="flex gap-2 flex-wrap">
           <button
             v-for="cat in prefs.transactionCategories" :key="cat"
-            @click="category = cat"
             class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+            @click="category = cat"
           >{{ cat }}</button>
         </div>
       </div>
@@ -167,9 +169,9 @@ const deleteRecurring = async () => {
     </div>
 
     <template #footer>
-      <TangoButton v-if="recurringId" @click="deleteRecurring" variant="outline" class="text-error border-error mr-auto" size="sm">Delete</TangoButton>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="save" :disabled="loading" shadow="dark" size="sm">{{ loading ? 'Saving…' : 'SAVE' }}</TangoButton>
+      <TangoButton v-if="recurringId" variant="outline" class="text-error border-error mr-auto" size="sm" @click="deleteRecurring">Delete</TangoButton>
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Cancel</TangoButton>
+      <TangoButton :disabled="loading" shadow="dark" size="sm" @click="save">{{ loading ? 'Saving…' : 'SAVE' }}</TangoButton>
     </template>
   </BaseModal>
 </template>

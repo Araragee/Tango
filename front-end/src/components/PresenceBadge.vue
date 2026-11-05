@@ -7,7 +7,7 @@ interface Props {
     userId?: string;
     showLabel?: boolean;
 }
-const props = withDefaults(defineProps<Props>(), { showLabel: false });
+const props = withDefaults(defineProps<Props>(), { userId: undefined, showLabel: false });
 
 const presence = usePresenceStore();
 const household = useHouseholdStore();

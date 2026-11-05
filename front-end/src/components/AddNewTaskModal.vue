@@ -47,12 +47,6 @@ const assigneeIdFor = (key: AssigneeKey): string | null => {
     return null;
 };
 
-const assigneeLabelFor = (key: AssigneeKey): string => {
-    if (key === 'me') return store.userName;
-    if (key === 'partner') return store.partnerName;
-    return 'Both';
-};
-
 watch(() => props.show, (open) => {
   if (!open) return;
   error.value = '';
@@ -190,17 +184,19 @@ const saveTask = async () => {
         <div class="flex gap-2 flex-wrap">
           <button
             v-for="cat in prefs.todoCategories" :key="cat"
-            @click="category = cat"
             class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+            @click="category = cat"
           >{{ cat }}</button>
         </div>
         <div class="flex justify-between gap-2 flex-wrap mt-1">
-          <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1"
+          <TangoInput
+v-model="newCategory" placeholder="Add category..." class="flex-1"
             @keyup.enter="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }" />
-          <TangoButton size="sm" variant="outline"
-            @click="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }"
-            aria-label="Add category">+</TangoButton>
+          <TangoButton
+size="sm" variant="outline"
+            aria-label="Add category"
+            @click="() => { if (!newCategory.trim()) return; prefs.addTodoCategory(newCategory); category = newCategory.trim(); newCategory = ''; }">+</TangoButton>
         </div>
       </div>
 
@@ -212,9 +208,9 @@ const saveTask = async () => {
           <button
             v-for="r in (['none', 'daily', 'weekly', 'biweekly', 'monthly'] as const)"
             :key="r"
-            @click="recurrence = r"
             class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="recurrence === r ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+            @click="recurrence = r"
           >{{ r === 'none' ? 'Never' : r }}</button>
         </div>
         <p v-if="recurrence !== 'none'" class="text-[10px] uppercase text-on-surface-variant">
@@ -234,9 +230,9 @@ const saveTask = async () => {
             <span class="material-symbols-outlined text-outline text-[14px]">check_box_outline_blank</span>
             <span class="flex-1 text-body-md">{{ item.text }}</span>
             <button
-              @click="removeChecklistItem(item.id)"
               class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error"
               aria-label="Remove checklist item"
+              @click="removeChecklistItem(item.id)"
             >close</button>
           </div>
         </div>
@@ -247,14 +243,14 @@ const saveTask = async () => {
             class="flex-1"
             @keyup.enter="addChecklistItem"
           />
-          <TangoButton size="sm" variant="outline" @click="addChecklistItem" aria-label="Add item">+</TangoButton>
+          <TangoButton size="sm" variant="outline" aria-label="Add item" @click="addChecklistItem">+</TangoButton>
         </div>
       </div>
     </div>
 
     <template #footer>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="saveTask" shadow="dark" size="sm">
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Cancel</TangoButton>
+      <TangoButton shadow="dark" size="sm" @click="saveTask">
         {{ isEditing ? 'SAVE CHANGES' : 'SAVE TASK' }}
       </TangoButton>
     </template>

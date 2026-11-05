@@ -92,9 +92,9 @@ const scheduleCustom = async () => {
               <div class="text-label-sm text-on-surface-variant uppercase">{{ surprise.category }} · {{ surprise.cost }}</div>
             </div>
           </div>
-          <TangoButton @click="scheduleIdea(surprise!)" size="sm" shadow="dark">Schedule</TangoButton>
+          <TangoButton size="sm" shadow="dark" @click="scheduleIdea(surprise!)">Schedule</TangoButton>
         </div>
-        <TangoButton @click="surpriseMe" variant="surface" class="self-start">
+        <TangoButton variant="surface" class="self-start" @click="surpriseMe">
           <span class="material-symbols-outlined text-[16px]">casino</span>
           {{ surprise ? 'Re-roll' : 'Pick for us' }}
         </TangoButton>
@@ -144,7 +144,7 @@ const scheduleCustom = async () => {
               <div class="text-label-sm text-outline uppercase">{{ i.category }} · {{ i.cost }}</div>
             </div>
           </div>
-          <TangoButton @click="scheduleIdea(i)" size="sm" variant="surface">Pick</TangoButton>
+          <TangoButton size="sm" variant="surface" @click="scheduleIdea(i)">Pick</TangoButton>
         </div>
       </div>
 
@@ -153,13 +153,13 @@ const scheduleCustom = async () => {
         <label class="text-label-sm uppercase text-on-surface-variant font-bold">Or write your own</label>
         <div class="flex justify-between gap-2 flex-wrap">
           <TangoInput v-model="customTitle" placeholder="e.g. Anniversary dinner at Luigi's" class="flex-1" />
-          <TangoButton @click="scheduleCustom" shadow="dark" size="sm">Add</TangoButton>
+          <TangoButton shadow="dark" size="sm" @click="scheduleCustom">Add</TangoButton>
         </div>
       </div>
     </div>
 
     <template #footer>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Close</TangoButton>
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Close</TangoButton>
     </template>
   </BaseModal>
 </template>

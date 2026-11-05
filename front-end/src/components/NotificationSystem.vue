@@ -38,7 +38,8 @@ defineExpose({ add });
                 'border-primary': n.type === 'info',
             }"
         >
-            <span class="material-symbols-outlined shrink-0" :class="{
+            <span
+class="material-symbols-outlined shrink-0" :class="{
                 'text-secondary': n.type === 'success',
                 'text-error': n.type === 'error',
                 'text-primary': n.type === 'info',
@@ -48,9 +49,9 @@ defineExpose({ add });
             <span class="flex-1 min-w-0 text-label-sm uppercase font-bold break-words">{{ n.message }}</span>
             <!-- B126: manual dismiss so users don't have to wait the 3s auto-timeout -->
             <button
-                @click="remove(n.id)"
                 class="material-symbols-outlined text-[16px] shrink-0 text-outline hover:text-on-surface transition-colors"
                 aria-label="Dismiss"
+                @click="remove(n.id)"
             >close</button>
         </div>
     </TransitionGroup>

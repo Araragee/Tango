@@ -1,6 +1,7 @@
 // Guards the subset Material Symbols font in index.html: any icon referenced in
 // the source must be in its `icon_names` list, otherwise it renders as raw
 // ligature text (e.g. "favorite") instead of a glyph. Fix: `npm run icons`.
+import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { CATEGORY_ICON_MAP } from './utils/categoryIcons'

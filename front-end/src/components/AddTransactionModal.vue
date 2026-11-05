@@ -105,10 +105,12 @@ const saveTransaction = async () => {
     <div class="flex flex-col gap-6">
       <!-- Type toggle -->
       <div class="flex gap-4">
-        <button @click="type = 'expense'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-          :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'">Expense</button>
-        <button @click="type = 'income'" class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
-          :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'">Income</button>
+        <button
+class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors" :class="type === 'expense' ? 'bg-error text-on-error' : 'bg-surface hover:bg-surface-variant'"
+          @click="type = 'expense'">Expense</button>
+        <button
+class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors" :class="type === 'income' ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'"
+          @click="type = 'income'">Income</button>
       </div>
 
       <TangoInput v-model="title" label="Title" placeholder="e.g. Weekly Groceries" :error="errors.title" required />
@@ -124,14 +126,14 @@ const saveTransaction = async () => {
         <div class="flex gap-2 flex-wrap">
           <button
             v-for="cat in prefs.transactionCategories" :key="cat"
-            @click="category = cat"
             class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+            @click="category = cat"
           >{{ cat }}</button>
         </div>
         <div class="flex justify-between gap-2 flex-wrap mt-1">
           <TangoInput v-model="newCategory" placeholder="Add category..." class="flex-1" @keyup.enter="addCategory" />
-          <TangoButton size="sm" variant="outline" @click="addCategory" aria-label="Add category">+</TangoButton>
+          <TangoButton size="sm" variant="outline" aria-label="Add category" @click="addCategory">+</TangoButton>
         </div>
       </div>
       <!-- Optional note -->
@@ -150,14 +152,14 @@ const saveTransaction = async () => {
         <label class="text-label-sm text-primary uppercase font-bold">Who Paid? <span class="text-[10px] text-on-surface-variant font-normal normal-case">(We'll remember your choice)</span></label>
         <div class="flex gap-2 flex-wrap">
           <button
-            @click="paidByMe = paidByMe === true ? null : true"
             class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="paidByMe === true ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+            @click="paidByMe = paidByMe === true ? null : true"
           >Me</button>
           <button
-            @click="paidByMe = paidByMe === false ? null : false"
             class="flex-1 py-2 pixel-border-sm text-label-sm uppercase transition-colors"
             :class="paidByMe === false ? 'bg-secondary text-on-secondary' : 'bg-surface hover:bg-surface-variant'"
+            @click="paidByMe = paidByMe === false ? null : false"
           >{{ store.partnerName }}</button>
         </div>
         <p v-if="paidByMe === null" class="text-[10px] uppercase text-on-surface-variant">Optional — tracks who fronted the money</p>
@@ -165,8 +167,8 @@ const saveTransaction = async () => {
     </div>
 
     <template #footer>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton @click="saveTransaction" shadow="dark" size="sm">SAVE</TangoButton>
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Cancel</TangoButton>
+      <TangoButton shadow="dark" size="sm" @click="saveTransaction">SAVE</TangoButton>
     </template>
   </BaseModal>
 </template>

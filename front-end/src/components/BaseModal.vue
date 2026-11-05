@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { watch, onMounted, onUnmounted } from 'vue';
 import { FocusTrap } from 'focus-trap-vue';
 import { useScrollLock } from '../composables/useScrollLock';
 
@@ -58,7 +58,7 @@ onUnmounted(() => {
           <!-- Modal Header -->
           <div class="bg-primary text-on-primary border-b-2 border-on-background p-4 flex justify-between items-center">
             <h2 id="modal-title" class="text-headline-md m-0 uppercase">{{ title }}</h2>
-            <button @click="emit('close')" aria-label="Close modal" class="tap-target -mr-2 text-on-primary hover:opacity-70 transition-opacity">
+            <button aria-label="Close modal" class="tap-target -mr-2 text-on-primary hover:opacity-70 transition-opacity" @click="emit('close')">
               <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">close</span>
             </button>
           </div>

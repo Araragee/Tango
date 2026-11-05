@@ -101,15 +101,15 @@ onUnmounted(() => {
 <template>
   <transition name="slide-x">
     <div v-if="show" class="fixed inset-0 z-50 flex">
-      <div class="flex-1 bg-black/40" @click="$emit('close')" aria-hidden="true"></div>
+      <div class="flex-1 bg-black/40" aria-hidden="true" @click="$emit('close')"></div>
 
       <aside class="w-full max-w-[24rem] bg-surface pixel-border-l hard-shadow flex flex-col">
         <header class="flex items-center justify-between p-4 border-b-2 border-on-surface">
           <h3 class="text-headline-md">Activity</h3>
           <button
-            @click="$emit('close')"
             class="material-symbols-outlined text-on-surface hover:text-primary"
             aria-label="Close"
+            @click="$emit('close')"
           >close</button>
         </header>
 

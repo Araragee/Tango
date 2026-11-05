@@ -103,7 +103,7 @@ onMounted(async () => {
       <h1 class="text-headline-lg">{{ status === 'ok' ? 'Welcome to Tango' : status === 'error' ? 'Something went wrong' : 'Just a sec' }}</h1>
       <p class="text-body-md text-on-surface-variant">{{ message }}</p>
 
-      <TangoButton v-if="status === 'error'" @click="router.push('/login')" shadow="dark" class="w-full">
+      <TangoButton v-if="status === 'error'" shadow="dark" class="w-full" @click="router.push('/login')">
         Go to Sign In
       </TangoButton>
     </TangoCard>

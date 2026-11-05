@@ -162,7 +162,8 @@ export const useHouseholdStore = defineStore('household', () => {
 
     const trimmed = code.trim().toUpperCase()
 
-    let { data: id, error } = await supabase.rpc('redeem_invite', { invite_code: trimmed })
+    const { data, error } = await supabase.rpc('redeem_invite', { invite_code: trimmed })
+    let id = data
 
     if (error && /Invalid invite code/i.test(error.message)) {
       const fallback = await supabase.rpc('join_household', { invite_code: trimmed })

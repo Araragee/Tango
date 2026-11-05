@@ -14,15 +14,15 @@ const { isVisible, currentOptions, handleUndo, hide } = useUndoToast()
     >
       <span class="text-body-md font-bold text-on-surface flex-1">{{ currentOptions.message }}</span>
       <button
-        @click="handleUndo"
         class="text-primary uppercase font-black text-label-md tracking-wider hover:opacity-80 transition-opacity"
+        @click="handleUndo"
       >
         Undo
       </button>
       <button
-        @click="hide"
         class="text-on-surface-variant hover:text-on-surface transition-colors p-1"
         aria-label="Close"
+        @click="hide"
       >
         <span class="material-symbols-outlined text-[18px]">close</span>
       </button>

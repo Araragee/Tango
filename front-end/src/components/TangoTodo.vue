@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { useConfirm } from '../composables/useConfirm';
 import { useUndoToast } from '../composables/useUndoToast';
 
-const { confirm } = useConfirm();
 const { showUndo } = useUndoToast();
 import { ref, inject, computed, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Todo, type ChecklistItem } from '../stores/useStore';
@@ -283,21 +281,22 @@ const phraseOfTheDay = computed(() => {
     <!-- View Mode Tabs -->
     <div class="flex gap-2 flex-wrap border-b-2 border-on-background pb-2">
       <button
-        @click="viewMode = 'tasks'"
         class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors flex items-center gap-2"
         :class="viewMode === 'tasks' ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+        @click="viewMode = 'tasks'"
       >
         <span class="material-symbols-outlined text-[16px]">checklist_rtl</span>
         To-Dos
       </button>
       <button
-        @click="viewMode = 'shopping'"
         class="px-4 py-2 pixel-border-sm text-label-sm uppercase transition-colors flex items-center gap-2"
         :class="viewMode === 'shopping' ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+        @click="viewMode = 'shopping'"
       >
         <span class="material-symbols-outlined text-[16px]">shopping_cart</span>
         Shopping
-        <span v-if="shoppingItems.filter(i => !i.completed).length > 0"
+        <span
+v-if="shoppingItems.filter(i => !i.completed).length > 0"
           class="text-[10px] px-1.5 py-0.5 pixel-border-sm"
           :class="viewMode === 'shopping' ? 'bg-on-primary text-primary' : 'bg-primary text-on-primary'"
         >{{ shoppingItems.filter(i => !i.completed).length }}</span>
@@ -313,7 +312,7 @@ const phraseOfTheDay = computed(() => {
 
       <div class="flex gap-2 flex-wrap">
         <TangoInput v-model="newShoppingItem" placeholder="Add item..." class="flex-1" @keyup.enter="quickAddShopping" />
-        <TangoButton @click="quickAddShopping" shadow="dark" size="sm">Add</TangoButton>
+        <TangoButton shadow="dark" size="sm" @click="quickAddShopping">Add</TangoButton>
       </div>
 
       <EmptyState
@@ -338,8 +337,8 @@ const phraseOfTheDay = computed(() => {
         </button>
         <span class="flex-grow text-body-lg" :class="{ 'line-through text-on-surface-variant': item.completed }">{{ item.text }}</span>
         <button
-          @click.stop="confirmDelete(item)"
           class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-error text-[18px] flex-shrink-0"
+          @click.stop="confirmDelete(item)"
         >delete</button>
       </div>
     </div>
@@ -358,9 +357,9 @@ const phraseOfTheDay = computed(() => {
         <button
           v-for="f in [['all', 'All'], ['active', 'Active'], ['done', 'Done']] as const"
           :key="f[0]"
-          @click="filter = f[0]"
           class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
           :class="filter === f[0] ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+          @click="filter = f[0]"
         >
           {{ f[1] }}
         </button>
@@ -398,8 +397,8 @@ const phraseOfTheDay = computed(() => {
           <button
             class="w-7 h-7 mt-0.5 sunken-input flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors"
             :class="{ 'bg-primary text-on-primary': todo.completed }"
-            @click="toggleTodo(todo.id)"
             :aria-label="todo.completed ? 'Mark incomplete' : 'Mark complete'"
+            @click="toggleTodo(todo.id)"
           >
             <span v-if="todo.completed" class="material-symbols-outlined text-[16px] font-bold">check</span>
           </button>
@@ -485,42 +484,42 @@ const phraseOfTheDay = computed(() => {
             {{ checklistProgress(todo)!.done }}/{{ checklistProgress(todo)!.total }}
           </span>
           <button
-            @click.stop="handoff(todo)"
             class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Hand off task"
             title="Hand off to partner / cycle assignee"
+            @click.stop="handoff(todo)"
           >
             swap_horiz
           </button>
           <button
             v-if="household.partner && !todo.completed"
-            @click.stop="nudgePartner(todo)"
             :disabled="nudging === todo.id"
             class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-secondary transition-all text-[18px]"
             aria-label="Nudge partner"
             title="Remind partner about this task"
+            @click.stop="nudgePartner(todo)"
           >
             {{ nudging === todo.id ? 'hourglass_empty' : 'notifications_active' }}
           </button>
           <button
-            @click.stop="openEditModal(todo)"
             class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Edit task"
+            @click.stop="openEditModal(todo)"
           >
             edit
           </button>
           <button
-            @click.stop="snoozeTodo(todo)"
             class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-primary transition-all text-[18px]"
             aria-label="Snooze task"
             title="Snooze until tomorrow"
+            @click.stop="snoozeTodo(todo)"
           >
             snooze
           </button>
           <button
-            @click.stop="confirmDelete(todo)"
             class="material-symbols-outlined tap-target-mobile text-outline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:text-error transition-all text-[18px]"
             aria-label="Delete task"
+            @click.stop="confirmDelete(todo)"
           >
             delete
           </button>
@@ -536,7 +535,7 @@ const phraseOfTheDay = computed(() => {
           <span class="material-symbols-outlined text-[16px]">tune</span>
           Detailed Add
         </TangoButton>
-        <TangoButton @click="quickAdd" shadow="dark" size="md" class="uppercase w-full sm:w-auto" aria-label="Add Task">Add</TangoButton>
+        <TangoButton shadow="dark" size="md" class="uppercase w-full sm:w-auto" aria-label="Add Task" @click="quickAdd">Add</TangoButton>
       </div>
     </TangoCard>
 

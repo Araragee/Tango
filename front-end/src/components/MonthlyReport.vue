@@ -197,8 +197,8 @@ function printReport() {
     </div>
 
     <template #footer>
-      <TangoButton @click="emit('close')" variant="surface" size="sm">Close</TangoButton>
-      <TangoButton @click="printReport" shadow="dark" size="sm">Save / Print</TangoButton>
+      <TangoButton variant="surface" size="sm" @click="emit('close')">Close</TangoButton>
+      <TangoButton shadow="dark" size="sm" @click="printReport">Save / Print</TangoButton>
     </template>
   </BaseModal>
 </template>

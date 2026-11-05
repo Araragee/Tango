@@ -113,11 +113,11 @@ const savingsRate = computed(() => {
             { id: 'categories', label: 'Spending' },
           ]"
           :key="tab.id"
-          @click="activeTab = tab.id as any"
           class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
           :class="activeTab === tab.id
             ? 'bg-primary text-on-primary'
             : 'bg-surface hover:bg-surface-variant text-on-surface'"
+          @click="activeTab = tab.id as any"
         >
           {{ tab.label }}
         </button>

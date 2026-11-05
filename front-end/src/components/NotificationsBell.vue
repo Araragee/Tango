@@ -81,9 +81,9 @@ onBeforeUnmount(() => {
 <template>
   <div ref="dropdownRef" class="relative">
     <button
-      @click.stop="toggle"
       class="material-symbols-outlined text-on-surface hover:text-primary transition-colors relative"
       aria-label="Notifications"
+      @click.stop="toggle"
     >
       notifications
       <span
@@ -102,8 +102,8 @@ onBeforeUnmount(() => {
         <span class="text-label-md uppercase font-bold">Notifications</span>
         <button
           v-if="notifications.unreadCount > 0"
-          @click="markAll"
           class="text-label-sm uppercase text-primary hover:underline"
+          @click="markAll"
         >Mark all read</button>
       </div>
 
@@ -114,9 +114,9 @@ onBeforeUnmount(() => {
         <button
           v-for="n in recent"
           :key="n.id"
-          @click="onItemClick(n)"
           class="w-full text-left flex items-start gap-3 p-3 border-b border-outline-variant hover:bg-surface-variant transition-colors"
           :class="!n.read_at && 'bg-primary-container/40'"
+          @click="onItemClick(n)"
         >
           <span class="material-symbols-outlined text-primary text-xl shrink-0 mt-0.5" style="font-variation-settings: 'FILL' 1;">
             {{ iconFor(n.type) }}

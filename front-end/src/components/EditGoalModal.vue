@@ -245,11 +245,11 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 <button
                     v-for="i in ['flag', 'flight_takeoff', 'home', 'pets', 'directions_car']"
                     :key="i"
-                    @click="icon = i"
                     class="w-10 h-10 pixel-border-sm flex items-center justify-center transition-colors"
                     :class="icon === i ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
                     :aria-label="'Select ' + i + ' icon'"
                     :aria-pressed="icon === i"
+                    @click="icon = i"
                 >
                     <span class="material-symbols-outlined">{{ i }}</span>
                 </button>
@@ -263,10 +263,10 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 <button
                     v-for="cat in GOAL_CATEGORIES"
                     :key="cat"
-                    @click="category = cat"
                     class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
                     :class="category === cat ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
                     :aria-pressed="category === cat"
+                    @click="category = cat"
                 >{{ cat }}</button>
             </div>
         </div>
@@ -278,7 +278,6 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 <button
                     v-for="p in GOAL_PRIORITIES"
                     :key="p"
-                    @click="priority = p"
                     class="flex-1 py-2 pixel-border-sm text-label-sm uppercase font-bold transition-colors"
                     :class="priority === p
                         ? p === 'High' ? 'bg-error text-on-error'
@@ -286,6 +285,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                           : 'bg-surface-variant text-on-surface-variant'
                         : 'bg-surface hover:bg-surface-variant'"
                     :aria-pressed="priority === p"
+                    @click="priority = p"
                 >{{ p }}</button>
             </div>
         </div>
@@ -308,7 +308,7 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                 <div class="flex-1">
                     <TangoInput v-model="newContribNote" label="Note (optional)" placeholder="e.g. From bonus" />
                 </div>
-                <TangoButton @click="addContribution" :disabled="contribBusy" shadow="dark" size="sm">
+                <TangoButton :disabled="contribBusy" shadow="dark" size="sm" @click="addContribution">
                     {{ contribBusy ? 'Adding…' : 'Add' }}
                 </TangoButton>
             </div>
@@ -328,9 +328,9 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
                     </div>
                     <button
                         v-if="c.user_id === auth.user?.id"
-                        @click="removeContribution(c.id)"
                         class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error transition-colors"
                         aria-label="Remove contribution"
+                        @click="removeContribution(c.id)"
                     >delete</button>
                 </div>
             </div>
@@ -339,9 +339,9 @@ const whoIs = (uid: string) => uid === auth.user?.id ? 'You' : (store.partnerNam
     </div>
 
     <template #footer>
-      <TangoButton v-if="goalId" @click="deleteGoal" variant="outline" class="text-error border-error mr-auto" size="sm" aria-label="Delete goal">Delete</TangoButton>
-      <TangoButton @click="emit('close')" variant="surface" size="sm" aria-label="Cancel">Cancel</TangoButton>
-      <TangoButton @click="saveGoal" shadow="dark" size="sm" aria-label="Save Goal">SAVE GOAL</TangoButton>
+      <TangoButton v-if="goalId" variant="outline" class="text-error border-error mr-auto" size="sm" aria-label="Delete goal" @click="deleteGoal">Delete</TangoButton>
+      <TangoButton variant="surface" size="sm" aria-label="Cancel" @click="emit('close')">Cancel</TangoButton>
+      <TangoButton shadow="dark" size="sm" aria-label="Save Goal" @click="saveGoal">SAVE GOAL</TangoButton>
     </template>
   </BaseModal>
 </template>

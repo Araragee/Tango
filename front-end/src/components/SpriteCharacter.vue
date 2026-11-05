@@ -55,6 +55,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  idle: undefined,
   emotion: 'idle',
   size: 80,
   animate: true,
