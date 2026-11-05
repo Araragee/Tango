@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { supabase, isConfigured } from '@/lib/supabase'
+import { supabase, isConfigured, AVATARS_BUCKET } from '@/lib/supabase'
 import { useHouseholdStore } from './useHouseholdStore'
 import { useAuthStore } from './useAuthStore'
 import { useOfflineQueue } from './useOfflineQueue'
@@ -326,11 +326,11 @@ export const useAppStore = defineStore('app', () => {
     const path = `${auth.user.id}/${crypto.randomUUID()}.${ext}`
 
     const { error: uploadError } = await supabase.storage
-      .from('avatars')
+      .from(AVATARS_BUCKET)
       .upload(path, file, { upsert: true, contentType: file.type || 'image/png' })
     if (uploadError) throw uploadError
 
-    const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
+    const { data: publicData } = supabase.storage.from(AVATARS_BUCKET).getPublicUrl(path)
     const publicUrl = publicData.publicUrl
 
     const { error: updateError } = await supabase
@@ -361,11 +361,11 @@ export const useAppStore = defineStore('app', () => {
     // splitting on '/public/avatars/'. Fire-and-forget — a storage delete
     // failure is non-fatal (the DB column is already cleared). (I21)
     if (avatarUrl.value) {
-      const marker = '/public/avatars/'
+      const marker = `/public/${AVATARS_BUCKET}/`
       const markerIdx = avatarUrl.value.indexOf(marker)
       if (markerIdx !== -1) {
         const storagePath = avatarUrl.value.slice(markerIdx + marker.length)
-        supabase.storage.from('avatars').remove([storagePath]).catch((err: any) => {
+        supabase.storage.from(AVATARS_BUCKET).remove([storagePath]).catch((err: any) => {
           console.warn('[removeAvatar] storage delete failed:', err)
         })
       }

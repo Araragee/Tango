@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { csvCell } from '../utils/csv';
 import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import { useAppStore, type Transaction } from '../stores/useStore';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
@@ -148,7 +149,7 @@ const settleUp = computed(() => {
 const exportCSV = () => {
   const rows = store.budget.recentActivity;
   const headers = ['Date', 'Title', 'Amount', 'Type', 'Category', 'Note'];
-  const escape = (s: string) => `"${String(s ?? '').replace(/"/g, '""')}"`;
+  const escape = csvCell;
   const lines = [
     headers.join(','),
     ...rows.map(tx => [
@@ -235,7 +236,8 @@ const exportCSV = () => {
               <p class="text-headline-md font-black tabular-nums">{{ prefs.money(settleUp.partnerPaid) }}</p>
             </div>
           </div>
-          <div class="px-4 py-3 pixel-border-sm text-center"
+          <div
+class="px-4 py-3 pixel-border-sm text-center"
                :class="settleUp.owedBy === 'settled' ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary-container text-on-primary-container'">
             <p class="text-label-sm uppercase font-bold">
               <span v-if="settleUp.owedBy === 'settled'">All settled!</span>
@@ -267,7 +269,7 @@ const exportCSV = () => {
                   <TangoButton class="mt-4" @click="showAddModal = true">Add Transaction</TangoButton>
               </EmptyState>
             </div>
-            <div v-else v-for="cat in store.budget.monthlySpending" :key="cat.id">
+            <div v-for="cat in store.budget.monthlySpending" v-else :key="cat.id">
               <div class="flex justify-between text-label-sm mb-2 uppercase items-center">
                 <span :class="isOverBudget(cat.spent, cat.category) ? 'text-error font-bold' : ''">
                   {{ cat.category }}
@@ -276,10 +278,11 @@ const exportCSV = () => {
                 <span class="flex items-center gap-2">
                   {{ prefs.currencySymbol }}{{ cat.spent.toFixed(0) }} /
                   <!-- Inline limit editor -->
-                  <span v-if="editingLimit !== cat.category"
-                    @click="startEditLimit(cat.category)"
+                  <span
+v-if="editingLimit !== cat.category"
                     class="cursor-pointer underline decoration-dotted hover:text-primary transition-colors"
                     title="Click to edit limit"
+                    @click="startEditLimit(cat.category)"
                   >{{ prefs.currencySymbol }}{{ getLimit(cat.category) }}</span>
                   <span v-else class="flex items-center gap-1">
                     <input
@@ -290,8 +293,8 @@ const exportCSV = () => {
                       @keyup.enter="saveLimit"
                       @keyup.escape="editingLimit = null"
                     />
-                    <button @click="saveLimit" aria-label="Save limit" class="material-symbols-outlined tap-target-mobile text-[18px] text-secondary hover:text-primary">check</button>
-                    <button @click="editingLimit = null" aria-label="Cancel" class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error">close</button>
+                    <button aria-label="Save limit" class="material-symbols-outlined tap-target-mobile text-[18px] text-secondary hover:text-primary" @click="saveLimit">check</button>
+                    <button aria-label="Cancel" class="material-symbols-outlined tap-target-mobile text-[18px] text-outline hover:text-error" @click="editingLimit = null">close</button>
                   </span>
                 </span>
               </div>
@@ -320,19 +323,19 @@ const exportCSV = () => {
             <h3 class="text-headline-lg text-on-surface">Recent</h3>
             <!-- Icon-only on mobile to keep a single tidy row; labels return at sm. -->
             <div class="grid grid-cols-4 gap-2 sm:flex">
-              <TangoButton @click="showMonthlyReport = true" variant="surface" size="sm" class="justify-center" aria-label="Monthly report">
+              <TangoButton variant="surface" size="sm" class="justify-center" aria-label="Monthly report" @click="showMonthlyReport = true">
                 <span class="material-symbols-outlined text-[16px]">summarize</span>
                 <span class="hidden sm:inline">Report</span>
               </TangoButton>
-              <TangoButton @click="exportCSV" variant="surface" size="sm" class="justify-center" aria-label="Export CSV">
+              <TangoButton variant="surface" size="sm" class="justify-center" aria-label="Export CSV" @click="exportCSV">
                 <span class="material-symbols-outlined text-[16px]">download</span>
                 <span class="hidden sm:inline">Export</span>
               </TangoButton>
-              <TangoButton @click="showCsvImport = true" variant="surface" size="sm" class="justify-center" aria-label="Import CSV">
+              <TangoButton variant="surface" size="sm" class="justify-center" aria-label="Import CSV" @click="showCsvImport = true">
                 <span class="material-symbols-outlined text-[16px]">upload_file</span>
                 <span class="hidden sm:inline">Import</span>
               </TangoButton>
-              <TangoButton @click="showAddModal = true" shadow="dark" size="sm" class="justify-center" aria-label="Add Transaction">
+              <TangoButton shadow="dark" size="sm" class="justify-center" aria-label="Add Transaction" @click="showAddModal = true">
                 <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">add</span>
                 <span class="hidden sm:inline">ADD</span>
               </TangoButton>
@@ -341,10 +344,11 @@ const exportCSV = () => {
 
           <!-- Filters -->
           <div class="flex gap-2 flex-wrap mb-4">
-            <button v-for="f in ['all', 'expense', 'income']" :key="f"
-              @click="filter = f as any"
+            <button
+v-for="f in ['all', 'expense', 'income']" :key="f"
               class="px-3 py-1 pixel-border-sm text-label-sm uppercase transition-colors"
-              :class="filter === f ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'">
+              :class="filter === f ? 'bg-primary text-on-primary' : 'bg-surface hover:bg-surface-variant'"
+              @click="filter = f as any">
               {{ f }}
             </button>
           </div>
@@ -369,11 +373,11 @@ const exportCSV = () => {
               description="Add your first transaction to start tracking."
             />
             <div
-              v-else
               v-for="tx in filteredActivity"
+              v-else
               :key="tx.id"
-              @click="openDetails(tx)"
               class="flex items-center justify-between p-3 hover:bg-surface-variant pixel-border-sm transition-colors cursor-pointer bg-surface"
+              @click="openDetails(tx)"
             >
               <div class="flex items-center gap-4">
                 <div class="w-10 h-10 flex items-center justify-center pixel-border-sm bg-surface-variant">

@@ -10,11 +10,11 @@ const supabaseKey =
 export const isConfigured =
   /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(supabaseUrl) && supabaseKey.length > 20
 
-// Storage bucket names. Override via env (e.g. `VITE_RECEIPTS_BUCKET=receipts`)
-// once a dedicated bucket with its own RLS policies is provisioned in the
-// Supabase dashboard. Until then the receipts share the public avatars bucket.
+// Storage bucket names (overridable via env). Receipts are financial documents,
+// so they live in the PRIVATE `receipts` bucket (migration 022) with
+// household-scoped RLS and are viewed through short-lived signed URLs.
 export const AVATARS_BUCKET: string = import.meta.env.VITE_AVATARS_BUCKET ?? 'avatars'
-export const RECEIPTS_BUCKET: string = import.meta.env.VITE_RECEIPTS_BUCKET ?? 'avatars'
+export const RECEIPTS_BUCKET: string = import.meta.env.VITE_RECEIPTS_BUCKET ?? 'receipts'
 
 import type { Database } from '@/types/database.types'
 

@@ -4,13 +4,15 @@ import { useUndoToast } from '../composables/useUndoToast';
 
 const { confirm } = useConfirm();
 const { showUndo } = useUndoToast();
-import { ref, watch, inject } from 'vue';
+import { ref, watch, inject, computed } from 'vue';
 import BaseModal from './BaseModal.vue';
 import TangoButton from './TangoButton.vue';
 import TangoInput from './TangoInput.vue';
 import { type Transaction, useAppStore } from '../stores/useStore';
 import { supabase, isConfigured, RECEIPTS_BUCKET } from '../lib/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useHouseholdStore } from '../stores/useHouseholdStore';
+import { receiptRef, parseReceipt, isPdfReceipt, resolveReceiptUrl } from '../utils/receipts';
 import { usePreferencesStore } from '../stores/usePreferencesStore';
 import { iconForCategory } from '../utils/categoryIcons';
 import CategoryIcon from './CategoryIcon.vue';
@@ -23,6 +25,7 @@ const emit = defineEmits(['close']);
 const store = useAppStore();
 const prefs = usePreferencesStore();
 const auth = useAuthStore();
+const household = useHouseholdStore();
 const notify = inject('notify') as (msg: string, type?: 'success' | 'error' | 'info') => void;
 
 const editMode = ref(false);
@@ -37,6 +40,17 @@ const receiptBusy = ref(false);
 const RECEIPT_ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']);
 
 const triggerReceiptPick = () => receiptFileInput.value?.click();
+
+// Signed (short-lived) URL for the current receipt; null until resolved.
+const receiptUrl = ref<string | null>(null);
+const receiptIsPdf = computed(() => isPdfReceipt(props.transaction?.receipt_url));
+watch(() => props.transaction?.receipt_url, async (value) => {
+    receiptUrl.value = null;
+    if (!value || !isConfigured) return;
+    const resolved = await resolveReceiptUrl(value);
+    // Ignore a stale resolution if the receipt changed while we were signing.
+    if (props.transaction?.receipt_url === value) receiptUrl.value = resolved;
+}, { immediate: true });
 
 const onReceiptChosen = async (e: Event) => {
     if (!props.transaction) return;
@@ -53,26 +67,28 @@ const onReceiptChosen = async (e: Event) => {
         input.value = '';
         return;
     }
-    if (!isConfigured || !auth.user) {
+    if (!isConfigured || !auth.user || !household.householdId) {
         notify('Supabase must be configured to upload receipts.', 'error');
         return;
     }
     receiptBusy.value = true;
     try {
         const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-        // When RECEIPTS_BUCKET still points at 'avatars' we prefix the path
-        // with 'receipts/' so the two file types don't collide in the bucket.
-        // Once a dedicated 'receipts' bucket is provisioned the prefix is
-        // redundant but harmless.
-        const path = RECEIPTS_BUCKET === 'avatars'
-            ? `receipts/${auth.user.id}/${props.transaction.id}_${crypto.randomUUID()}.${ext}`
-            : `${auth.user.id}/${props.transaction.id}_${crypto.randomUUID()}.${ext}`;
+        // Private bucket; the first path segment must be the household id —
+        // that's what the receipts_* storage RLS policies check (migration 013).
+        const path = `${household.householdId}/${props.transaction.id}_${crypto.randomUUID()}.${ext}`;
+        const previous = parseReceipt(props.transaction.receipt_url);
         const { error: uploadError } = await supabase.storage
             .from(RECEIPTS_BUCKET)
-            .upload(path, file, { upsert: true, contentType: file.type });
+            .upload(path, file, { upsert: false, contentType: file.type });
         if (uploadError) throw uploadError;
-        const { data: publicData } = supabase.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
-        await store.updateTransaction(props.transaction.id, { receipt_url: publicData.publicUrl });
+        await store.updateTransaction(props.transaction.id, { receipt_url: receiptRef(RECEIPTS_BUCKET, path) });
+        // Replacing: drop the old object so it doesn't linger in storage.
+        if (previous) {
+            supabase.storage.from(previous.bucket).remove([previous.path]).catch((err: any) => {
+                console.warn('[replaceReceipt] storage delete failed:', err);
+            });
+        }
         notify('Receipt attached.', 'success');
     } catch (err: any) {
         notify(err.message ?? 'Failed to upload receipt.', 'error');
@@ -93,20 +109,15 @@ const removeReceipt = async () => {
         await store.updateTransaction(props.transaction.id, { receipt_url: null });
 
         // Also delete the file from Supabase Storage so orphaned objects don't
-        // accumulate in the bucket. Extract the in-bucket path by splitting the
-        // public URL on the `/public/<bucket>/` segment. (B124)
-        if (isConfigured) {
-            const marker = `/public/${RECEIPTS_BUCKET}/`;
-            const markerIdx = props.transaction.receipt_url.indexOf(marker);
-            if (markerIdx !== -1) {
-                const storagePath = props.transaction.receipt_url.slice(markerIdx + marker.length);
-                // Fire-and-forget: a storage delete failure is non-fatal — the DB
-                // column is already cleared and the file is effectively orphaned
-                // at worst. Log the error but don't surface it to the user.
-                supabase.storage.from(RECEIPTS_BUCKET).remove([storagePath]).catch((err: any) => {
-                    console.warn('[removeReceipt] storage delete failed:', err);
-                });
-            }
+        // accumulate in the bucket. (B124)
+        const stored = parseReceipt(props.transaction.receipt_url);
+        if (isConfigured && stored) {
+            // Fire-and-forget: a storage delete failure is non-fatal — the DB
+            // column is already cleared and the file is effectively orphaned
+            // at worst. Log the error but don't surface it to the user.
+            supabase.storage.from(stored.bucket).remove([stored.path]).catch((err: any) => {
+                console.warn('[removeReceipt] storage delete failed:', err);
+            });
         }
 
         notify('Receipt removed.', 'success');
@@ -246,35 +257,36 @@ const saveEdit = async () => {
                 <div class="flex items-center gap-2">
                     <button
                         v-if="transaction.receipt_url"
-                        @click="removeReceipt"
                         class="text-label-sm uppercase text-error hover:underline"
                         title="Remove receipt"
+                        @click="removeReceipt"
                     >Remove</button>
                     <button
-                        @click="triggerReceiptPick"
                         :disabled="receiptBusy"
                         class="text-label-sm uppercase text-primary hover:underline disabled:opacity-50"
+                        @click="triggerReceiptPick"
                     >{{ receiptBusy ? 'Uploading…' : (transaction.receipt_url ? 'Replace' : 'Attach') }}</button>
                 </div>
             </div>
 
             <!-- Preview -->
             <a
-                v-if="transaction.receipt_url && !transaction.receipt_url.endsWith('.pdf')"
-                :href="transaction.receipt_url"
+                v-if="receiptUrl && !receiptIsPdf"
+                :href="receiptUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="block"
             >
                 <img
-                    :src="transaction.receipt_url"
+                    :src="receiptUrl"
                     alt="Receipt"
+                    loading="lazy"
                     class="w-full max-h-48 object-contain pixel-border-sm bg-surface"
                 />
             </a>
             <a
-                v-else-if="transaction.receipt_url"
-                :href="transaction.receipt_url"
+                v-else-if="receiptUrl"
+                :href="receiptUrl"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex items-center gap-2 text-primary hover:underline text-body-md"
@@ -282,6 +294,7 @@ const saveEdit = async () => {
                 <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
                 View PDF Receipt
             </a>
+            <p v-else-if="transaction.receipt_url" class="text-body-md text-on-surface-variant">Loading receipt…</p>
             <p v-else class="text-body-md text-on-surface-variant">No receipt attached.</p>
 
             <input
@@ -295,11 +308,11 @@ const saveEdit = async () => {
     </div>
 
     <template #footer>
-      <TangoButton v-if="!editMode" @click="deleteTx" :disabled="deleteBusy" variant="outline" class="text-error border-error mr-auto" size="sm">{{ deleteBusy ? 'Deleting…' : 'Delete' }}</TangoButton>
-      <TangoButton v-if="!editMode" @click="editMode = true" variant="surface" size="sm">Edit</TangoButton>
-      <TangoButton v-if="!editMode" @click="emit('close')" shadow="dark" size="sm">Close</TangoButton>
-      <TangoButton v-if="editMode" @click="editMode = false" :disabled="saveBusy" variant="surface" size="sm">Cancel</TangoButton>
-      <TangoButton v-if="editMode" @click="saveEdit" :disabled="saveBusy" shadow="dark" size="sm">{{ saveBusy ? 'Saving…' : 'Save' }}</TangoButton>
+      <TangoButton v-if="!editMode" :disabled="deleteBusy" variant="outline" class="text-error border-error mr-auto" size="sm" @click="deleteTx">{{ deleteBusy ? 'Deleting…' : 'Delete' }}</TangoButton>
+      <TangoButton v-if="!editMode" variant="surface" size="sm" @click="editMode = true">Edit</TangoButton>
+      <TangoButton v-if="!editMode" shadow="dark" size="sm" @click="emit('close')">Close</TangoButton>
+      <TangoButton v-if="editMode" :disabled="saveBusy" variant="surface" size="sm" @click="editMode = false">Cancel</TangoButton>
+      <TangoButton v-if="editMode" :disabled="saveBusy" shadow="dark" size="sm" @click="saveEdit">{{ saveBusy ? 'Saving…' : 'Save' }}</TangoButton>
     </template>
   </BaseModal>
 </template>

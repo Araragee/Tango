@@ -27,6 +27,16 @@ export async function saveReadCache(key: string, data: unknown[]): Promise<void>
   }
 }
 
+/** Wipe all cached household data (on logout — protects shared devices). */
+export async function clearReadCache(): Promise<void> {
+  try {
+    const d = await db()
+    await d.clear(STORE)
+  } catch (e) {
+    console.warn('[readCache] clear failed', e)
+  }
+}
+
 export async function loadReadCache<T>(key: string): Promise<T[] | null> {
   try {
     const d = await db()

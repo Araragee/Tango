@@ -25,6 +25,7 @@ import { useAchievementsStore } from './stores/useAchievementsStore';
 import { useAppStore } from './stores/useStore';
 import { isConfigured } from './lib/supabase';
 import { useConfirm } from './composables/useConfirm';
+import { clearReadCache } from './composables/useReadCache';
 
 // On-demand overlays are code-split and only mounted the first time they open,
 // keeping them (and focus-trap, via BaseModal) out of the initial bundle —
@@ -133,6 +134,8 @@ watch(
       notifications.unsubscribe();
       achievements.unsubscribe();
       offline.clearAll();
+      // Don't leave the household's financial data in IndexedDB after sign-out.
+      clearReadCache();
       
       if (route.meta.requiresAuth) {
         router.push({
@@ -225,9 +228,9 @@ onErrorCaptured((err: any) => {
     <header v-if="showNav" class="app-header fixed top-0 left-0 w-full z-40 flex items-center gap-2 sm:gap-3 px-4 md:px-8 bg-surface border-b-2 border-black dark:border-white">
       <!-- Logo / Home -->
       <button
-        @click="goHome()"
         class="flex items-center gap-2 shrink-0 -ml-1 px-1 py-1 hover:opacity-80 transition-opacity"
         aria-label="Tango home"
+        @click="goHome()"
       >
         <span class="material-symbols-outlined text-primary text-[26px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
         <span class="text-headline-md font-bold text-on-surface hidden xs:inline">Tango</span>
@@ -238,11 +241,11 @@ onErrorCaptured((err: any) => {
         <button
           v-for="item in navItems"
           :key="item.path"
-          @click="router.push(item.path)"
           class="px-3 py-1.5 text-label-sm uppercase font-bold pixel-border-sm transition-colors"
           :class="route.path === item.path
             ? 'bg-primary text-on-primary'
             : 'bg-surface text-on-surface-variant hover:bg-surface-variant'"
+          @click="router.push(item.path)"
         >{{ item.name }}</button>
       </nav>
 
@@ -253,9 +256,9 @@ onErrorCaptured((err: any) => {
       <div v-if="showNav" class="flex items-center gap-1 sm:gap-2 shrink-0">
         <!-- Search — inline from md up; folded into the mobile menu below. -->
         <button
-          @click="showSearch = true"
           class="hidden md:flex items-center gap-2 px-2.5 py-1.5 min-h-9 pixel-border-sm bg-surface-variant hover:bg-surface-container-high transition-colors text-on-surface-variant text-label-sm"
           aria-label="Search (Cmd+K)"
+          @click="showSearch = true"
         >
           <span class="material-symbols-outlined text-[18px]">search</span>
           <span class="hidden lg:inline">Search</span>
@@ -267,30 +270,30 @@ onErrorCaptured((err: any) => {
 
         <!-- Secondary actions — inline on desktop -->
         <button
-          @click="showHelp = true"
           class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Help"
+          @click="showHelp = true"
         >help</button>
         <button
-          @click="showActivity = true"
           class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Activity"
+          @click="showActivity = true"
         >timeline</button>
         <button
-          @click="router.push('/app/archive')"
           class="!hidden md:!inline-flex tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
           aria-label="Archive"
+          @click="router.push('/app/archive')"
         >history</button>
 
         <!-- Mobile hamburger — holds search + secondary actions to keep the bar
              uncluttered. Important controls (notifications, avatar) stay inline. -->
         <div class="relative md:hidden">
           <button
-            @click="showMoreMenu = !showMoreMenu"
             class="tap-target material-symbols-outlined text-on-surface hover:text-primary transition-colors"
             aria-label="Menu"
             aria-haspopup="true"
             :aria-expanded="showMoreMenu"
+            @click="showMoreMenu = !showMoreMenu"
           >menu</button>
           <div v-if="showMoreMenu" class="fixed inset-0 z-40" @click="showMoreMenu = false"></div>
           <div
@@ -306,9 +309,9 @@ onErrorCaptured((err: any) => {
                 { icon: 'history', label: 'Archive', act: () => { router.push('/app/archive'); } },
               ]"
               :key="m.label"
-              @click="m.act(); showMoreMenu = false"
               class="w-full flex items-center gap-3 px-3 py-2.5 text-left text-body-md hover:bg-surface-variant transition-colors"
               role="menuitem"
+              @click="m.act(); showMoreMenu = false"
             >
               <span class="material-symbols-outlined text-[20px] text-on-surface-variant">{{ m.icon }}</span>
               {{ m.label }}
@@ -318,9 +321,9 @@ onErrorCaptured((err: any) => {
 
         <!-- Settings / avatar -->
         <button
-          @click="router.push('/app/settings')"
           class="relative w-10 h-10 pixel-border bg-surface-container-highest overflow-hidden flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity"
           aria-label="Settings"
+          @click="router.push('/app/settings')"
         >
           <img
             v-if="headerAvatar"
@@ -341,7 +344,8 @@ onErrorCaptured((err: any) => {
       </div>
     </header>
 
-    <main :class="[
+    <main
+:class="[
       'min-h-screen transition-all duration-300',
       showNav ? 'with-header-offset max-md:pb-32 md:pb-8 px-4 md:px-8 max-w-6xl mx-auto' : 'pt-0 pb-0 px-0 max-w-none w-full'
     ]">
@@ -376,14 +380,14 @@ onErrorCaptured((err: any) => {
         <p class="flex-1 text-sm font-bold uppercase tracking-wide">New version ready</p>
         <button
           type="button"
-          @click="pwa.applyUpdate()"
           class="px-3 py-1 pixel-border-sm bg-primary text-on-primary text-xs font-bold uppercase hover:opacity-90"
+          @click="pwa.applyUpdate()"
         >Reload</button>
         <button
           type="button"
-          @click="pwa.dismissNeedRefresh()"
           class="material-symbols-outlined text-on-primary-container hover:opacity-70"
           aria-label="Dismiss update"
+          @click="pwa.dismissNeedRefresh()"
         >close</button>
       </div>
     </Transition>

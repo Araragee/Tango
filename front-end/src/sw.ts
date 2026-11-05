@@ -77,7 +77,13 @@ self.addEventListener('push', (event: PushEvent) => {
 // ─── Notification click ──────────────────────────────────────────────────────
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close()
-  const url: string = event.notification.data?.url ?? '/app/budget'
+  // Only ever navigate within this origin — a push payload must not be able to
+  // send the user (with our installed-app chrome) to an arbitrary site.
+  let url = '/app/budget'
+  try {
+    const target = new URL(event.notification.data?.url ?? url, self.location.origin)
+    if (target.origin === self.location.origin) url = target.pathname + target.search + target.hash
+  } catch { /* keep default */ }
 
   event.waitUntil(
     (self.clients as Clients)
